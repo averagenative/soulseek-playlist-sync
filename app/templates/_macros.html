@@ -1,0 +1,32 @@
+{% macro cover(urls, extra="") -%}
+  {% set n = urls|length %}
+  <div class="cover {{ 'n0' if n == 0 else ('n1' if n < 4 else '') }} {{ extra }}" aria-hidden="true">
+    {% if n >= 4 %}{% for u in urls[:4] %}<img src="{{ u }}" alt="" loading="lazy">{% endfor %}
+    {% elif n >= 1 %}<img src="{{ urls[0] }}" alt="" loading="lazy">{% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro source(src) -%}
+  <span class="source {{ src }}">{{ SOURCES[src] }}</span>
+{%- endmacro %}
+
+{# One bar, segments by status. counts: status -> number #}
+{% macro segbar(counts, live=False) -%}
+  {% set groups = [
+      ('synced', ['synced']), ('in_library', ['in_library']), ('moving', ['downloading', 'queued']),
+      ('waiting', ['waiting', 'searching', 'found']), ('bad', ['not_found', 'failed'])] %}
+  {% set total = namespace(n=0) %}
+  {% for s, n in counts.items() if s != 'removed' %}{% set total.n = total.n + n %}{% endfor %}
+  <div class="segbar {{ 'live' if live else '' }}" role="img"
+       aria-label="{{ counts.get('synced', 0) }} of {{ total.n }} songs synced">
+    {% if total.n %}{% for cls, members in groups %}
+      {% set g = namespace(n=0) %}{% for m in members %}{% set g.n = g.n + counts.get(m, 0) %}{% endfor %}
+      {% if g.n %}<span class="{{ cls }}" style="width: {{ 100 * g.n / total.n }}%"></span>{% endif %}
+    {% endfor %}{% endif %}
+  </div>
+{%- endmacro %}
+
+{% macro thumb(song) -%}
+  {% set u = song.thumb_url or song.artwork_url %}
+  {% if u %}<img class="thumb" src="{{ u }}" alt="" loading="lazy">{% else %}<div class="thumb blank">&#9835;</div>{% endif %}
+{%- endmacro %}

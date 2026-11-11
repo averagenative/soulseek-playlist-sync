@@ -1,0 +1,234 @@
+"""Apple Music API: developer tokens, the user's library playlists and their tracks."""
+import base64
+import json
+import re
+import time
+
+import httpx
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+
+from .config import Config
+
+API = "https://api.music.apple.com"
+WEB_API = "https://amp-api.music.apple.com"
+ARTWORK_SIZE = 600
+THUMB_SIZE = 120
+
+
+class AppleError(Exception):
+    pass
+
+
+class NotConnected(AppleError):
+    pass
+
+
+def _b64(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+
+def developer_token(cfg: Config, lifetime: int = 12 * 3600) -> str:
+    """Sign a short-lived ES256 developer token with the MusicKit key."""
+    if not (cfg.apple_team_id and cfg.apple_key_id and cfg.apple_key_file):
+        raise AppleError("APPLE_TEAM_ID, APPLE_KEY_ID and APPLE_KEY_FILE must be set")
+    key = load_pem_private_key(cfg.apple_key_file.read_bytes(), None)
+    now = int(time.time())
+    header = {"alg": "ES256", "kid": cfg.apple_key_id}
+    claims = {"iss": cfg.apple_team_id, "iat": now, "exp": now + lifetime}
+    signing_input = ".".join(_b64(json.dumps(p, separators=(",", ":")).encode()) for p in (header, claims))
+    r, s = decode_dss_signature(key.sign(signing_input.encode(), ec.ECDSA(hashes.SHA256())))
+    return f"{signing_input}.{_b64(r.to_bytes(32, 'big') + s.to_bytes(32, 'big'))}"
+
+
+def key_configured(cfg: Config) -> bool:
+    """A MusicKit key from an Apple Developer account is set up."""
+    return bool(cfg.apple_team_id and cfg.apple_key_id and cfg.apple_key_file and cfg.apple_key_file.exists())
+
+
+def mode(cfg: Config) -> str:
+    """'developer' with your own MusicKit key, else 'web': the music.apple.com web player's token."""
+    if cfg.apple_mode in ("developer", "web"):
+        return cfg.apple_mode
+    return "developer" if key_configured(cfg) else "web"
+
+
+def configured(cfg: Config) -> bool:
+    return mode(cfg) == "web" or key_configured(cfg)
+
+
+# ------------------------------------------------------------------ web player token
+
+WEB_UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+          "Chrome/130.0 Safari/537.36")
+
+
+def _claims(jwt: str) -> dict:
+    try:
+        return json.loads(base64.urlsafe_b64decode(jwt.split(".")[1] + "=="))
+    except Exception:
+        return {}
+
+
+def web_token(force: bool = False) -> str:
+    """The token music.apple.com's own player uses, read from its JavaScript and cached until it expires."""
+    from . import db
+    cached = db.get_kv("apple_web_token")
+    if cached and not force and _claims(cached).get("exp", 0) > time.time() + 86400:
+        return cached
+    try:
+        with httpx.Client(timeout=30, headers={"User-Agent": WEB_UA}, follow_redirects=True) as h:
+            html = h.get("https://music.apple.com/us/browse").text
+            scripts = re.findall(r'<script[^>]+src="(/assets/[^"]+\.js)"', html)
+            for src in scripts:
+                js = h.get("https://music.apple.com" + src).text
+                for m in re.finditer(r"eyJ[\w-]+\.eyJ[\w-]+\.[\w-]+", js):
+                    if _claims(m.group(0)).get("iss") == "AMPWebPlay":
+                        db.set_kv("apple_web_token", m.group(0))
+                        return m.group(0)
+    except httpx.HTTPError as e:
+        raise AppleError(f"Couldn't reach music.apple.com for its web token: {e}") from e
+    raise AppleError("Couldn't find the web player's token on music.apple.com (Apple may have changed the page)")
+
+
+# ------------------------------------------------------------------ the signed-in user
+
+def user_token(cfg: Config) -> str | None:
+    f = cfg.apple_user_token_file
+    return f.read_text().strip() if f.exists() else None
+
+
+def save_user_token(cfg: Config, token: str) -> None:
+    import os
+    cfg.data_dir.mkdir(parents=True, exist_ok=True)
+    fd = os.open(cfg.apple_user_token_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(token.strip())
+
+
+def clean_pasted_token(raw: str) -> str:
+    """Accept the bare cookie value, 'media-user-token=...', or a whole Cookie header."""
+    raw = (raw or "").strip().strip('"').strip("'")
+    m = re.search(r"media-user-token=([^;\s]+)", raw)
+    return (m.group(1) if m else raw).strip()
+
+
+def check_user_token(cfg: Config, token: str) -> str:
+    """Returns the account's storefront (e.g. 'us') if Apple accepts the token, else raises."""
+    with Client(cfg, token=token) as api:
+        return api.storefront()
+
+
+class Client:
+    def __init__(self, cfg: Config, token: str | None = None):
+        token = token or user_token(cfg)
+        if not token:
+            raise NotConnected("Apple Music is not connected")
+        self.mode = mode(cfg)
+        self.cfg = cfg
+        self._user = token
+        self.http = httpx.Client(base_url=API if self.mode == "developer" else WEB_API, timeout=30)
+        self._auth()
+        self._storefront = None
+
+    def _auth(self, refresh: bool = False):
+        if self.mode == "developer":
+            self.http.headers.update({"Authorization": f"Bearer {developer_token(self.cfg)}",
+                                      "Music-User-Token": self._user})
+        else:
+            self.http.headers.update({"Authorization": f"Bearer {web_token(force=refresh)}",
+                                      "Media-User-Token": self._user, "Origin": "https://music.apple.com",
+                                      "Referer": "https://music.apple.com/", "User-Agent": WEB_UA})
+
+    def close(self):
+        self.http.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
+    def get(self, path: str, params: dict | None = None) -> dict:
+        r = self.http.get(path, params=params)
+        if r.status_code == 401 and self.mode == "web":
+            self._auth(refresh=True)       # the web player's token may have been rotated
+            r = self.http.get(path, params=params)
+        if r.status_code in (401, 403):
+            raise NotConnected(f"Apple returned {r.status_code}; reconnect Apple Music")
+        r.raise_for_status()
+        return r.json()
+
+    def get_all(self, path: str, params: dict | None = None) -> list:
+        items = []
+        while path:
+            page = self.get(path, params)
+            items += page.get("data", [])
+            path, params = page.get("next"), None
+        return items
+
+    def storefront(self) -> str:
+        if not self._storefront:
+            self._storefront = self.get("/v1/me/storefront")["data"][0]["id"]
+        return self._storefront
+
+    def playlists(self) -> list[dict]:
+        out = []
+        for p in self.get_all("/v1/me/library/playlists", {"limit": 100}):
+            a = p.get("attributes", {})
+            out.append({
+                "remote_id": p["id"],
+                "name": a.get("name", "?"),
+                "can_edit": bool(a.get("canEdit")),
+                "modified": a.get("lastModifiedDate") or a.get("dateAdded"),
+                "description": (a.get("description") or {}).get("standard"),
+                "image": ((a.get("artwork") or {}).get("url") or "").replace("{w}", "120").replace("{h}", "120") or None,
+            })
+        return sorted(out, key=lambda p: p["name"].casefold())
+
+    def playlist_name(self, remote_id: str) -> str:
+        data = self.get(f"/v1/me/library/playlists/{remote_id}")["data"]
+        return data[0]["attributes"].get("name", remote_id)
+
+    def playlist_tracks(self, remote_id: str) -> list[dict]:
+        """The playlist in order, as song dicts with a stable `key`."""
+        lib = self.get_all(f"/v1/me/library/playlists/{remote_id}/tracks", {"limit": 100})
+        cids = [t.get("attributes", {}).get("playParams", {}).get("catalogId") for t in lib]
+        catalog, albums = {}, {}
+        wanted = [c for c in dict.fromkeys(cids) if c]
+        for i in range(0, len(wanted), 300):
+            page = self.get(f"/v1/catalog/{self.storefront()}/songs",
+                            {"ids": ",".join(wanted[i:i + 300]), "include": "albums"})
+            for song in page.get("data", []):
+                catalog[song["id"]] = song["attributes"]
+                rel = song.get("relationships", {}).get("albums", {}).get("data", [])
+                if rel and rel[0].get("attributes"):
+                    albums[song["id"]] = rel[0]["attributes"]
+
+        out = []
+        for t, cid in zip(lib, cids):
+            a = t.get("attributes", {})
+            c = catalog.get(cid, {})
+            alb = albums.get(cid, {})
+            art = (c.get("artwork") or a.get("artwork") or {}).get("url")
+            genres = c.get("genreNames") or a.get("genreNames") or []
+            out.append({
+                "key": f"apple:{cid}" if cid else f"apple-lib:{t['id']}",
+                "isrc": c.get("isrc"),
+                "title": a.get("name") or c.get("name"),
+                "artist": a.get("artistName") or c.get("artistName"),
+                "album": a.get("albumName") or c.get("albumName"),
+                "album_artist": alb.get("artistName"),
+                "track_number": c.get("trackNumber") or a.get("trackNumber"),
+                "disc_number": c.get("discNumber") or a.get("discNumber"),
+                "duration_ms": c.get("durationInMillis") or a.get("durationInMillis"),
+                "content_rating": c.get("contentRating") or a.get("contentRating"),
+                "release_date": c.get("releaseDate") or a.get("releaseDate"),
+                "genre": next((g for g in genres if g != "Music"), genres[0] if genres else None),
+                "artwork_url": art.replace("{w}", str(ARTWORK_SIZE)).replace("{h}", str(ARTWORK_SIZE)) if art else None,
+                "thumb_url": art.replace("{w}", str(THUMB_SIZE)).replace("{h}", str(THUMB_SIZE)) if art else None,
+                "url": c.get("url"),
+            })
+        return out

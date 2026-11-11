@@ -1,0 +1,154 @@
+"""Text normalization and Soulseek candidate ranking. Pure functions, no I/O."""
+import math
+import re
+import unicodedata
+
+# Bracketed parts that don't change which recording it is.
+_NOISE_BRACKET = re.compile(
+    r"\s*[\(\[][^\)\]]*\b(feat|ft|with|from|remaster(ed)?|explicit|clean|radio edit|"
+    r"single version|album version|original motion picture|soundtrack)\b[^\)\]]*[\)\]]",
+    re.I,
+)
+_ANY_BRACKET = re.compile(r"\s*[\(\[][^\)\]]*[\)\]]")
+_FEAT = re.compile(r"\s+(feat\.?|ft\.?|featuring)\s+.*$", re.I)
+_TRACK_PREFIX = re.compile(r"^\s*(\d{1,3}|[a-d]\d{1,2})\s*[-_. ]+\s*", re.I)
+
+
+def ascii_fold(s: str) -> str:
+    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
+
+
+def norm(s: str | None) -> str:
+    """Lowercase ASCII words separated by single spaces."""
+    if not s:
+        return ""
+    s = ascii_fold(s).lower().replace("&", " and ")
+    s = re.sub(r"[’'`]", "", s)
+    return re.sub(r"[^a-z0-9]+", " ", s).strip()
+
+
+def clean_title(title: str | None) -> str:
+    """Title without featuring credits, soundtrack notes and remaster tags."""
+    t = _NOISE_BRACKET.sub("", title or "")
+    return _FEAT.sub("", t).strip()
+
+
+def core_title(title: str | None) -> str:
+    """Title with every bracketed part removed: the words a file name must contain."""
+    return _ANY_BRACKET.sub("", clean_title(title)).strip() or clean_title(title)
+
+
+def norm_title(title: str | None) -> str:
+    return norm(clean_title(title))
+
+
+def primary_artist(artist: str | None) -> str:
+    """First credited artist: 'A, B & C' -> 'A'. Keeps 'Simon & Garfunkel' style names whole."""
+    a = _FEAT.sub("", artist or "").strip()
+    if "," in a:
+        return a.split(",")[0].strip()
+    return a
+
+
+def artist_matches(want: str | None, have: str | None) -> bool:
+    w, h = norm(primary_artist(want)), norm(have)
+    if not w or not h:
+        return False
+    return w in h or h in norm(want)
+
+
+def search_artist(artist: str | None) -> str:
+    """The artist words to search with: the first name in 'A & B', 'A x B', 'A, B'."""
+    a = re.split(r"\s+(?:&|x|and|with|vs\.?)\s+", primary_artist(artist), maxsplit=1, flags=re.I)[0]
+    return norm(a)
+
+
+def search_queries(title: str, artist: str, album: str | None) -> list[str]:
+    """Soulseek searches to try, most specific first."""
+    core = norm(core_title(title))
+    queries = [f"{search_artist(artist)} {core}"]
+    album_core = norm(core_title(album)) if album else ""
+    if album_core and album_core != norm(primary_artist(artist)):
+        # Soundtracks are often filed by movie name rather than by performer.
+        queries.append(f"{' '.join(album_core.split()[:3])} {core}")
+    if len(core.split()) >= 2:
+        queries.append(core)
+    seen, out = set(), []
+    for q in queries:
+        q = q.strip()
+        if q and q not in seen:
+            seen.add(q)
+            out.append(q)
+    return out
+
+
+def _bitrate(f: dict) -> float | None:
+    if f.get("bitRate"):
+        return float(f["bitRate"])
+    if f.get("length") and f.get("size"):
+        return f["size"] * 8 / f["length"] / 1000
+    return None
+
+
+def rank_candidates(responses: list[dict], title: str, artist: str, duration_ms: int | None,
+                    min_bitrate: int = 192, tolerance: float = 3.0, limit: int = 5) -> list[dict]:
+    """Pick acceptable MP3s from slskd search responses, best first."""
+    want_len = (duration_ms or 0) / 1000
+    need = set(norm(core_title(title)).split())
+    artist_words = set(norm(primary_artist(artist)).split())
+    out = []
+    for r in responses:
+        for f in r.get("files", []):
+            remote = f.get("filename", "")
+            base = remote.replace("\\", "/").rsplit("/", 1)[-1]
+            if not base.lower().endswith(".mp3"):
+                continue
+            length = f.get("length")
+            if want_len and (not length or abs(length - want_len) > tolerance):
+                continue
+            br = _bitrate(f)
+            if br is not None and br < min_bitrate - 5:
+                continue
+            name_words = set(norm(_TRACK_PREFIX.sub("", base[:-4])).split())
+            if need and not need <= name_words:
+                continue
+            path_words = set(norm(remote).split())
+            score = 0.0
+            if br is None:
+                score += 20
+            elif br >= 315:
+                score += 100
+            elif br >= 240:
+                score += 80
+            else:
+                score += 50
+            if artist_words and artist_words <= path_words:
+                score += 15
+            extra = len(name_words - need - artist_words)
+            score -= min(extra, 10) * 2          # "Perfect (Live) [Remix]" loses to "Perfect"
+            if r.get("hasFreeUploadSlot"):
+                score += 20
+            score -= min(r.get("queueLength", 0), 50) * 0.5
+            score += min(math.log10(max(r.get("uploadSpeed", 0), 1)), 8) * 2
+            if want_len and length:
+                score -= abs(length - want_len) * 3
+            out.append({
+                "username": r.get("username"),
+                "filename": remote,
+                "size": f.get("size"),
+                "bitrate": round(br) if br else None,
+                "length": length,
+                "free_slot": bool(r.get("hasFreeUploadSlot")),
+                "score": round(score, 1),
+            })
+    out.sort(key=lambda c: c["score"], reverse=True)
+    # One file per peer, so a failing peer doesn't use up every fallback.
+    seen, picked = set(), []
+    for c in out:
+        if c["username"] in seen:
+            continue
+        seen.add(c["username"])
+        picked.append(c)
+        if len(picked) >= limit:
+            break
+    return picked

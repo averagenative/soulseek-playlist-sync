@@ -1,0 +1,59 @@
+# soulseek-playlist-sync with its own slskd (Soulseek client).
+#
+#   cp .env.example .env        # then fill it in
+#   mkdir -p music data secrets slskd
+#   docker compose up -d
+#
+# Then open http://localhost:8080 (or http://<this machine's IP>:8080 on your network).
+
+services:
+  playlist-sync:
+    build: .
+    image: soulseek-playlist-sync:local
+    container_name: playlist-sync
+    restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: ${TZ:-UTC}
+      MUSIC_ROOT: /music
+      DATA_DIR: /data
+      SLSKD_URL: http://slskd:5030
+      SLSKD_API_KEY: ${SLSKD_API_KEY:?Set SLSKD_API_KEY in .env}
+      SLSKD_DOWNLOADS: /slskd-downloads
+      # Apple Music: leave these empty to connect without an Apple Developer account.
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
+      APPLE_KEY_ID: ${APPLE_KEY_ID:-}
+      APPLE_KEY_FILE: /secrets/AuthKey.p8
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
+      YOUTUBE_FALLBACK: ${YOUTUBE_FALLBACK:-0}
+      APP_PASSWORD: ${APP_PASSWORD:-}
+    volumes:
+      - ${MUSIC_DIR:-./music}:/music          # playlists are written to AppleMusic/ and SpotifyMusic/ in here
+      - ./data:/data                          # database and sign-in tokens
+      - ./secrets:/secrets:ro                 # AuthKey.p8, only if you use an Apple Developer key
+      - ./slskd/downloads:/slskd-downloads    # where slskd puts finished downloads
+    depends_on:
+      - slskd
+
+  slskd:
+    image: slskd/slskd:latest
+    container_name: slskd
+    restart: unless-stopped
+    user: "${PUID:-1000}:${PGID:-1000}"
+    ports:
+      - "5030:5030"      # slskd's own web UI (optional)
+      - "50300:50300"    # Soulseek listen port; forwarding it on your router gets you more results
+    environment:
+      SLSKD_SLSK_USERNAME: ${SOULSEEK_USERNAME:?Set SOULSEEK_USERNAME in .env}
+      SLSKD_SLSK_PASSWORD: ${SOULSEEK_PASSWORD:?Set SOULSEEK_PASSWORD in .env}
+      SLSKD_SLSK_LISTEN_PORT: 50300
+      SLSKD_USERNAME: ${SLSKD_WEB_USERNAME:-slskd}
+      SLSKD_PASSWORD: ${SLSKD_WEB_PASSWORD:?Set SLSKD_WEB_PASSWORD in .env}
+      SLSKD_API_KEY: ${SLSKD_API_KEY}
+      SLSKD_SHARED_DIR: /music
+      SLSKD_REMOTE_CONFIGURATION: "false"
+    volumes:
+      - ./slskd:/app
+      - ${MUSIC_DIR:-./music}:/music:ro      # shared back to the network; Soulseek bans people who share nothing

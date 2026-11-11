@@ -1,0 +1,22 @@
+# Apple MusicKit signing key: never commit
+*.p8
+
+# Tokens and secrets (the real ones live in ~/.config/apple-music)
+music-user-token
+developer-token
+.env
+.env.*
+!.env.example
+
+# Run output
+state/
+__pycache__/
+.venv/
+*.pyc
+.pytest_cache/
+
+# Folders docker-compose.yml creates next to it
+/data/
+/music/
+/secrets/
+/slskd/

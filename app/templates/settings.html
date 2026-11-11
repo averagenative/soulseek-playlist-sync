@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">Playlist Sync</div>
+    <h1>Settings</h1>
+  </div>
+</section>
+{% if saved %}<p class="notice ok">Saved. Changes apply right away.</p>{% endif %}
+{% if error %}<p class="notice bad">{{ error }}</p>{% endif %}
+
+{% macro field(name, kind="text", step=None) %}
+  {% set f = fields[name] %}
+  <label class="field">
+    <span class="label">{{ f[1] }}{% if name in overridden %} <span class="tag" title="Saved here; the environment default is {{ base[name] }}">changed</span>{% endif %}</span>
+    <input type="{{ kind }}" name="{{ name }}" value="{{ cfg[name] if cfg[name] is not none else '' }}" {% if step %}step="{{ step }}"{% endif %}>
+    <span class="muted small">{{ f[2] }}</span>
+  </label>
+{% endmacro %}
+
+<form method="post" action="/settings" class="settings-form">
+  <fieldset>
+    <legend>Folders</legend>
+    <p class="muted small">Music root: <code>{{ cfg.music_root }}</code> (set by <code>MUSIC_ROOT</code>; it's a container mount, so it can't change here).
+      Changing these affects new playlists only. To move an existing playlist, change its folder on the playlist's Settings.</p>
+    {{ field("apple_dir") }}
+    {{ field("spotify_dir") }}
+  </fieldset>
+
+  <fieldset>
+    <legend>New playlists</legend>
+    <label class="check"><input type="checkbox" name="default_numbering" value="1" {% if cfg.default_numbering %}checked{% endif %}>
+      {{ fields.default_numbering[1] }} (001 - Artist - Title.mp3)</label>
+    <label class="field"><span class="label">{{ fields.default_library_mode[1] }}</span>
+      <select name="default_library_mode">
+        <option value="copy" {% if cfg.default_library_mode == 'copy' %}selected{% endif %}>Copy into the playlist folder (portable)</option>
+        <option value="reference" {% if cfg.default_library_mode == 'reference' %}selected{% endif %}>Point the .m3u at the library copy</option>
+      </select>
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Downloads</legend>
+    {{ field("min_bitrate", "number") }}
+    {{ field("length_tolerance", "number", "0.5") }}
+    {{ field("max_downloads", "number") }}
+    {{ field("search_delay", "number", "0.5") }}
+    {{ field("queue_timeout", "number") }}
+    <label class="check"><input type="checkbox" name="youtube_fallback" value="1" {% if cfg.youtube_fallback %}checked{% endif %}>
+      <span><b>{{ fields.youtube_fallback[1] }}</b><br><span class="muted small">{{ fields.youtube_fallback[2] }}
+      YouTube audio is lower quality than a good Soulseek copy, so it's only used when Soulseek has no match.</span></span></label>
+    <p class="muted small">slskd: <code>{{ cfg.slskd_url }}</code>, finished files land in <code>{{ cfg.slskd_downloads }}</code>
+      (set by <code>SLSKD_URL</code> and <code>SLSKD_DOWNLOADS</code>).</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Spotify</legend>
+    <p class="muted small">Create an app at <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a>
+      (Web API), add this redirect URI to it, and paste its Client ID here. No client secret is needed.</p>
+    <p><code class="copy">{{ spotify_redirect }}</code></p>
+    {{ field("spotify_client_id") }}
+    <p>
+      {% if spotify_connected %}
+        <span class="badge synced">Connected</span>
+        <button class="btn small" formaction="/spotify/disconnect" formmethod="post" formnovalidate>Disconnect</button>
+      {% elif spotify_configured %}
+        <a class="btn small primary" href="/spotify/connect">Connect Spotify</a>
+      {% else %}
+        <span class="muted small">Save a Client ID, then connect.</span>
+      {% endif %}
+    </p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Apple Music</legend>
+    {% if apple_mode == 'developer' %}
+      <p>Using your MusicKit key <code>{{ cfg.apple_key_id }}</code> (team <code>{{ cfg.apple_team_id }}</code>).</p>
+    {% else %}
+      <p>Using Apple's web player access, so no Apple Developer account is needed. Connect by pasting your
+        <code>media-user-token</code> cookie from music.apple.com.</p>
+    {% endif %}
+    <p>{% if apple_connected %}<span class="badge synced">Connected</span>{% endif %}
+      <a class="btn small" href="/apple/connect">{{ 'Reconnect' if apple_connected else 'Connect' }}</a></p>
+  </fieldset>
+
+  <div class="actions"><button class="btn primary">Save</button></div>
+</form>
+{% endblock %}

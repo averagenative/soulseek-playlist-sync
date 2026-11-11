@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Downloads · Playlist Sync{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">Live from slskd</div>
+    <h1>Downloads</h1>
+  </div>
+</section>
+<div id="live" data-url="/downloads/rows">
+{% include "_downloads.html" %}
+</div>
+<script src="/static/poll.js"></script>
+{% endblock %}

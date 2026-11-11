@@ -1,0 +1,10 @@
+.venv
+.git
+state
+tests
+__pycache__
+*.pyc
+*.p8
+applemusic.py
+.env
+.env.*

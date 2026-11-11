@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_macros.html" import source as source_label %}
+{% block title %}{{ SOURCES[source] }} playlists · Playlist Sync{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">{{ source_label(source) }}</div>
+    <h1>Add playlists</h1>
+  </div>
+</section>
+<p class="muted">Pick the playlists to keep local copies of. Each gets its own folder of MP3s and an .m3u.</p>
+<div class="table-wrap">
+<table>
+  <tbody>
+  {% for r in remote %}
+    <tr>
+      <td>
+        <div class="song">
+          {% if r.image %}<img class="thumb" src="{{ r.image }}" alt="" loading="lazy">{% else %}<div class="thumb blank">&#9835;</div>{% endif %}
+          <div>
+            <div class="title {{ '' if r.readable else 'muted' }}" title="{{ r.name }}">{{ r.name }}</div>
+            {% if r.note %}<div class="muted small" title="{{ r.note }}">{{ r.note }}</div>{% endif %}
+          </div>
+        </div>
+      </td>
+      <td class="right">
+        {% if r.remote_id in tracked %}
+          <a class="btn small" href="/playlists/{{ tracked[r.remote_id] }}">Open</a>
+        {% elif r.readable %}
+          <form method="post" action="/playlists" class="inline">
+            <input type="hidden" name="source" value="{{ source }}">
+            <input type="hidden" name="remote_id" value="{{ r.remote_id }}">
+            <input type="hidden" name="name" value="{{ r.name }}">
+            <button class="btn small primary">Add</button>
+          </form>
+        {% else %}
+          <span class="muted small">Can't read</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

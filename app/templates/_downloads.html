@@ -1,0 +1,39 @@
+{% from "_macros.html" import thumb %}
+<div data-active="{{ 1 if active else 0 }}" class="counts">
+  {% for state, n in counts.items() %}
+    <span class="badge {{ state }}">{{ DOWNLOAD_LABELS.get(state, state) }} {{ n }}</span>
+  {% else %}
+    <span class="muted">Nothing searching or downloading. Press Download all on a playlist to start.</span>
+  {% endfor %}
+</div>
+{% if rows %}
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Song</th><th class="hide-sm">Playlist</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>
+        <div class="song">
+          {{ thumb(r) }}
+          <div><div class="title" title="{{ r.title }}">{{ r.title }}</div><div class="muted small">{{ r.artist }}</div></div>
+        </div>
+      </td>
+      <td class="hide-sm small muted">{{ r.playlists }}</td>
+      <td>
+        <span class="badge {{ r.state }}">{{ DOWNLOAD_LABELS.get(r.state, r.state) }}</span>
+        {% if r.state == 'downloading' %}
+          <div class="meter"><span style="width: {{ r.percent or 0 }}%"></span></div>
+          <div class="muted small speed">{{ r.progress }}</div>
+        {% elif r.state == 'queued' %}
+          <div class="muted small">At {{ r.username }}{% if r.place_in_queue %}, number {{ r.place_in_queue }} in line{% endif %}</div>
+        {% elif r.detail %}
+          <div class="muted small detail" title="{{ r.detail }}">{{ r.detail }}</div>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}

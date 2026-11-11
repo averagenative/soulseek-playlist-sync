@@ -1,0 +1,4 @@
+# Unpinned on purpose: YouTube changes often and yt-dlp follows. Rebuild the image to update:
+#   docker compose build --no-cache playlist-sync
+yt-dlp[default]
+deno

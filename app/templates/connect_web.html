@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Connect Apple Music · Playlist Sync{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">No Apple Developer account needed</div>
+    <h1>Connect Apple Music</h1>
+  </div>
+</section>
+{% if error %}<p class="notice bad">{{ error }}</p>{% endif %}
+<div class="settings-form">
+  <fieldset>
+    <legend>Copy your sign-in from music.apple.com</legend>
+    <p class="muted small">This app reads your library the way Apple's own web player does. It needs the
+      <code>media-user-token</code> cookie your browser gets when you sign in. It stays on this server and is only
+      used to read your playlists. It lasts a few months; when it runs out, paste a new one.</p>
+    <ol class="steps">
+      <li>On a computer, open <a href="https://music.apple.com" target="_blank" rel="noopener">music.apple.com</a> and sign in.</li>
+      <li>Open the developer tools: <b>F12</b>, or <b>Cmd+Option+I</b> on a Mac.</li>
+      <li>Chrome or Edge: <b>Application</b> tab &rarr; <b>Cookies</b> &rarr; <code>https://music.apple.com</code>.
+        Firefox: <b>Storage</b> tab &rarr; <b>Cookies</b>. Safari: <b>Storage</b> tab &rarr; <b>Cookies</b>.</li>
+      <li>Find <code>media-user-token</code>, double-click its value, copy it, and paste it below.</li>
+    </ol>
+    <form method="post" action="/apple/paste" class="stack" style="box-shadow:none;border:0;padding:0;margin:0">
+      <label class="field"><span class="label">media-user-token</span>
+        <textarea name="token" rows="3" required spellcheck="false" autocomplete="off"
+                  placeholder="Paste the cookie value (a long string starting with A or 0)"></textarea>
+      </label>
+      <div class="actions"><button class="btn primary">Connect</button></div>
+    </form>
+  </fieldset>
+  <p class="muted small">Have an Apple Developer account? Set <code>APPLE_TEAM_ID</code>, <code>APPLE_KEY_ID</code> and
+    <code>APPLE_KEY_FILE</code> instead, and this page becomes a one-click sign-in.</p>
+</div>
+{% endblock %}

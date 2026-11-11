@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Connect Apple Music · Playlist Sync</title>
+{% include "_head.html" %}
+<script src="https://js-cdn.music.apple.com/musickit/v3/musickit.js" data-web-components async></script>
+</head>
+<body>
+<header class="top"><a class="brand" href="/"><img src="/static/favicon.svg" alt="">Playlist Sync</a></header>
+<main class="narrow">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/" class="back">&larr; All playlists</a></nav>
+  <h1>Connect Apple Music</h1>
+  <p>Sign in with the Apple ID whose playlists you want to sync. Only read access to your library is used.</p>
+  <p id="status" class="muted">Loading MusicKit...</p>
+  <button id="go" class="btn primary" disabled>Authorize</button>
+</main>
+<script>
+const DEV = {{ developer_token|tojson }}, NONCE = {{ nonce|tojson }};
+const status = t => { document.getElementById("status").textContent = t; };
+async function init() {
+  try {
+    await MusicKit.configure({developerToken: DEV, app: {name: "Playlist Sync", build: "1.0"}});
+  } catch (e) { status("MusicKit setup failed: " + e); return; }
+  status("Ready. Click Authorize and sign in.");
+  const b = document.getElementById("go");
+  b.disabled = false;
+  b.onclick = async () => {
+    try {
+      const token = await MusicKit.getInstance().authorize();
+      const r = await fetch("/apple/token", {method: "POST", headers: {"Content-Type": "application/json"},
+                                            body: JSON.stringify({nonce: NONCE, token})});
+      if (r.ok) { status("Connected. Taking you back..."); setTimeout(() => location.href = "/", 800); }
+      else status("Saving failed: HTTP " + r.status);
+    } catch (e) { status("Authorization failed: " + e); }
+  };
+}
+if (window.MusicKit) init(); else document.addEventListener("musickitloaded", init);
+</script>
+</body>
+</html>
