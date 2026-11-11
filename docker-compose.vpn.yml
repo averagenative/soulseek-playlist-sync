@@ -1,0 +1,53 @@
+# Route slskd's Soulseek traffic through a VPN with gluetun. Use it on top of docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.vpn.yml up -d
+#
+# The defaults are for Private Internet Access (PIA) over OpenVPN, in a region that supports
+# port forwarding. For another provider, set VPN_SERVICE_PROVIDER and see
+# https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers for the settings it needs.
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "5030:5030"      # slskd's web UI, now reached through gluetun
+    environment:
+      TZ: ${TZ:-UTC}
+      VPN_SERVICE_PROVIDER: ${VPN_SERVICE_PROVIDER:-private internet access}
+      VPN_TYPE: openvpn
+      OPENVPN_USER: ${VPN_USER:?Set VPN_USER in .env}
+      OPENVPN_PASSWORD: ${VPN_PASSWORD:?Set VPN_PASSWORD in .env}
+      SERVER_REGIONS: ${VPN_REGIONS:-CA Montreal}
+      # PIA: UDP 1198 with the "normal" preset. The default "strong" preset (UDP 8080) can stall
+      # large transfers.
+      PRIVATE_INTERNET_ACCESS_OPENVPN_ENCRYPTION_PRESET: ${PIA_ENCRYPTION_PRESET:-normal}
+      OPENVPN_ENDPOINT_PORT: ${VPN_OPENVPN_PORT:-1198}
+      # Soulseek works much better when other peers can connect to you: ask the VPN for a
+      # forwarded port and give it to slskd (slskd reloads its config file when it changes).
+      VPN_PORT_FORWARDING: "on"
+      VPN_PORT_FORWARDING_UP_COMMAND: "/bin/sh -c 'printf \"soulseek:\\n  listen_port: {{PORTS}}\\n\" > /slskd/slskd.yml'"
+      # Let the playlist app reach slskd's API through gluetun's firewall.
+      FIREWALL_INPUT_PORTS: "5030"
+      # VPN providers move servers. Keep gluetun's server list current so it doesn't keep
+      # trying servers that are gone.
+      UPDATER_PERIOD: 24h
+    volumes:
+      - ./gluetun:/gluetun
+      - ./slskd:/slskd
+
+  slskd:
+    network_mode: "service:gluetun"
+    ports: !reset []
+    depends_on:
+      gluetun:
+        condition: service_healthy
+
+  playlist-sync:
+    environment:
+      SLSKD_URL: http://gluetun:5030

@@ -194,7 +194,27 @@ The app moves each finished download out of slskd's folder right away, so other 
 
 ## Run Soulseek through a VPN
 
-The included setup connects to Soulseek from your own internet connection. To route it through a VPN, run slskd inside a [gluetun](https://github.com/qdm12/gluetun) container (`network_mode: "service:gluetun"`) and set `SLSKD_URL` to `http://gluetun:5030`. If your VPN provider rotates its servers, set gluetun's `UPDATER_PERIOD` (for example, `24h`) and mount a folder at `/gluetun` so gluetun keeps its server list current.
+`docker-compose.vpn.yml` routes slskd's Soulseek traffic through a VPN with [gluetun](https://github.com/qdm12/gluetun). The playlist app and its downloads from Apple, Spotify, and YouTube don't use the VPN.
+
+1. In `.env`, set `VPN_USER` and `VPN_PASSWORD`. The defaults are for Private Internet Access (PIA) in a region with port forwarding (`CA Montreal`).
+1. Start both files together:
+
+   ```sh
+   mkdir -p gluetun
+   docker compose -f docker-compose.yml -f docker-compose.vpn.yml up -d
+   ```
+
+1. Run `docker compose logs gluetun` and look for `Initialization Sequence Completed`. The **Soulseek** dot in the app turns green after slskd logs in.
+
+Use the same two `-f` options for every later `docker compose` command, such as `logs`, `pull`, and `down`.
+
+The VPN setup does the following:
+
+- It asks PIA for a forwarded port and gives it to slskd, so other Soulseek users can connect to you. This gets you more search results and faster downloads.
+- It refreshes gluetun's list of VPN servers every day. Providers move servers, and a stale list means the VPN never connects.
+- It uses UDP port 1198 with PIA's "normal" encryption preset, because the default preset can stall large transfers.
+
+For another provider, set `VPN_SERVICE_PROVIDER` and the settings that provider needs from the [gluetun provider guides](https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers), and remove the two PIA lines in `docker-compose.vpn.yml`.
 
 ## Update
 
