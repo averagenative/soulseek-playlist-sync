@@ -91,6 +91,28 @@ CREATE TABLE IF NOT EXISTS library (
     norm_title TEXT
 );
 CREATE INDEX IF NOT EXISTS library_isrc ON library(isrc);
+
+-- A copy of a playlist on the other service.
+CREATE TABLE IF NOT EXISTS mirrors (
+    playlist_id TEXT NOT NULL,
+    target      TEXT NOT NULL,        -- spotify | apple
+    remote_id   TEXT,
+    matched     INTEGER,
+    total       INTEGER,
+    missing     TEXT,                 -- JSON list of "Artist - Title" not found on the target
+    updated_at  REAL,
+    error       TEXT,
+    PRIMARY KEY (playlist_id, target)
+);
+
+-- A song's match on another service ('' = looked, not there).
+CREATE TABLE IF NOT EXISTS song_links (
+    song_key   TEXT NOT NULL,
+    target     TEXT NOT NULL,
+    remote_id  TEXT NOT NULL,
+    checked_at REAL,
+    PRIMARY KEY (song_key, target)
+);
 CREATE INDEX IF NOT EXISTS library_norm_title ON library(norm_title);
 """
 
@@ -104,8 +126,10 @@ def init(path: Path) -> None:
     with connect() as c:
         c.executescript(SCHEMA)
         c.execute("PRAGMA journal_mode=WAL")
-        if "thumb_url" not in {r["name"] for r in c.execute("PRAGMA table_info(songs)")}:
-            c.execute("ALTER TABLE songs ADD COLUMN thumb_url TEXT")
+        song_cols = {r["name"] for r in c.execute("PRAGMA table_info(songs)")}
+        for col in ("thumb_url", "preview_url"):
+            if col not in song_cols:
+                c.execute(f"ALTER TABLE songs ADD COLUMN {col} TEXT")
         have = {r["name"] for r in c.execute("PRAGMA table_info(downloads)")}
         for col, kind in (("speed", "REAL"), ("bytes_done", "INTEGER"), ("place_in_queue", "INTEGER"),
                           ("source", "TEXT NOT NULL DEFAULT 'soulseek'")):

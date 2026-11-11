@@ -6,7 +6,7 @@
 <script src="https://js-cdn.music.apple.com/musickit/v3/musickit.js" data-web-components async></script>
 </head>
 <body>
-<header class="top"><a class="brand" href="/"><img src="/static/favicon.svg" alt="">Playlist Sync</a></header>
+<header class="top"><a class="brand" href="/"><img src="/static/favicon.svg" alt="">Playlist Sync</a>{% include "_theme.html" %}</header>
 <main class="narrow">
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/" class="back">&larr; All playlists</a></nav>
   <h1>Connect Apple Music</h1>
@@ -36,5 +36,6 @@ async function init() {
 }
 if (window.MusicKit) init(); else document.addEventListener("musickitloaded", init);
 </script>
+<script src="/static/theme.js" defer></script>
 </body>
 </html>

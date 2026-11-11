@@ -21,6 +21,10 @@
     <form method="post" action="/playlists/{{ p.id }}/preview" class="inline">
       <button class="btn" {% if p.busy %}disabled{% endif %} title="Fetch the playlist again and match it against your library. Changes no files.">Check for changes</button>
     </form>
+    {% if counts.get('synced') %}
+    <a class="btn" href="/playlists/{{ p.id }}/zip" download
+       title="Download the playlist's MP3s and its .m3u to this computer as one ZIP file">Download ZIP</a>
+    {% endif %}
     <details class="settings">
       <summary class="btn">Settings</summary>
       <form method="post" action="/playlists/{{ p.id }}/settings" class="stack">
@@ -48,6 +52,31 @@
 </section>
 
 {% if form_error %}<p class="notice bad">{{ form_error }}</p>{% endif %}
+<section class="copy-panel">
+  <div>
+    <div class="eyebrow">Copy to {{ target_label }}</div>
+    {% if mirror and mirror.url %}
+      <div><a href="{{ mirror.url }}" target="_blank" rel="noopener">Open the {{ target_label }} copy</a>
+        <span class="muted small">&middot; {{ mirror.matched }} of {{ mirror.total }} songs found on {{ target_label }} &middot; updated {{ mirror.updated_at|ago }}</span></div>
+      {% if mirror.missing %}
+        <details class="missing"><summary class="muted small">{{ mirror.missing|length }} not on {{ target_label }}</summary>
+          <ul class="small muted">{% for m in mirror.missing %}<li>{{ m }}</li>{% endfor %}</ul></details>
+      {% endif %}
+    {% else %}
+      <div class="muted small">Make a {{ target_label }} playlist with the same songs{{ ', in the same order' if target == 'spotify' else '' }}.</div>
+    {% endif %}
+    {% if mirror and mirror.error %}<div class="small" style="color: var(--bad)">{{ mirror.error }}</div>{% endif %}
+    {% if target == 'apple' and mirror %}<div class="muted small">Apple only lets apps add songs, so songs removed here stay in the Apple copy.</div>{% endif %}
+  </div>
+  <div>
+    {% if can_copy %}
+      <form method="post" action="/playlists/{{ p.id }}/mirror" class="inline">
+        <button class="btn" {% if p.busy %}disabled{% endif %}>{{ 'Update' if mirror and mirror.url else 'Copy to' }} {{ target_label }}</button></form>
+    {% else %}
+      <a class="btn small" href="{{ '/spotify/connect' if target == 'spotify' else '/apple/connect' }}">{{ copy_blocker }}</a>
+    {% endif %}
+  </div>
+</section>
 {% if p.error %}<p class="notice bad">{{ p.error }}</p>{% endif %}
 {% if slskd.reachable == false %}
   <div class="notice bad">slskd is off, so missing songs can't be searched or downloaded.
@@ -57,8 +86,17 @@
   <p class="notice warn">slskd is running but isn't connected to the Soulseek network, so searches are paused. The app retries every minute.</p>
 {% endif %}
 
-<div id="live" data-url="/playlists/{{ p.id }}/rows">
+<div data-live="/playlists/{{ p.id }}/rows">
 {% include "_songs.html" %}
 </div>
-<script src="/static/poll.js"></script>
+<div class="player" id="player" hidden>
+  <img class="thumb" id="pl-art" alt="">
+  <div class="pl-meta">
+    <div class="title" id="pl-title"></div>
+    <div class="muted small"><span id="pl-artist"></span> <span class="tag" id="pl-kind"></span></div>
+  </div>
+  <audio id="pl-audio" controls preload="none"></audio>
+  <button class="btn tiny" id="pl-close" aria-label="Close the player">Close</button>
+</div>
+<script src="/static/player.js" defer></script>
 {% endblock %}

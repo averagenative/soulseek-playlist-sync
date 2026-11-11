@@ -14,7 +14,8 @@ SOURCES = {"apple": "Apple Music", "spotify": "Spotify"}
 
 log = logging.getLogger(__name__)
 SONG_FIELDS = ("isrc", "title", "artist", "album", "album_artist", "track_number", "disc_number",
-               "duration_ms", "content_rating", "release_date", "genre", "artwork_url", "thumb_url", "url")
+               "duration_ms", "content_rating", "release_date", "genre", "artwork_url", "thumb_url", "url",
+               "preview_url")
 RETRY_AFTER = 6 * 3600   # a Sync retries songs not found on Soulseek after this long
 _locks: dict[str, threading.Lock] = {}
 
@@ -89,7 +90,7 @@ def add_playlist(cfg: Config, source: str, remote_id: str, name: str) -> str:
 def remove_playlist(pid: str) -> None:
     """Stop tracking a playlist. Files on disk are left alone."""
     with db.connect() as c:
-        for t in ("entries", "items"):
+        for t in ("entries", "items", "mirrors"):
             c.execute(f"DELETE FROM {t} WHERE playlist_id = ?", (pid,))
         c.execute("DELETE FROM playlists WHERE id = ?", (pid,))
 
@@ -450,6 +451,49 @@ def _cand_detail(d: dict) -> str | None:
     c = cands[min(d["attempt"], len(cands) - 1)]
     br = f"{c['bitrate']} kbps" if c.get("bitrate") else "unknown bitrate"
     return f"{br} from {c['username']} ({len(cands)} option{'s' if len(cands) != 1 else ''})"
+
+
+def song_path(cfg: Config, pid: str, key: str) -> Path | None:
+    """The local file for a song in a playlist, if it has one."""
+    p = playlist(pid)
+    if not p:
+        return None
+    with db.connect() as c:
+        it = c.execute("SELECT * FROM items WHERE playlist_id = ? AND song_key = ?", (pid, key)).fetchone()
+    if not it:
+        return None
+    if it["origin"] == "reference" and it["library_path"]:
+        path = Path(it["library_path"])
+    elif it["file"]:
+        path = folder_of(cfg, p) / it["file"]
+    else:
+        return None
+    return path if path.is_file() else None
+
+
+def export_files(cfg: Config, pid: str) -> tuple[str, list[tuple[str, Path]], str]:
+    """(folder name, [(name in the ZIP, file on disk)], .m3u text) for a self-contained ZIP."""
+    p = playlist(pid)
+    folder = folder_of(cfg, p)
+    entries, items, songs, _ = _load(pid)
+    width = max(3, len(str(len(entries))))
+    names: dict[str, str] = {}
+    files: list[tuple[str, Path]] = []
+    lines = ["#EXTM3U"]
+    for e in entries:
+        key = e["song_key"]
+        it, s = items[key], songs[key]
+        if it["skip"] or not _placed(folder, it):
+            continue
+        if key not in names:
+            if it["origin"] == "reference":
+                names[key] = song_file_name(s, e["position"] if p["numbering"] else None, width)
+                files.append((names[key], Path(it["library_path"])))
+            else:
+                names[key] = it["file"]
+                files.append((names[key], folder / it["file"]))
+        lines += [f"#EXTINF:{round((s['duration_ms'] or 0) / 1000)},{s['artist']} - {s['title']}", names[key]]
+    return safe_name(p["name"]), files, "\n".join(lines) + "\n"
 
 
 def covers(pid: str, n: int = 4) -> list[str]:

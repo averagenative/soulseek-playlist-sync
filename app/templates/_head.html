@@ -1,4 +1,12 @@
 <meta charset="utf-8">
+<script>/* apply the saved theme before the page draws */
+try {
+  var q = new URLSearchParams(location.search).get("theme");
+  if (q) localStorage.setItem("theme", q);
+  var t = q || localStorage.getItem("theme");
+  if (t && t !== "auto") document.documentElement.dataset.theme = t;
+} catch (e) {}
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">

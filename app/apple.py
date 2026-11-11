@@ -151,15 +151,82 @@ class Client:
     def __exit__(self, *exc):
         self.close()
 
+    def _send(self, method: str, path: str, **kw) -> httpx.Response:
+        """One request, with a retry after a rotated web token and backing off when rate-limited."""
+        delay = 2.0
+        for attempt in range(6):
+            r = self.http.request(method, path, **kw)
+            if r.status_code == 401 and self.mode == "web" and attempt == 0:
+                self._auth(refresh=True)       # the web player's token may have been rotated
+                continue
+            if r.status_code == 429:
+                wait = r.headers.get("Retry-After")
+                time.sleep(min(float(wait) if wait and wait.isdigit() else delay, 60))
+                delay *= 2
+                continue
+            return r
+        raise AppleError("Apple Music kept rate-limiting; try again in a few minutes")
+
     def get(self, path: str, params: dict | None = None) -> dict:
-        r = self.http.get(path, params=params)
-        if r.status_code == 401 and self.mode == "web":
-            self._auth(refresh=True)       # the web player's token may have been rotated
-            r = self.http.get(path, params=params)
+        r = self._send("GET", path, params=params)
         if r.status_code in (401, 403):
             raise NotConnected(f"Apple returned {r.status_code}; reconnect Apple Music")
         r.raise_for_status()
         return r.json()
+
+    def post(self, path: str, body: dict) -> dict:
+        r = self._send("POST", path, json=body)
+        if r.status_code in (401, 403):
+            raise NotConnected(f"Apple returned {r.status_code}; reconnect Apple Music")
+        if r.status_code >= 400:
+            raise AppleError(f"Apple refused the change: HTTP {r.status_code} {r.text[:200]}")
+        return r.json() if r.content else {}
+
+    # ---------------------------------------------------------- writing
+
+    def find_song(self, song: dict) -> str | None:
+        """Apple catalog ID for a song from another service: by ISRC, else by title, artist and length."""
+        from .match import artist_matches, core_title, norm_title, search_artist
+        want_len = (song.get("duration_ms") or 0) / 1000
+        sf = self.storefront()
+        found = []
+        if song.get("isrc"):
+            found = self.get(f"/v1/catalog/{sf}/songs", {"filter[isrc]": song["isrc"]}).get("data", [])
+        if not found:
+            term = f"{search_artist(song.get('artist'))} {core_title(song.get('title'))}"
+            res = self.get(f"/v1/catalog/{sf}/search", {"term": term, "types": "songs", "limit": 15})
+            found = [s for s in res.get("results", {}).get("songs", {}).get("data", [])
+                     if norm_title(s["attributes"].get("name")) == norm_title(song.get("title"))
+                     and artist_matches(song.get("artist"), s["attributes"].get("artistName"))]
+        if want_len:
+            found = [s for s in found if abs((s["attributes"].get("durationInMillis") or 0) / 1000 - want_len) <= 5]
+        if not found:
+            return None
+        want_explicit = song.get("content_rating") == "explicit"
+        found.sort(key=lambda s: ((s["attributes"].get("contentRating") == "explicit") != want_explicit,
+                                  abs((s["attributes"].get("durationInMillis") or 0) / 1000 - want_len)))
+        return found[0]["id"]
+
+    def playlist_exists(self, playlist_id: str) -> bool:
+        r = self.http.get(f"/v1/me/library/playlists/{playlist_id}")
+        return r.status_code == 200
+
+    def create_playlist(self, name: str, description: str, song_ids: list[str]) -> str:
+        body = {"attributes": {"name": name, "description": description},
+                "relationships": {"tracks": {"data": [{"id": i, "type": "songs"} for i in song_ids[:100]]}}}
+        pid = self.post("/v1/me/library/playlists", body)["data"][0]["id"]
+        self.add_tracks(pid, song_ids[100:])
+        return pid
+
+    def add_tracks(self, playlist_id: str, song_ids: list[str]) -> None:
+        for i in range(0, len(song_ids), 100):
+            self.post(f"/v1/me/library/playlists/{playlist_id}/tracks",
+                      {"data": [{"id": s, "type": "songs"} for s in song_ids[i:i + 100]]})
+
+    def playlist_song_ids(self, playlist_id: str) -> set[str]:
+        """Catalog IDs already in a library playlist."""
+        tracks = self.get_all(f"/v1/me/library/playlists/{playlist_id}/tracks", {"limit": 100})
+        return {t.get("attributes", {}).get("playParams", {}).get("catalogId") for t in tracks} - {None}
 
     def get_all(self, path: str, params: dict | None = None) -> list:
         items = []
@@ -230,5 +297,6 @@ class Client:
                 "artwork_url": art.replace("{w}", str(ARTWORK_SIZE)).replace("{h}", str(ARTWORK_SIZE)) if art else None,
                 "thumb_url": art.replace("{w}", str(THUMB_SIZE)).replace("{h}", str(THUMB_SIZE)) if art else None,
                 "url": c.get("url"),
+                "preview_url": ((c.get("previews") or [{}])[0] or {}).get("url"),
             })
         return out

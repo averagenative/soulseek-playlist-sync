@@ -99,3 +99,69 @@ def test_youtube_relaxed_pass_needs_the_artist():
     picked = rank(entries, "PJ Masks Halloween", "PJ Masks", 105_000, tol=6)
     assert [c["id"] for c in picked] == ["y"]
     assert picked[0]["relaxed"] and picked[0]["length_diff"] == 19
+
+
+def _seed_playlist(cfg, pid="apple:p.test", n=3, files=True):
+    folder = cfg.music_root / "AppleMusic" / "Mix"
+    folder.mkdir(parents=True, exist_ok=True)
+    with db.connect() as c:
+        c.execute("INSERT INTO playlists (id, source, remote_id, name, folder) VALUES (?, 'apple', 'p.test', 'Mix', 'AppleMusic/Mix')", (pid,))
+        for i in range(1, n + 1):
+            key = f"apple:{i}"
+            c.execute("INSERT INTO songs (key, isrc, title, artist, duration_ms) VALUES (?, ?, ?, ?, ?)",
+                      (key, f"ISRC{i}", f"Song {i}", "Artist", 180000))
+            c.execute("INSERT INTO entries (playlist_id, position, song_key) VALUES (?, ?, ?)", (pid, i, key))
+            name = f"{i:03d} - Artist - Song {i}.mp3"
+            c.execute("INSERT INTO items (playlist_id, song_key, file, origin, owned) VALUES (?, ?, ?, 'download', 1)",
+                      (pid, key, name if files else None))
+            if files:
+                (folder / name).write_bytes(b"ID3" + bytes([i]) * 1000)
+        # the first song appears twice in the playlist
+        c.execute("INSERT INTO entries (playlist_id, position, song_key) VALUES (?, ?, 'apple:1')", (pid, n + 1))
+    return pid
+
+
+def test_zip_export_is_a_valid_self_contained_zip(cfg):
+    import io, zipfile
+    from app import export
+    pid = _seed_playlist(cfg)
+    folder, files, m3u = sync.export_files(cfg, pid)
+    data = b"".join(export.stream_zip(folder, files, m3u))
+    z = zipfile.ZipFile(io.BytesIO(data))
+    assert z.testzip() is None
+    names = z.namelist()
+    assert names[0] == "Mix/Mix.m3u" and len(names) == 4          # one file per song, not per position
+    lines = z.read("Mix/Mix.m3u").decode().splitlines()
+    assert lines[0] == "#EXTM3U" and lines.count("001 - Artist - Song 1.mp3") == 2
+    assert z.read("Mix/002 - Artist - Song 2.mp3") == b"ID3" + bytes([2]) * 1000
+    assert sync.song_path(cfg, pid, "apple:2").name == "002 - Artist - Song 2.mp3"
+    assert sync.song_path(cfg, pid, "apple:missing") is None
+
+
+def test_mirror_to_spotify_keeps_order_and_reports_missing(cfg, monkeypatch):
+    from app import mirror
+    pid = _seed_playlist(cfg, files=False)
+
+    class Fake:
+        made, tracks, searches = [], {}, []
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+        def find_track(self, song):
+            Fake.searches.append(song["key"])
+            return None if song["isrc"] == "ISRC2" else f"spotify:track:{song['isrc']}"
+        def playlist_exists(self, pid): return pid in Fake.tracks
+        def create_playlist(self, name, desc):
+            Fake.made.append(name); Fake.tracks["sp1"] = []; return "sp1"
+        def set_tracks(self, pid, uris): Fake.tracks[pid] = list(uris)
+
+    monkeypatch.setattr(mirror, "_client", lambda cfg, target: Fake())
+    mirror.run(cfg, pid)
+    assert Fake.made == ["Mix"]
+    assert Fake.tracks["sp1"] == ["spotify:track:ISRC1", "spotify:track:ISRC3", "spotify:track:ISRC1"]
+    m = mirror.get(pid, "spotify")
+    assert (m["matched"], m["total"], m["missing"]) == (2, 3, ["Artist - Song 2"])
+    assert m["url"] == "https://open.spotify.com/playlist/sp1"
+    # A second run updates the same playlist and doesn't search again for songs it already matched.
+    Fake.searches.clear()
+    mirror.run(cfg, pid)
+    assert Fake.made == ["Mix"] and Fake.searches == []

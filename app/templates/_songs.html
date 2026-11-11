@@ -26,7 +26,12 @@
       <td class="num">{{ r.positions[0] if r.positions else '' }}{% if r.positions|length > 1 %}<div class="muted small" title="Also at {{ r.positions[1:]|join(', ') }}">&times;{{ r.positions|length }}</div>{% endif %}</td>
       <td>
         <div class="song">
-          {{ thumb(s) }}
+          {% if r.status == 'synced' %}
+          <button class="play-thumb" data-play data-kind="file" data-key="{{ r.key }}"
+                  data-src="/playlists/{{ p.id }}/songs/{{ r.key }}/audio" data-title="{{ s.title }}"
+                  data-artist="{{ s.artist }}" data-art="{{ s.thumb_url or s.artwork_url or '' }}"
+                  aria-label="Play {{ s.title }}" title="Play your copy">{{ thumb(s) }}<span class="play-icon" aria-hidden="true"></span></button>
+          {% else %}{{ thumb(s) }}{% endif %}
           <div>
             <div class="title" title="{{ s.title }}">{{ s.title }}{% if s.content_rating == 'explicit' %} <span class="tag" title="Explicit">E</span>{% endif %}{% if r.download and r.download.source == 'youtube' and r.status == 'synced' %} <span class="tag yt" title="Downloaded from YouTube">YouTube</span>{% endif %}</div>
             <div class="muted small" title="{{ s.artist }}">{{ s.artist }}</div>
@@ -44,6 +49,11 @@
         {% if r.detail %}<div class="muted small detail speed" title="{{ r.detail }}">{{ r.detail }}</div>{% endif %}
       </td>
       <td class="right hide-sm">
+        {% if s.preview_url %}
+          <button class="btn tiny" data-play data-kind="original" data-key="{{ r.key }}" data-src="{{ s.preview_url }}"
+                  data-title="{{ s.title }}" data-artist="{{ s.artist }}" data-art="{{ s.thumb_url or s.artwork_url or '' }}"
+                  title="Play Apple's 30-second clip of the original, to compare">Original</button>
+        {% endif %}
         {% if r.status == 'skipped' %}
           <form method="post" action="/playlists/{{ p.id }}/songs/{{ r.key }}/unskip" class="inline"><button class="btn tiny">Unskip</button></form>
         {% elif r.status not in ('removed', 'synced') %}

@@ -12,9 +12,12 @@ Keep local MP3 copies of your Apple Music and Spotify playlists. Pick a playlist
 - **Reuses what you have.** Songs already in your library are matched by ISRC or by artist, title, and length, and hardlinked into the playlist folder instead of downloaded again.
 - **Careful downloads.** MP3 only, 192 kbps or better (320 preferred), and the length has to match the streaming service's within 3 seconds, so you don't get live versions or the wrong edit.
 - **Clean tags.** Every file is retagged from the streaming service: title, artist, album, album artist, track number, year, ISRC, and cover art (ID3v2.3, which every player reads).
-- **YouTube fallback (optional).** For songs Soulseek doesn't have, it prefers official "Artist - Topic" audio uploads and skips covers, live takes, and sped-up edits.
-- **Download all** button per playlist, live progress from slskd, and a Downloads page for everything in flight.
-- Settings page, light and dark themes, works on phones, and installs to a phone's home screen.
+- **YouTube fallback (optional).** For songs Soulseek doesn't have, it searches YouTube Music first for official "Artist - Topic" audio uploads, and skips covers, live takes, and sped-up edits.
+- **Copy playlists between services.** Make a Spotify copy of an Apple Music playlist, or an Apple Music copy of a Spotify playlist, matched by ISRC.
+- **Check songs by ear.** Play any downloaded song in the browser, and compare it with Apple's 30-second clip of the original.
+- **Download a playlist as a ZIP** to the computer you're browsing from, with its `.m3u`.
+- **Download all** button per playlist, live progress from slskd, a Downloads page for everything in flight, and pages that refresh themselves.
+- Settings page, six color themes, works on phones, and installs to a phone's home screen.
 
 <img src="docs/screenshots/phone-dark.png" width="260" alt="A playlist on a phone in dark mode, with the status under each song">
 
@@ -118,6 +121,8 @@ ssh -L 8080:127.0.0.1:8080 you@your-server
 
 Then open `http://127.0.0.1:8080` on your own computer and click **Connect Spotify**. After that, use the app from any address.
 
+Copying playlists to Spotify needs permission to create playlists. If a playlist page shows **Reconnect Spotify to allow creating playlists**, click it and approve again.
+
 Spotify only lets apps read playlists you own or collaborate on, plus Liked Songs. Playlists you only follow are listed but can't be added. If Spotify returns a 403 error, add your account under **User Management** in your Spotify app's dashboard page.
 
 ## How syncing works
@@ -148,6 +153,20 @@ music/
 ```
 
 Media servers that scan your music folder (Navidrome, Jellyfin, Plex) pick up the folders and the `.m3u` playlists. A song that's in your library and in a playlist folder shows up twice in them.
+
+## Copy a playlist to the other service
+
+On a playlist's page, the **Copy to Spotify** or **Copy to Apple Music** panel makes a playlist with the same songs on the other service. Songs are matched by ISRC, or by title, artist, and length when there's no ISRC match. The panel lists songs the other service doesn't have.
+
+Click **Update** to bring the copy up to date later. The two directions behave differently:
+
+- **To Spotify:** the copy is made identical every time, with the same songs in the same order.
+- **To Apple Music:** new songs are added. Apple's API doesn't let apps remove or reorder songs, so songs removed from the original stay in the Apple Music copy until you remove them in the Music app.
+
+## Check songs and take them with you
+
+- Click a downloaded song's cover to play it in the browser. The player moves on to the next downloaded song. For Apple Music playlists, **Original** plays Apple's 30-second clip of the song so you can compare it with your copy.
+- **Download ZIP** sends the playlist's MP3s and its `.m3u` to the computer you're browsing from, as one ZIP file you can copy to a device.
 
 ## Settings
 

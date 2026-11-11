@@ -85,22 +85,51 @@ def _rank(entries, title, artist, duration_ms, tol, need_artist):
 
 
 def search(song: dict, length_tolerance: float) -> list[dict]:
-    """Up to two YouTube searches; the second adds "song" because kids' and TV titles otherwise
-    bring back whole episodes."""
+    """YouTube Music's song search first (it finds official "Artist - Topic" uploads that general
+    search buries under unrelated videos), then up to two general YouTube searches."""
     import yt_dlp
     artist, title = primary_artist(song.get("artist")), core_title(song.get("title"))
-    opts = {"quiet": True, "no_warnings": True, "extract_flat": "in_playlist", "skip_download": True}
-    for q in (f"{artist} {title}", f"{artist} {title} song"):
-        try:
-            with yt_dlp.YoutubeDL(opts) as ydl:
-                info = ydl.extract_info(f"ytsearch12:{q}", download=False)
-        except Exception as e:      # yt-dlp raises many kinds
-            raise YouTubeError(f"YouTube search failed: {e}") from e
-        found = rank(info.get("entries") or [], song.get("title"), song.get("artist"), song.get("duration_ms"),
-                     tolerance(length_tolerance))
+    tol = tolerance(length_tolerance)
+    try:
+        found = rank(_music_search(f"{artist} {title}", title), song.get("title"), song.get("artist"),
+                     song.get("duration_ms"), tol)
         if found:
             return found
+        opts = {"quiet": True, "no_warnings": True, "extract_flat": "in_playlist", "skip_download": True}
+        for q in (f"{artist} {title}", f"{artist} {title} song"):
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info = ydl.extract_info(f"ytsearch12:{q}", download=False)
+            found = rank(info.get("entries") or [], song.get("title"), song.get("artist"),
+                         song.get("duration_ms"), tol)
+            if found:
+                return found
+    except Exception as e:      # yt-dlp raises many kinds
+        raise YouTubeError(f"YouTube search failed: {e}") from e
     return []
+
+
+def _music_search(query: str, title: str, look_at: int = 4) -> list[dict]:
+    """music.youtube.com song results, with length and channel looked up for the likely ones
+    (the search page itself doesn't include them)."""
+    import yt_dlp
+    from urllib.parse import quote_plus
+    need = set(norm(title).split())
+    flat_opts = {"quiet": True, "no_warnings": True, "extract_flat": "in_playlist", "playlistend": 10}
+    with yt_dlp.YoutubeDL(flat_opts) as ydl:
+        info = ydl.extract_info(f"https://music.youtube.com/search?q={quote_plus(query)}#songs", download=False)
+    likely = [e for e in (info.get("entries") or []) if e and e.get("id")
+              and need <= set(norm(e.get("title")).split())][:look_at]
+    out = []
+    with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True, "skip_download": True}) as ydl:
+        for e in likely:
+            try:
+                v = ydl.extract_info(f"https://www.youtube.com/watch?v={e['id']}", download=False)
+            except Exception:
+                continue
+            out.append({"id": v.get("id") or e["id"], "title": v.get("title") or e.get("title"),
+                        "channel": v.get("channel") or v.get("uploader") or "", "duration": v.get("duration"),
+                        "url": f"https://www.youtube.com/watch?v={e['id']}"})
+    return out
 
 
 def download(candidate: dict, work_dir: Path, progress=None) -> Path:

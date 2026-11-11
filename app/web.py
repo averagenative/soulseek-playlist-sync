@@ -9,13 +9,14 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
+from urllib.parse import quote
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 import httpx
 
-from . import apple, control, db, library, settings, spotify, sync
+from . import apple, control, db, export, library, mirror, settings, spotify, sync
 from .config import Config, load
 from .slskd import Slskd
 from .worker import Worker
@@ -145,11 +146,25 @@ def apple_touch_icon():
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    playlists = []
+    return templates.TemplateResponse(request, "index.html", {**_common(), "playlists": _home_playlists()})
+
+
+@app.get("/partials/nav", response_class=HTMLResponse)
+def partial_nav(request: Request):
+    return templates.TemplateResponse(request, "_nav.html", _common())
+
+
+@app.get("/partials/home", response_class=HTMLResponse)
+def partial_home(request: Request):
+    return templates.TemplateResponse(request, "_home.html", {**_common(), "playlists": _home_playlists()})
+
+
+def _home_playlists() -> list[dict]:
+    out = []
     for p in sync.tracked():
         _, counts = sync.summary(C(), p["id"])
-        playlists.append({**p, "counts": counts, "covers": sync.covers(p["id"])})
-    return templates.TemplateResponse(request, "index.html", {**_common(), "playlists": playlists})
+        out.append({**p, "counts": counts, "covers": sync.covers(p["id"])})
+    return out
 
 
 @app.get("/settings", response_class=HTMLResponse)
@@ -296,9 +311,17 @@ def _playlist_ctx(pid: str) -> dict:
     cfg = C()
     p = sync.playlist(pid)
     rows, counts = sync.summary(cfg, pid)
-    active = bool(p["busy"]) or any(r["status"] in ("waiting", "searching", "queued", "downloading") for r in rows)
+    active = bool(p["busy"]) or any(r["status"] in ("waiting", "searching", "found", "queued", "downloading")
+                                    for r in rows)
+    target = mirror.target_for(p["source"])
+    if target == "spotify":
+        can_copy, why = spotify.connected(cfg) and spotify.can_write(cfg), (
+            "Connect Spotify first" if not spotify.connected(cfg) else "Reconnect Spotify to allow creating playlists")
+    else:
+        can_copy, why = bool(apple.user_token(cfg)), "Connect Apple Music first"
     return {"p": p, "rows": rows, "counts": counts, "active": active, "music_root": str(cfg.music_root),
-            "covers": sync.covers(pid),
+            "covers": sync.covers(pid), "target": target, "target_label": mirror.TARGETS[target],
+            "mirror": mirror.get(pid, target), "can_copy": can_copy, "copy_blocker": None if can_copy else why,
             "folder": str(sync.folder_of(cfg, p)), "m3u": sync.m3u_path(cfg, p).name}
 
 
@@ -330,7 +353,8 @@ def playlist_action(pid: str, action: str, back: str | None = None):
     if not sync.playlist(pid):
         raise HTTPException(404)
     jobs = {"preview": ("Checking", sync.preview), "sync": ("Downloading all", sync.sync),
-            "prune": ("Pruning", sync.prune)}
+            "prune": ("Pruning", sync.prune),
+            "mirror": (f"Copying to {mirror.TARGETS[mirror.target_for(sync.playlist(pid)['source'])]}", mirror.run)}
     if action in jobs:
         label, fn = jobs[action]
         sync.run_job(pid, label, fn, C(), pid)
@@ -340,6 +364,26 @@ def playlist_action(pid: str, action: str, back: str | None = None):
     else:
         raise HTTPException(404)
     return _back("/" if back == "/" else f"/playlists/{pid}")
+
+
+@app.get("/playlists/{pid}/songs/{key}/audio")
+def song_audio(pid: str, key: str):
+    path = sync.song_path(C(), pid, key)
+    if not path:
+        raise HTTPException(404, "No local file for this song")
+    return FileResponse(path, media_type="audio/mpeg")
+
+
+@app.get("/playlists/{pid}/zip")
+def playlist_zip(pid: str):
+    if not sync.playlist(pid):
+        raise HTTPException(404)
+    folder, files, m3u = sync.export_files(C(), pid)
+    if not files:
+        raise HTTPException(404, "Nothing downloaded in this playlist yet")
+    name = quote(f"{folder}.zip")
+    return StreamingResponse(export.stream_zip(folder, files, m3u), media_type="application/zip",
+                             headers={"Content-Disposition": f"attachment; filename*=UTF-8''{name}"})
 
 
 @app.post("/playlists/{pid}/songs/{key}/{action}")

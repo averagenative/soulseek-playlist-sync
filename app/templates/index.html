@@ -15,53 +15,9 @@
   </div>
 </section>
 
-{% if not apple_configured %}
-  <p class="notice bad">Apple Music isn't set up. Set <code>APPLE_TEAM_ID</code>, <code>APPLE_KEY_ID</code> and <code>APPLE_KEY_FILE</code>.</p>
-{% elif not apple_connected %}
-  <p class="notice warn">Connect Apple Music to see your playlists. <a class="btn small" href="/apple/connect">Connect</a></p>
-{% endif %}
-{% if slskd.reachable == false %}
-  <div class="notice bad">slskd isn't reachable, so nothing can be searched or downloaded.
-    {% if can_turn_on %}<form method="post" action="/slskd/on" class="inline"><button class="btn small">Turn on</button></form>{% endif %}
-  </div>
-{% elif slskd.connected == false %}
-  <p class="notice warn">slskd is running but isn't connected to the Soulseek network, so searches are paused. The app retries every minute.</p>
-{% endif %}
-
-{% if playlists %}
-<div class="grid">
-  {% for p in playlists %}
-    {% set total = namespace(n=0) %}{% for s, n in p.counts.items() if s != 'removed' %}{% set total.n = total.n + n %}{% endfor %}
-    {% set done = p.counts.get('synced', 0) %}
-    {% set live = p.busy or p.counts.get('downloading') or p.counts.get('queued') or p.counts.get('searching') %}
-    <article class="card">
-      <a href="/playlists/{{ p.id }}" tabindex="-1">{{ cover(p.covers) }}</a>
-      <div>
-        <a class="name" href="/playlists/{{ p.id }}" title="{{ p.name }}">{{ p.name }}</a>
-        <div class="meta small">{{ source(p.source) }}<span class="muted">{{ done }} / {{ total.n }} synced</span></div>
-      </div>
-      {{ segbar(p.counts, live) }}
-      <div class="foot">
-        <span class="muted small">{% if p.busy %}<span class="badge busy">{{ p.busy }}</span>{% else %}Synced {{ p.synced_at|ago }}{% endif %}</span>
-        {% if done < total.n %}
-          <form method="post" action="/playlists/{{ p.id }}/sync?back=/" class="inline">
-            <button class="btn small primary" {% if p.busy %}disabled{% endif %}>Download all</button></form>
-        {% else %}<span class="badge synced">Complete</span>{% endif %}
-      </div>
-    </article>
-  {% endfor %}
+<div data-live="/partials/home">
+{% include "_home.html" %}
 </div>
-{% else %}
-  <div class="empty">
-    <img src="/static/icons/icon-192.png" alt="">
-    <h2>No playlists yet</h2>
-    <p class="muted">Pick a playlist and it gets its own folder of MP3s and an .m3u, ready for an MP3 player or Navidrome.</p>
-    <div class="actions">
-      {% if apple_connected %}<a class="btn primary" href="/apple/playlists">Add from Apple Music</a>{% endif %}
-      {% if spotify_connected %}<a class="btn primary" href="/spotify/playlists">Add from Spotify</a>{% endif %}
-    </div>
-  </div>
-{% endif %}
 
 <section class="foot-row">
   <span class="muted small">Library index: {{ '{:,}'.format(library.files) }} files &middot; {{ library.scan or 'not scanned yet' }}</span>

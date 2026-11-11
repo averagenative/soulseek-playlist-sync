@@ -18,7 +18,9 @@ from .config import Config
 
 API = "https://api.spotify.com/v1"
 ACCOUNTS = "https://accounts.spotify.com"
-SCOPES = "playlist-read-private playlist-read-collaborative user-library-read"
+SCOPES = ("playlist-read-private playlist-read-collaborative user-library-read "
+          "playlist-modify-private playlist-modify-public")
+WRITE_SCOPE = "playlist-modify-private"
 LIKED = "liked"
 
 
@@ -30,12 +32,22 @@ class NotConnected(SpotifyError):
     pass
 
 
+class NotFound(SpotifyError):
+    pass
+
+
 def configured(cfg: Config) -> bool:
     return bool(cfg.spotify_client_id)
 
 
 def connected(cfg: Config) -> bool:
     return cfg.spotify_token_file.exists()
+
+
+def can_write(cfg: Config) -> bool:
+    """Signed in with permission to create playlists (sign-ins before that was added lack it)."""
+    tok = _load_token(cfg) or {}
+    return WRITE_SCOPE in (tok.get("scope") or "").split()
 
 
 def disconnect(cfg: Config) -> None:
@@ -124,8 +136,11 @@ class Client:
         return self.tok["access_token"]
 
     def get(self, url: str, params: dict | None = None) -> dict:
+        return self.request("GET", url, params=params)
+
+    def request(self, method: str, url: str, **kw) -> dict:
         for attempt in range(5):
-            r = self.http.get(url, params=params, headers={"Authorization": f"Bearer {self._access()}"})
+            r = self.http.request(method, url, headers={"Authorization": f"Bearer {self._access()}"}, **kw)
             if r.status_code == 401 and attempt == 0:
                 self.tok["expires_at"] = 0       # force a refresh, then retry once
                 continue
@@ -136,9 +151,54 @@ class Client:
                 raise NotConnected("Spotify rejected the sign-in; reconnect")
             if r.status_code == 403:
                 raise SpotifyError(f"Spotify refused access (403): {r.text[:200]}")
+            if r.status_code == 404:
+                raise NotFound(f"Spotify: not found ({url})")
             r.raise_for_status()
-            return r.json()
+            return r.json() if r.content else {}
         raise SpotifyError("Spotify kept rate-limiting; try again later")
+
+    # ---------------------------------------------------------- writing
+
+    def find_track(self, song: dict) -> str | None:
+        """Spotify track URI for a song from another service: by ISRC, else by title, artist and length."""
+        from .match import artist_matches, core_title, norm, norm_title, search_artist
+        want_len = (song.get("duration_ms") or 0) / 1000
+        candidates = []
+        if song.get("isrc"):
+            candidates = self.get("/search", {"q": f"isrc:{song['isrc']}", "type": "track", "limit": 10}
+                                  ).get("tracks", {}).get("items", [])
+        if not candidates:
+            q = f'track:"{core_title(song.get("title"))}" artist:"{search_artist(song.get("artist"))}"'
+            found = self.get("/search", {"q": q, "type": "track", "limit": 10}).get("tracks", {}).get("items", [])
+            candidates = [t for t in found if t and norm_title(t.get("name")) == norm_title(song.get("title"))
+                          and artist_matches(song.get("artist"), ", ".join(a["name"] for a in t.get("artists", [])))]
+        candidates = [t for t in candidates if t and t.get("uri")]
+        if want_len:
+            candidates = [t for t in candidates if abs((t.get("duration_ms") or 0) / 1000 - want_len) <= 5]
+        if not candidates:
+            return None
+        # Same explicitness as the source when there's a choice.
+        want_explicit = song.get("content_rating") == "explicit"
+        candidates.sort(key=lambda t: (bool(t.get("explicit")) != want_explicit,
+                                       abs((t.get("duration_ms") or 0) / 1000 - want_len)))
+        return candidates[0]["uri"]
+
+    def playlist_exists(self, playlist_id: str) -> bool:
+        try:
+            self.get(f"/playlists/{playlist_id}", {"fields": "id"})
+            return True
+        except NotFound:
+            return False
+
+    def create_playlist(self, name: str, description: str) -> str:
+        p = self.request("POST", "/me/playlists", json={"name": name, "description": description, "public": False})
+        return p["id"]
+
+    def set_tracks(self, playlist_id: str, uris: list[str]) -> None:
+        """Make the playlist exactly this list, in this order."""
+        self.request("PUT", f"/playlists/{playlist_id}/items", json={"uris": uris[:100]})
+        for i in range(100, len(uris), 100):
+            self.request("POST", f"/playlists/{playlist_id}/items", json={"uris": uris[i:i + 100]})
 
     def get_all(self, url: str, params: dict | None = None) -> list:
         items = []

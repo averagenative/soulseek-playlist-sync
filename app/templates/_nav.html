@@ -1,0 +1,21 @@
+    {% if apple_connected %}
+      <span class="pill ok" title="Apple Music is connected"><span class="dot"></span>Apple Music</span>
+    {% else %}
+      <a class="pill warn" href="/apple/connect"><span class="dot"></span>Connect Apple Music</a>
+    {% endif %}
+    {% if spotify_connected %}
+      <span class="pill ok" title="Spotify is connected"><span class="dot"></span>Spotify</span>
+    {% elif spotify_configured %}
+      <a class="pill warn" href="/spotify/connect"><span class="dot"></span>Connect Spotify</a>
+    {% endif %}
+    {% if slskd.reachable and slskd.connected == false %}
+      <span class="pill warn" title="{{ slskd.error or '' }}"><span class="dot"></span>Soulseek offline</span>
+    {% elif slskd.reachable %}
+      <span class="pill ok" title="slskd {{ slskd.version or '' }}"><span class="dot"></span>Soulseek</span>
+    {% elif slskd.reachable == false %}
+      <span class="pill bad" title="{{ slskd.error or '' }}"><span class="dot"></span>slskd off</span>
+    {% else %}
+      <span class="pill"><span class="dot"></span>Soulseek</span>
+    {% endif %}
+    <a class="pill {{ 'active' if downloads_active else '' }}" href="/downloads"><span class="dot"></span>Downloads{% if downloads_active %} &middot; {{ downloads_active }}{% endif %}</a>
+    <a class="pill" href="/settings" title="Settings">Settings</a>
