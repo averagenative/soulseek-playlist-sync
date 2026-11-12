@@ -8,11 +8,11 @@ import threading
 import time
 from pathlib import Path
 
-from . import apple, db, library, spotify
+from . import apple, db, library, spotify, youtube
 from .config import Config
 from .folders import place, rename_all, safe_name, song_file_name, write_m3u
 
-SOURCES = {"apple": "Apple Music", "spotify": "Spotify", "local": "My music"}
+SOURCES = {"apple": "Apple Music", "spotify": "Spotify", "youtube": "YouTube", "local": "My music"}
 
 log = logging.getLogger(__name__)
 SONG_FIELDS = ("isrc", "title", "artist", "album", "album_artist", "track_number", "disc_number",
@@ -38,6 +38,8 @@ def m3u_path(cfg: Config, p) -> Path:
 
 
 def _client(cfg: Config, source: str):
+    if source == "youtube":
+        return youtube.Playlists(cfg)
     return apple.Client(cfg) if source == "apple" else spotify.Client(cfg)
 
 
@@ -78,7 +80,7 @@ def run_job(pid: str, label: str, fn, *args) -> bool:
 # ------------------------------------------------------------------ add / fetch
 
 def add_playlist(cfg: Config, source: str, remote_id: str, name: str) -> str:
-    if source not in ("apple", "spotify"):
+    if source not in ("apple", "spotify", "youtube"):
         raise ValueError(f"unknown source {source!r}")
     pid = f"{source}:{remote_id}"
     with db.connect() as c:
@@ -619,5 +621,6 @@ def tracked() -> list[dict]:
 def wait_idle(pid: str, timeout: float = 600) -> None:
     """For scripts and tests: block until the playlist's job finishes."""
     end = time.time() + timeout
-    while time.time() < end and playlist(pid)["busy"]:
-        time.sleep(0.5)
+    lock = _locks.get(pid)          # taken before the job's thread starts, so there's no gap to miss
+    while time.time() < end and ((lock and lock.locked()) or playlist(pid)["busy"]):
+        time.sleep(0.1)

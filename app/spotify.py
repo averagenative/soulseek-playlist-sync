@@ -19,8 +19,9 @@ from .config import Config
 API = "https://api.spotify.com/v1"
 ACCOUNTS = "https://accounts.spotify.com"
 SCOPES = ("playlist-read-private playlist-read-collaborative user-library-read "
-          "playlist-modify-private playlist-modify-public")
+          "playlist-modify-private playlist-modify-public user-library-modify")
 WRITE_SCOPE = "playlist-modify-private"
+LIKES_SCOPE = "user-library-modify"    # saving songs to Liked Songs, for favorites sync
 LIKED = "liked"
 
 
@@ -44,10 +45,29 @@ def connected(cfg: Config) -> bool:
     return cfg.spotify_token_file.exists()
 
 
+def _scopes(cfg: Config) -> set[str]:
+    return set(((_load_token(cfg) or {}).get("scope") or "").split())
+
+
 def can_write(cfg: Config) -> bool:
     """Signed in with permission to create playlists (sign-ins before that was added lack it)."""
-    tok = _load_token(cfg) or {}
-    return WRITE_SCOPE in (tok.get("scope") or "").split()
+    return WRITE_SCOPE in _scopes(cfg)
+
+
+def can_save_likes(cfg: Config) -> bool:
+    """Signed in with permission to add songs to Liked Songs (sign-ins before favorites sync lack it)."""
+    return LIKES_SCOPE in _scopes(cfg)
+
+
+def missing_permissions(cfg: Config) -> list[str]:
+    """What a sign-in from an older version can't do, in words, for a Reconnect prompt."""
+    have = _scopes(cfg)
+    out = []
+    if WRITE_SCOPE not in have:
+        out.append("create playlists")
+    if LIKES_SCOPE not in have:
+        out.append("add songs to Liked Songs")
+    return out
 
 
 def disconnect(cfg: Config) -> None:
@@ -208,6 +228,20 @@ class Client:
         self.request("PUT", f"/playlists/{playlist_id}/items", json={"uris": uris[:100]})
         for i in range(100, len(uris), 100):
             self.request("POST", f"/playlists/{playlist_id}/items", json={"uris": uris[i:i + 100]})
+
+    def save_likes(self, uris: list[str], progress=None) -> None:
+        """Add tracks to Liked Songs (PUT /me/library, 40 at a time)."""
+        for i in range(0, len(uris), 40):
+            batch = uris[i:i + 40]
+            try:
+                self.request("PUT", "/me/library", params={"uris": ",".join(batch)})
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code != 400:
+                    raise
+                # Spotify's guide shows the URIs in a JSON body, its reference as a query parameter.
+                self.request("PUT", "/me/library", json={"uris": batch})
+            if progress:
+                progress(min(i + 40, len(uris)))
 
     def get_all(self, url: str, params: dict | None = None) -> list:
         items = []

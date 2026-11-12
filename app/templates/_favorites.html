@@ -1,0 +1,46 @@
+{% set f = fav %}
+{% macro song_list(key, title) %}
+  {% if f[key] %}
+  <details><summary>{{ title }} ({{ f[key ~ "_count"]|n }})</summary>
+    <ul class="song-list">{% for x in f[key] %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% if f[key ~ "_count"] > f[key]|length %}<p class="muted small">And {{ (f[key ~ "_count"] - f[key]|length)|n }} more.</p>{% endif %}
+  </details>
+  {% endif %}
+{% endmacro %}
+<fieldset data-active="{{ 1 if fav_running else 0 }}">
+  <legend>Status</legend>
+  {% if fav_running %}
+    <p><span class="badge busy">{{ 'Syncing' if f.mode == 'sync' else 'Checking' }}</span> {{ f.step or '' }}</p>
+    <p class="muted small">A first run searches the other service for each song, roughly 100 songs a minute. Later runs only look at new favorites.</p>
+  {% elif f.state == 'error' %}
+    <p class="notice bad">The last {{ 'sync' if f.mode == 'sync' else 'check' }} stopped: {{ f.error }}</p>
+  {% elif f.state == 'stopped' %}
+    <p class="notice warn">The last run stopped when the app restarted. Run it again: songs it already matched aren't searched again.</p>
+  {% elif not f.state %}
+    <p>Click <b>Check</b> to see what a sync would add. Nothing changes on either service until you click <b>Sync now</b>.</p>
+  {% endif %}
+
+  {% if f.state == 'done' and not fav_running %}
+    <p class="muted small">Last {{ 'sync' if f.mode == 'sync' else 'check' }} {{ f.finished|ago }}:
+      {{ f.liked|n }} Spotify Liked Songs, {{ f.favorites|n }} Apple Music Favorite Songs, {{ f.in_sync|n }} already on both.</p>
+    {% if f.mode == 'sync' %}
+      <p class="notice ok">Added {{ f.added_apple|n }} {{ 'song' if f.added_apple == 1 else 'songs' }} to Apple Music Favorite Songs
+        and {{ f.added_spotify|n }} to Spotify Liked Songs.</p>
+    {% else %}
+      <p>A sync would add <b>{{ f.to_apple_count|n }}</b> {{ 'song' if f.to_apple_count == 1 else 'songs' }} to Apple Music Favorite Songs
+        and <b>{{ f.to_spotify_count|n }}</b> to Spotify Liked Songs.</p>
+      {{ song_list("to_apple", "Songs to add to Apple Music") }}
+      {{ song_list("to_spotify", "Songs to add to Spotify") }}
+    {% endif %}
+    {{ song_list("missing_apple", "Not found on Apple Music") }}
+    {{ song_list("missing_spotify", "Not found on Spotify") }}
+  {% endif %}
+
+  <div class="actions">
+    <form method="post" action="/favorites/check" class="inline">
+      <button class="btn" {% if fav_running or not fav_ready %}disabled{% endif %}>Check</button></form>
+    <form method="post" action="/favorites/sync" class="inline">
+      <button class="btn primary" {% if fav_running or not fav_ready or needs_likes_scope %}disabled{% endif %}>Sync now</button></form>
+  </div>
+  {% if not fav_ready and not fav_running %}<p class="muted small">Connect both services, choose what to sync, and click Save.</p>{% endif %}
+</fieldset>

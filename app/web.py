@@ -17,7 +17,7 @@ from fastapi.templating import Jinja2Templates
 
 import httpx
 
-from . import apple, art, control, db, export, library, mirror, settings, spotify, sync
+from . import apple, art, control, db, export, favorites, library, mirror, settings, spotify, sync, youtube
 from .config import Config, load
 from .slskd import Slskd
 from .worker import Worker
@@ -124,6 +124,7 @@ def _common() -> dict:
         "apple_connected": bool(apple.user_token(cfg)),
         "spotify_configured": spotify.configured(cfg),
         "spotify_connected": spotify.connected(cfg),
+        "youtube_ready": youtube.can_read_playlists(),
         "slskd": worker.status if worker else {},
         "can_turn_on": control.available(cfg),
         "library": library.stats(),
@@ -280,7 +281,7 @@ def spotify_setup(request: Request, error: str | None = None):
         **_common(), "client_id": cfg.spotify_client_id or "", "redirect": redirect,
         "redirect_ok": _spotify_accepts(redirect),
         "loopback": str(request.url.replace(hostname="127.0.0.1", query="")),
-        "can_write": spotify.connected(cfg) and spotify.can_write(cfg), "error": error,
+        "missing_permissions": spotify.missing_permissions(cfg) if spotify.connected(cfg) else [], "error": error,
     })
 
 
@@ -335,6 +336,71 @@ def _pick(request: Request, source: str, remote: list[dict]):
     tracked = {p["remote_id"]: p["id"] for p in sync.tracked() if p["source"] == source}
     return templates.TemplateResponse(request, "pick_playlists.html",
                                       {**_common(), "source": source, "remote": remote, "tracked": tracked})
+
+
+# ------------------------------------------------------------------ YouTube
+
+@app.get("/youtube/add", response_class=HTMLResponse)
+def youtube_add_page(request: Request, error: str | None = None, link: str = ""):
+    return templates.TemplateResponse(request, "youtube_add.html", {
+        **_common(), "error": error, "link": link, "youtube_fallback_label": settings.EDITABLE["youtube_fallback"][1]})
+
+
+@app.post("/youtube/add")
+def youtube_add(link: str = Form("")):
+    try:
+        remote_id = youtube.playlist_id(link)
+        existing = next((p["id"] for p in sync.tracked() if p["source"] == "youtube" and p["remote_id"] == remote_id), None)
+        if existing:
+            return _back(f"/playlists/{existing}")
+        with youtube.Playlists(C()) as yt:
+            name = yt.playlist_name(remote_id)
+    except youtube.YouTubeError as e:
+        return _back(f"/youtube/add?error={quote(str(e))}&link={quote(link.strip())}")
+    pid = sync.add_playlist(C(), "youtube", remote_id, name)
+    sync.run_job(pid, "Checking", sync.preview, C(), pid)
+    return _back(f"/playlists/{pid}")
+
+
+# ------------------------------------------------------------------ favorites
+
+def _favorites_ctx() -> dict:
+    cfg = C()
+    o = favorites.options()
+    sp_ok, am_ok = spotify.connected(cfg), bool(apple.user_token(cfg))
+    return {
+        "opts": o, "fav": favorites.status(), "fav_running": favorites.running(), "pairs": favorites.pair_count(),
+        "needs_likes_scope": sp_ok and o["to_spotify"] and not spotify.can_save_likes(cfg),
+        "fav_ready": sp_ok and am_ok and (o["to_apple"] or o["to_spotify"]),
+    }
+
+
+@app.get("/favorites", response_class=HTMLResponse)
+def favorites_page(request: Request, saved: int = 0, error: str | None = None):
+    return templates.TemplateResponse(request, "favorites.html",
+                                      {**_common(), **_favorites_ctx(), "saved": saved, "error": error})
+
+
+@app.get("/partials/favorites", response_class=HTMLResponse)
+def favorites_partial(request: Request):
+    return templates.TemplateResponse(request, "_favorites.html", {**_common(), **_favorites_ctx()})
+
+
+@app.post("/favorites/options")
+def favorites_options(to_apple: str = Form(""), to_spotify: str = Form(""), auto: str = Form("")):
+    favorites.save_options(bool(to_apple), bool(to_spotify), bool(auto))
+    return _back("/favorites?saved=1")
+
+
+@app.post("/favorites/{action}")
+def favorites_action(action: str):
+    if action not in ("check", "sync"):
+        raise HTTPException(404)
+    try:
+        favorites.start(C(), apply=action == "sync")
+    except favorites.Busy as e:
+        return _back(f"/favorites?error={quote(str(e))}")
+    return _back("/favorites")
 
 
 # ------------------------------------------------------------------ playlists

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Sync favorites · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><span class="here">Sync favorites</span>{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">Spotify Liked Songs and Apple Music Favorite Songs</div>
+    <h1>Sync favorites</h1>
+  </div>
+</section>
+{% if saved %}<p class="notice ok">Saved.</p>{% endif %}
+{% if error %}<p class="notice bad">{{ error }}</p>{% endif %}
+{% if not spotify_connected or not apple_connected %}
+<p class="notice warn">Connect both services first.
+  {% if not spotify_connected %}<a class="btn small" href="/spotify/setup">Connect Spotify</a>{% endif %}
+  {% if not apple_connected %}<a class="btn small" href="/apple/connect">Connect Apple Music</a>{% endif %}</p>
+{% endif %}
+{% if needs_likes_scope %}
+<p class="notice warn">Reconnect Spotify so the app can add songs to your Liked Songs.
+  <a class="btn small" href="/spotify/connect">Reconnect Spotify</a></p>
+{% endif %}
+
+<div class="settings-form">
+  <form method="post" action="/favorites/options" class="settings-form" style="gap:0">
+    <fieldset>
+      <legend>What to sync</legend>
+      <label class="check"><input type="checkbox" name="to_apple" value="1" {% if opts.to_apple %}checked{% endif %}>
+        Add songs I like on Spotify to my Apple Music Favorite Songs</label>
+      <label class="check"><input type="checkbox" name="to_spotify" value="1" {% if opts.to_spotify %}checked{% endif %}>
+        Add songs I favorite on Apple Music to my Spotify Liked Songs</label>
+      <label class="check"><input type="checkbox" name="auto" value="1" {% if opts.auto %}checked{% endif %}>
+        Keep them in sync: run every 6 hours</label>
+      <p class="muted small">The app only adds songs. It carries each song across once and remembers the pair, so a song
+        you later remove on either service stays removed. Songs the other service doesn't have are listed and looked for
+        again after a week. A song you favorite on Apple Music this way is also added to your library, as the Music app does.</p>
+      <div class="actions"><button class="btn">Save</button></div>
+    </fieldset>
+  </form>
+
+  <div data-live="/partials/favorites">
+{% include "_favorites.html" %}
+  </div>
+</div>
+{% endblock %}

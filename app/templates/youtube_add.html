@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Add a YouTube playlist · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><span class="here">Add a YouTube playlist</span>{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">YouTube and YouTube Music</div>
+    <h1>Add a YouTube playlist</h1>
+  </div>
+</section>
+{% if error %}<p class="notice bad">{{ error }}</p>{% endif %}
+
+<div class="settings-form">
+  <form method="post" action="/youtube/add" class="settings-form" style="gap:0">
+    <fieldset>
+      <legend>Playlist link</legend>
+      <label class="field"><span class="label">Link</span>
+        <input type="text" name="link" value="{{ link }}" required autocomplete="off" spellcheck="false"
+               placeholder="https://music.youtube.com/playlist?list=...">
+      </label>
+      <p class="muted small">On YouTube or YouTube Music, open the playlist, click <b>Share</b>, and copy the link.
+        The playlist has to be Public or Unlisted. The app doesn't sign in to YouTube, so it can't read private playlists,
+        Liked videos, or Liked Music.</p>
+      <div class="actions"><button class="btn primary">Add playlist</button></div>
+    </fieldset>
+  </form>
+
+  <fieldset>
+    <legend>How YouTube playlists work</legend>
+    <ul class="steps">
+      <li>Each video's title is split into artist and song: "Artist - Song (Official Video)" becomes "Song" by "Artist".
+        For YouTube Music's "Artist - Topic" uploads, the artist comes from the channel.</li>
+      <li>Songs are looked for in your music folder first, then on Soulseek, as for the other services.</li>
+      <li>With <b>{{ youtube_fallback_label }}</b> on in Settings, a song Soulseek doesn't have is downloaded from the
+        playlist's own video.</li>
+      <li>Music videos often have an intro or an ending, so for those the app doesn't require a Soulseek file's length to match.</li>
+      <li>From the playlist's page, you can also copy it to Spotify or Apple Music.</li>
+    </ul>
+  </fieldset>
+</div>
+{% endblock %}

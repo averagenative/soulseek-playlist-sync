@@ -18,10 +18,11 @@
 {% if error %}<p class="notice bad">{{ error }}</p>{% endif %}
 
 {% if spotify_connected %}
-  {% if can_write %}
-  <p class="notice ok">Spotify is connected. You can add Spotify playlists, and copy any playlist to Spotify.</p>
+  {% if not missing_permissions %}
+  <p class="notice ok">Spotify is connected. You can add Spotify playlists, copy any playlist to Spotify, and sync favorites.</p>
   {% else %}
-  <p class="notice warn">Spotify is connected, but without permission to create playlists, so copies to Spotify can't be made.
+  <p class="notice warn">Spotify is connected from an earlier version of this app, without permission to
+    {{ missing_permissions|join(" or ") }}. Reconnect and approve again to allow it.
     <a class="btn small" href="/spotify/connect">Reconnect</a></p>
   {% endif %}
 {% endif %}

@@ -53,10 +53,11 @@
       {% else %}<a class="btn" href="/apple/connect">Connect Apple Music</a>{% endif %}
       {% if spotify_connected %}<a class="btn primary" href="/spotify/playlists">Add from Spotify</a>
       {% else %}<a class="btn" href="/spotify/setup">Connect Spotify</a>{% endif %}
+      {% if youtube_ready %}<a class="btn primary" href="/youtube/add">Add from YouTube</a>{% endif %}
       {% if library.files %}<a class="btn" href="/library">Make one from my music</a>{% endif %}
     </div>
     {% if not apple_connected and not spotify_connected %}
-    <p class="muted small">Connect Apple Music, Spotify, or both. Each button walks you through it.</p>
+    <p class="muted small">Connect Apple Music, Spotify, or both: each button walks you through it. YouTube playlists need no sign-in.</p>
     {% endif %}
   </div>
 {% endif %}

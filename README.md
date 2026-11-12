@@ -6,7 +6,7 @@ Keep local MP3 copies of your Apple Music and Spotify playlists. Pick a playlist
 
 ## Features
 
-- **Apple Music and Spotify playlists**, including Apple collaborative playlists, Apple Favorite Songs, your whole Apple Music library, and Spotify Liked Songs.
+- **Apple Music, Spotify, and YouTube playlists**, including Apple collaborative playlists, Apple Favorite Songs, your whole Apple Music library, Spotify Liked Songs, and any public or unlisted YouTube or YouTube Music playlist.
 - **One folder per playlist**, with numbered files (`001 - Artist - Title.mp3`) and a relative-path `.m3u`, so the folder works when you copy it to a phone, an SD card, or an MP3 player. File names are safe for FAT32 and exFAT.
 - **Per-song sync status**: synced, in your library, downloading (with speed and time left), not found, removed from the playlist, and so on.
 - **Reuses what you have.** Songs already in your library are matched by ISRC or by artist, title, and length, and hardlinked into the playlist folder instead of downloaded again.
@@ -14,6 +14,7 @@ Keep local MP3 copies of your Apple Music and Spotify playlists. Pick a playlist
 - **Clean tags.** Every file is retagged from the streaming service: title, artist, album, album artist, track number, year, ISRC, and cover art (ID3v2.3, which every player reads).
 - **YouTube fallback (optional).** For songs Soulseek doesn't have, it searches YouTube Music first for official "Artist - Topic" audio uploads, and skips covers, live takes, and sped-up edits.
 - **Copy playlists between services.** Make a Spotify copy of an Apple Music playlist, or an Apple Music copy of a Spotify playlist, matched by ISRC.
+- **Sync favorites.** Add the songs you like on Spotify to Apple Music Favorite Songs, the songs you favorite on Apple Music to Spotify Liked Songs, or both, on a schedule.
 - **Browse your own music** on the **My music** page: search, filter by folder, play songs, and see album art from your files.
 - **Make playlists from your music**, by hand or as "every song in these folders" playlists that keep up as your library changes, and copy them to Spotify, Apple Music, or both. Put your whole collection on your phone's music app and shuffle it.
 - **Check songs by ear.** Play any downloaded song in the browser, and compare it with Apple's 30-second clip of the original.
@@ -136,6 +137,22 @@ Copying playlists to Spotify needs permission to create playlists. If a playlist
 
 Spotify only lets apps read playlists you own or collaborate on, plus Liked Songs. Playlists you only follow are listed but can't be added. If Spotify returns a 403 error, add your account under **User Management** in your Spotify app's dashboard page.
 
+## Add YouTube playlists
+
+YouTube and YouTube Music playlists need no sign-in and no setup. The playlist has to be Public or Unlisted.
+
+1. On YouTube or YouTube Music, open the playlist, click **Share**, and copy the link.
+1. In the app, click **+ YouTube**, paste the link, and click **Add playlist**.
+
+How YouTube playlists differ from the other services:
+
+- **Artist and title come from the video's title.** "Artist - Song (Official Video)" becomes "Song" by "Artist". For YouTube Music's "Artist - Topic" uploads, the artist comes from the channel. A video whose title doesn't name the artist gets the channel's name as the artist.
+- **Music videos don't set the song's length.** A music video often has an intro or an ending, so for those, a Soulseek file's length doesn't have to match. Lyric videos, audio uploads, and "Topic" uploads keep their length.
+- **The YouTube fallback uses the playlist's own video.** With **Try YouTube when Soulseek doesn't have a song** on, a song Soulseek doesn't have is downloaded from the video in the playlist, instead of a search.
+- **Cover art** is the middle of the video's thumbnail, which for "Topic" uploads is the album cover.
+- **Private playlists, Liked videos, Liked Music, and Mixes can't be added**, because reading them needs a YouTube sign-in. Save the songs to a Public or Unlisted playlist and add that.
+- You can copy a YouTube playlist to Spotify or Apple Music from its page.
+
 ## How syncing works
 
 When you click **Download all**, the app does the following for each song in the playlist:
@@ -173,6 +190,27 @@ Click **Update** to bring the copy up to date later. The two directions behave d
 
 - **To Spotify:** the copy is made identical every time, with the same songs in the same order.
 - **To Apple Music:** new songs are added. Apple's API doesn't let apps remove or reorder songs, so songs removed from the original stay in the Apple Music copy until you remove them in the Music app.
+
+## Sync favorites between Spotify and Apple Music
+
+The **Sync favorites** page keeps Spotify Liked Songs and Apple Music Favorite Songs in step. It needs both services connected.
+
+1. On the home page, click **Sync favorites**.
+1. Choose one or both directions:
+   - **Add songs I like on Spotify to my Apple Music Favorite Songs.**
+   - **Add songs I favorite on Apple Music to my Spotify Liked Songs.**
+1. To keep them in sync, also select **Keep them in sync: run every 6 hours**. Click **Save**.
+1. Click **Check**. The page lists the songs a sync would add to each service, and the songs it can't find there. Nothing changes on either service.
+1. Click **Sync now**.
+
+How it behaves:
+
+- **It only adds.** It carries each song across once and remembers the pair, so a song you later remove on either service stays removed. It never removes a favorite.
+- **Songs are matched** by ISRC, or by title, artist, and length. A song that's already a favorite on both services, even as a different version, is left alone.
+- **On Apple Music**, a favorited song is also added to your library, as the Music app does when you favorite a song.
+- **Spotify needs one more permission** to add Liked Songs. If you connected Spotify before this feature, the page asks you to reconnect.
+- **The first run takes a while** for a big collection: it searches the other service for each song, roughly 100 songs a minute. Later runs only look at new favorites.
+- The app finds Apple's Favorite Songs playlist by its English name. If your Apple Music is set to another language, syncing to Apple Music works, but songs you favorite on Apple Music aren't read.
 
 ## Make playlists from your own music
 

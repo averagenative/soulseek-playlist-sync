@@ -24,7 +24,8 @@ PACE = {"spotify": 0.35, "apple": 0.15}   # seconds between searches when matchi
 
 
 def targets_for(source: str) -> list[str]:
-    return {"apple": ["spotify"], "spotify": ["apple"], "local": ["spotify", "apple"]}[source]
+    return {"apple": ["spotify"], "spotify": ["apple"], "local": ["spotify", "apple"],
+            "youtube": ["spotify", "apple"]}[source]
 
 
 def target_for(source: str) -> str:

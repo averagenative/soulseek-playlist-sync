@@ -1,5 +1,6 @@
 """Write clean ID3 tags from the streaming service's metadata."""
 import hashlib
+import io
 import logging
 from pathlib import Path
 
@@ -24,8 +25,26 @@ def artwork(url: str | None, cache_dir: Path) -> bytes | None:
     except httpx.HTTPError as e:
         log.warning("artwork download failed: %s", e)
         return None
-    f.write_bytes(r.content)
-    return r.content
+    data = _square_youtube_thumbnail(r.content) if "ytimg.com" in url else r.content
+    f.write_bytes(data)
+    return data
+
+
+def _square_youtube_thumbnail(data: bytes) -> bytes:
+    """YouTube thumbnails are 4:3 with the 16:9 video letterboxed inside. The middle square of the video
+    is the cover: for YouTube Music's "Topic" uploads that's the album art."""
+    try:
+        from PIL import Image
+        im = Image.open(io.BytesIO(data)).convert("RGB")
+        w, h = im.size
+        frame = min(h, round(w * 9 / 16))           # the video's height inside the thumbnail
+        top, left = (h - frame) // 2, (w - frame) // 2
+        out = io.BytesIO()
+        im.crop((left, top, left + frame, top + frame)).save(out, "JPEG", quality=90)
+        return out.getvalue()
+    except Exception as e:                           # keep the original if Pillow can't read it
+        log.warning("couldn't crop a YouTube thumbnail: %s", e)
+        return data
 
 
 def tag_mp3(path: Path, song: dict, cover: bytes | None) -> None:

@@ -6,7 +6,7 @@ import threading
 import time
 from pathlib import Path
 
-from . import db, library, settings, sync, youtube
+from . import db, favorites, library, settings, sync, youtube
 from .config import Config
 from .match import rank_candidates, search_queries
 from .slskd import Slskd, SlskdError
@@ -15,7 +15,7 @@ from .tagger import artwork, tag_mp3
 log = logging.getLogger(__name__)
 TICK = 2.0
 SEARCH_STALE = 120     # a search running this long is abandoned
-REFRESH_EVERY = 6 * 3600   # rescan the library and update auto-updating playlists
+REFRESH_EVERY = 6 * 3600   # rescan the library, update auto-updating playlists, sync favorites
 
 
 class Worker:
@@ -33,6 +33,14 @@ class Worker:
     def start(self):
         self.thread.start()
 
+    @staticmethod
+    def refresh(cfg: Config) -> None:
+        """Every few hours: update auto-updating playlists, then sync favorites if that's switched on."""
+        try:
+            sync.refresh_auto_playlists(cfg)
+        finally:
+            favorites.scheduled(cfg)
+
     def run(self):
         client = Slskd(self.cfg)
         last_status = 0.0
@@ -41,8 +49,7 @@ class Worker:
             try:
                 if time.time() - self.last_refresh > REFRESH_EVERY:
                     self.last_refresh = time.time()
-                    threading.Thread(target=sync.refresh_auto_playlists, args=(self.cfg,), daemon=True,
-                                     name="auto-refresh").start()
+                    threading.Thread(target=self.refresh, args=(self.cfg,), daemon=True, name="auto-refresh").start()
                 if time.time() >= paused_until and time.time() - last_status > 15:
                     self.status = client.status()
                     last_status = time.time()
@@ -191,7 +198,8 @@ class Worker:
         song = self._song(key)
         self._update(key, state="searching", detail="Searching YouTube")
         try:
-            cands = youtube.search(song, cfg.length_tolerance)
+            # A song from a YouTube playlist has its own video; anything else is searched for.
+            cands = youtube.own_video(song) or youtube.search(song, cfg.length_tolerance)
         except youtube.YouTubeError as e:
             self._update(key, state="failed", detail=str(e)[:300])
             return

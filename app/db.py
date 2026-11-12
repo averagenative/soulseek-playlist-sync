@@ -114,6 +114,17 @@ CREATE TABLE IF NOT EXISTS song_links (
     PRIMARY KEY (song_key, target)
 );
 CREATE INDEX IF NOT EXISTS library_norm_title ON library(norm_title);
+
+-- Favorites sync: a Spotify Liked Song and its Apple Music Favorite Song. Once a pair is here, the
+-- app never adds either one again, so a song you remove on one service stays removed.
+CREATE TABLE IF NOT EXISTS favorite_pairs (
+    spotify_id TEXT NOT NULL,             -- Spotify track ID
+    apple_id   TEXT NOT NULL,             -- Apple Music catalog ID
+    added_to   TEXT,                      -- 'apple' or 'spotify' when the app made the favorite, NULL when both had it
+    at         REAL,
+    PRIMARY KEY (spotify_id, apple_id)
+);
+CREATE INDEX IF NOT EXISTS favorite_pairs_apple ON favorite_pairs(apple_id);
 """
 
 _path: Path | None = None

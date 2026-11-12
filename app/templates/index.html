@@ -11,8 +11,10 @@
     {% if apple_connected %}<a class="btn primary" href="/apple/playlists">+ Apple Music</a>
     {% else %}<a class="btn" href="/apple/connect">Connect Apple Music</a>{% endif %}
     <a class="btn" href="/library">My music</a>
+    <a class="btn" href="/favorites">Sync favorites</a>
     {% if spotify_connected %}<a class="btn primary" href="/spotify/playlists">+ Spotify</a>
     {% else %}<a class="btn" href="/spotify/setup">Connect Spotify</a>{% endif %}
+    {% if youtube_ready %}<a class="btn primary" href="/youtube/add">+ YouTube</a>{% endif %}
   </div>
 </section>
 

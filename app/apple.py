@@ -18,6 +18,9 @@ ARTWORK_SIZE = 600
 THUMB_SIZE = 120
 LIBRARY_SONGS = "library-songs"      # every song in your library, offered like a playlist
 LIBRARY_NAME = "Apple Music library"
+# Apple's automatic playlist of your favorites. Its API entry has no type, so it's found by name:
+# a library playlist you can't edit, not from the catalog, with this name.
+FAVORITES_NAMES = ("favorite songs", "favourite songs")
 
 
 class AppleError(Exception):
@@ -183,6 +186,66 @@ class Client:
         if r.status_code >= 400:
             raise AppleError(f"Apple refused the change: HTTP {r.status_code} {r.text[:200]}")
         return r.json() if r.content else {}
+
+    def _change(self, method: str, path: str, **kw) -> None:
+        r = self._send(method, path, **kw)
+        if r.status_code in (401, 403):
+            raise NotConnected(f"Apple returned {r.status_code}; reconnect Apple Music")
+        if r.status_code >= 400:
+            raise AppleError(f"Apple refused the change: HTTP {r.status_code} {r.text[:200]}")
+
+    # ---------------------------------------------------------- favorites
+
+    def favorites_playlist(self) -> str | None:
+        """The library ID of Favorite Songs, or None before you favorite anything."""
+        for p in self.get_all("/v1/me/library/playlists", {"limit": 100}):
+            a = p.get("attributes", {})
+            if (not a.get("canEdit", True) and not a.get("playParams", {}).get("globalId")
+                    and (a.get("name") or "").strip().casefold() in FAVORITES_NAMES):
+                return p["id"]
+        return None
+
+    def favorite_songs(self) -> list[dict]:
+        """Your Favorite Songs, as song dicts like a playlist's."""
+        pid = self.favorites_playlist()
+        return self.playlist_tracks(pid) if pid else []
+
+    def _library_ids(self, storefront: str, catalog_ids: list[str]) -> dict[str, str]:
+        """Catalog ID -> library ID, for the songs that are in your library."""
+        if not catalog_ids:
+            return {}
+        r = self.get(f"/v1/catalog/{storefront}/songs", {"ids": ",".join(catalog_ids), "relate": "library"})
+        out = {}
+        for d in r.get("data", []):
+            lib = d.get("relationships", {}).get("library", {}).get("data") or []
+            if lib:
+                out[d["id"]] = lib[0]["id"]
+        return out
+
+    def add_favorites(self, catalog_ids: list[str], progress=None) -> list[str]:
+        """Favorite these catalog songs: add the ones not in your library, then rate each library copy.
+        Returns the catalog IDs that are now favorites."""
+        sf, done = self.storefront(), []
+        for i in range(0, len(catalog_ids), 50):
+            batch = catalog_ids[i:i + 50]
+            lib = self._library_ids(sf, batch)
+            new = [c for c in batch if c not in lib]
+            if new:
+                self._change("POST", "/v1/me/library", params={"ids[songs]": ",".join(new)})
+                for wait in (2, 3, 5, 8, 12):          # Apple takes a few seconds to list new library songs
+                    time.sleep(wait)
+                    lib.update(self._library_ids(sf, [c for c in new if c not in lib]))
+                    if all(c in lib for c in new):
+                        break
+            for c in batch:
+                if c in lib:
+                    self._change("PUT", f"/v1/me/ratings/library-songs/{lib[c]}",
+                                 json={"type": "rating", "attributes": {"value": 1}})
+                    done.append(c)
+                    time.sleep(0.1)
+            if progress:
+                progress(len(done))
+        return done
 
     # ---------------------------------------------------------- writing
 

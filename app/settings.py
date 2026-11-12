@@ -11,6 +11,7 @@ from .config import Config
 EDITABLE = {
     "apple_dir": (str, "Apple Music folder", "Under the music root. New Apple Music playlists get a folder in here."),
     "spotify_dir": (str, "Spotify folder", "Under the music root. New Spotify playlists get a folder in here."),
+    "youtube_dir": (str, "YouTube folder", "Under the music root. New YouTube playlists get a folder in here."),
     "local_dir": (str, "My music folder", "Under the music root. Playlists you make on the My music page get a folder in here."),
     "default_numbering": (bool, "Number files in playlist order", "Default for new playlists."),
     "default_library_mode": (str, "Songs already in your library", "Default for new playlists."),

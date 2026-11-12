@@ -182,6 +182,7 @@ main.narrow { max-width: 560px; }
 .source.apple::before { background: var(--apple); }
 .source.spotify::before { background: var(--spotify); }
 .source.local::before { background: var(--accent); }
+.source.youtube::before { background: var(--yt); }
 
 /* progress */
 .segbar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--dim-bg); }
@@ -309,6 +310,8 @@ textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3
 .steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
 
 /* setup guides */
+.song-list { margin: 8px 0 0; padding-left: 20px; max-height: 280px; overflow: auto; font-size: 14px; }
+details > summary { cursor: pointer; }
 .copy-row { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: 100%; vertical-align: middle; }
 .copy-row code.copy { padding: 3px 8px; }
 .form-values { display: grid; grid-template-columns: max-content 1fr; gap: 12px 18px; margin: 0; align-items: baseline; }
