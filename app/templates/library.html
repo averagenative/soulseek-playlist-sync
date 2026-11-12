@@ -51,17 +51,22 @@
   {% if f.album %}<input type="hidden" name="album" value="{{ f.album }}">{% endif %}
 
   {% if total %}
+  {% set n_songs %}{{ songs|n }} {{ 'matching ' if filtered else '' }}{{ 'song' if songs == 1 else 'songs' }}{% endset %}
+  {% set all_songs %}{{ 'all ' if songs > 1 else '' }}{{ n_songs }}{% endset %}
   <section class="copy-panel make-panel">
     <div>
       <div class="eyebrow">Make a playlist</div>
-      <div class="muted small">Of all {{ songs|n }} {{ 'matching songs' if filtered else 'songs in your library' }}{% if songs < total %}
-        (a song in more than one album or folder counts once){% endif %}. Then copy it to Spotify or Apple Music from its page.</div>
+      <div class="small">With no songs selected, the playlist gets <b>{{ all_songs }}</b>{{ '' if filtered else ' in your library' }}{% if songs < total %}
+        (a song in more than one album or folder counts once){% endif %}. To choose songs, select them in the list.</div>
+      <div class="muted small">Then copy it to Spotify or Apple Music from its page.</div>
+      <p class="notice warn small" id="pick-note" hidden>You selected <b id="pick-note-n"></b>, but <b>Make playlist</b> here
+        adds {{ all_songs }}. To add only the selected songs, click <b>Add</b> in the selection bar.</p>
     </div>
     <div class="actions">
       <input type="text" name="name" value="{{ suggest }}" aria-label="Playlist name">
       <label class="check small" title="Songs you add to these folders later join the playlist, and ones you delete leave it">
         <input type="checkbox" name="live" value="1" checked>Keep up to date</label>
-      <button class="btn primary" name="what" value="all">Make playlist</button>
+      <button class="btn primary" name="what" value="all">Make playlist of {{ all_songs }}</button>
     </div>
   </section>
   {% endif %}

@@ -1,0 +1,34 @@
+{# The Copy to Spotify and Apple Music panels. Part of the live rows, so they follow a running job. #}
+{% for c in copies %}
+{% set m = c.mirror %}
+<section class="copy-panel">
+  <div>
+    <div class="eyebrow">Copy to {{ c.label }}</div>
+    {% if m and m.url %}
+      <div><a href="{{ m.url }}" target="_blank" rel="noopener">Open the {{ c.label }} copy</a>
+        <span class="muted small">&middot; {% if m.capped %}{{ m.matched|n }} songs{% else %}{{ m.matched|n }} of {{ m.total|n }} songs found on {{ c.label }}{% endif %} &middot; updated {{ m.updated_at|ago }}</span></div>
+      {% if m.note %}<div class="muted small">{{ m.note }}</div>{% endif %}
+      {% if m.missing %}
+        <details class="missing" data-keep="missing-{{ c.target }}"><summary class="muted small">{{ m.missing|length|n }} not on {{ c.label }}{% if m.capped %} (of the songs checked){% endif %}</summary>
+          <ul class="small muted" data-keep="missing-{{ c.target }}-list">{% for x in m.missing[:300] %}<li>{{ x }}</li>{% endfor %}
+            {% if m.missing|length > 300 %}<li>and {{ (m.missing|length - 300)|n }} more</li>{% endif %}</ul></details>
+      {% endif %}
+    {% else %}
+      <div class="muted small">Make {{ 'an' if c.target == 'apple' else 'a' }} {{ c.label }} playlist with the same songs{{ ', in the same order' if c.target == 'spotify' and size <= spotify_max else '' }}.
+        {% if c.target == 'spotify' and size > spotify_max %}Spotify playlists hold up to {{ spotify_max|n }} songs, so the copy gets a random {{ spotify_max|n }} of these {{ size|n }}, picked again each time you update it.{% endif %}
+        {% if size > 1000 %}Finding {{ size|n }} songs on {{ c.label }} takes a while the first time; the app remembers what it found.{% endif %}</div>
+    {% endif %}
+    {% if m and m.error %}<div class="small" style="color: var(--bad)">{{ m.error }}</div>{% endif %}
+    {% if c.target == 'apple' and m %}<div class="muted small">Apple only lets apps add songs, so songs removed here stay in the Apple copy.</div>{% endif %}
+  </div>
+  <div>
+    {% if c.can_copy %}
+      <form method="post" action="/playlists/{{ p.id }}/mirror?target={{ c.target }}" class="inline">
+        <button class="btn" {% if p.busy %}disabled{% endif %}>{{ 'Update' if m and m.url else 'Copy to' }} {{ c.label }}</button></form>
+    {% else %}
+      <a class="btn small" href="{{ '/spotify/connect' if c.target == 'spotify' else '/apple/connect' }}">{{ c.blocker }}</a>
+    {% endif %}
+  </div>
+</section>
+{% endfor %}
+{% if p.error %}<p class="notice bad">{{ p.error }}</p>{% endif %}

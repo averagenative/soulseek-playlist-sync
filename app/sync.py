@@ -191,6 +191,49 @@ def remove_songs(cfg: Config, pid: str, keys: list[str]) -> None:
     reconcile(cfg, pid, apply=True)
 
 
+def leave_out(cfg: Config, pid: str, keys: list[str], out: bool = True) -> int:
+    """Take songs out of a My music playlist, or put them back.
+
+    A hand-picked playlist drops them. An auto playlist remembers them, so they stay out when it
+    refreshes and when it's copied to Spotify or Apple Music, and they can be put back.
+    """
+    p = playlist(pid)
+    if not p or p["source"] != "local":
+        raise ValueError("Only playlists made from your music can have songs taken out")
+    keys = list(dict.fromkeys(keys))
+    if not p["rule"]:
+        if out:
+            remove_songs(cfg, pid, keys)
+        return len(keys)
+    folder = folder_of(cfg, p)
+    t = db.now()
+    with db.connect() as c:
+        c.executemany("UPDATE items SET skip = ?, updated_at = ? WHERE playlist_id = ? AND song_key = ?",
+                      [(1 if out else 0, t, pid, k) for k in keys])
+        if out:
+            # Copies this app made in the playlist folder (the "Copy into the playlist folder" setting) go too.
+            drop = set(keys)
+            for it in c.execute("SELECT song_key, file FROM items WHERE playlist_id = ? AND owned = 1 "
+                                "AND file IS NOT NULL", (pid,)).fetchall():
+                if it["song_key"] in drop:
+                    (folder / it["file"]).unlink(missing_ok=True)
+                    c.execute("UPDATE items SET file = NULL, origin = NULL, owned = 0 "
+                              "WHERE playlist_id = ? AND song_key = ?", (pid, it["song_key"]))
+    if not out and p["library_mode"] == "copy":
+        reconcile(cfg, pid, apply=True)         # makes the copies again
+    else:
+        write_playlist_m3u(cfg, pid)
+    return len(keys)
+
+
+def song_count(pid: str, skipped: bool = True) -> int:
+    """Songs in a playlist, counting each once; without skipped (left-out) ones if asked."""
+    with db.connect() as c:
+        return c.execute("SELECT COUNT(DISTINCT e.song_key) FROM entries e JOIN items i "
+                         "ON i.playlist_id = e.playlist_id AND i.song_key = e.song_key "
+                         "WHERE e.playlist_id = ? AND (? OR i.skip = 0)", (pid, 1 if skipped else 0)).fetchone()[0]
+
+
 def refresh_local(cfg: Config, pid: str, scan: bool = True) -> None:
     """Rescan the library for changes, then bring the playlist and its .m3u up to date."""
     if scan:

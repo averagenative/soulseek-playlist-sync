@@ -16,7 +16,7 @@
       ('synced', ['synced']), ('in_library', ['in_library']), ('moving', ['downloading', 'queued']),
       ('waiting', ['waiting', 'searching', 'found']), ('bad', ['not_found', 'failed'])] %}
   {% set total = namespace(n=0) %}
-  {% for s, n in counts.items() if s != 'removed' %}{% set total.n = total.n + n %}{% endfor %}
+  {% for s, n in counts.items() if s not in ('removed', 'skipped') %}{% set total.n = total.n + n %}{% endfor %}
   <div class="segbar {{ 'live' if live else '' }}" role="img"
        aria-label="{{ counts.get('synced', 0) }} of {{ total.n }} songs synced">
     {% if total.n %}{% for cls, members in groups %}

@@ -80,6 +80,7 @@ def test_add_a_youtube_playlist(cfg, monkeypatch):
         {"id": "v2", "title": "[Private video]", "duration": None},
         {"id": "v3", "title": "Smells Like Teen Spirit", "duration": 301, "channel": "Nirvana - Topic"}]}
     monkeypatch.setattr(youtube.Playlists, "_info", lambda self, rid: info)
+    monkeypatch.setattr(youtube, "can_read_playlists", lambda: True)     # passes without yt-dlp installed
     from fastapi.testclient import TestClient
     import app.web as web
     importlib.reload(web)

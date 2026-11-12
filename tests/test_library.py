@@ -1,5 +1,7 @@
 import importlib
+import io
 import os
+import zipfile
 
 import pytest
 
@@ -219,3 +221,165 @@ def test_home_card_says_copied_not_synced_after_a_copy(cfg, monkeypatch):
         with db.connect() as c:
             c.execute("UPDATE playlists SET synced_at = ? WHERE id = ?", (db.now() + 1, pid))
         assert "Synced just now" in client.get("/partials/home").text
+
+
+def test_all_songs_playlist_page_and_zip_size_guard(cfg, monkeypatch):
+    monkeypatch.setenv("WORKER", "0")
+    monkeypatch.setenv("SLSKD_URL", "http://127.0.0.1:9")
+    from fastapi.testclient import TestClient
+    from app import export
+    import app.web as web
+    importlib.reload(web)
+    add_files(cfg, ("Albums/Beck/Odelay/01.mp3", "Beck", "Devils Haircut", "Odelay", 1),
+              ("Random/x.mp3", None, "Elsewhere", None))         # no artist or album tag
+    with TestClient(web.app) as client:
+        page = client.get("/library").text
+        assert "With no songs selected, the playlist gets <b>all 2 songs</b> in your library" in page
+        assert "Make playlist of all 2 songs" in page and 'id="pick-note"' in page
+        client.post("/library/playlist", data={"what": "all", "live": "1", "name": "Everything"}, follow_redirects=False)
+        pid = next(p["id"] for p in sync.tracked() if p["name"] == "Everything")
+        sync.wait_idle(pid)
+        # The copy panels refresh with the songs, so they follow a running job; the top buttons follow data-busy.
+        rows = client.get(f"/playlists/{pid}/rows").text
+        assert 'data-busy="0"' in rows and "None" not in rows
+        assert "Copy to Apple Music" in client.get(f"/playlists/{pid}/copies").text
+        page = client.get(f"/playlists/{pid}").text
+        assert "data-busy-lock" in page and "data-zip-check" in page and page.count("Copy to Apple Music") == 1
+        # Download ZIP: small ones just go, big ones ask first, too-big ones are refused even by a direct link.
+        c = client.get(f"/playlists/{pid}/zip/check").json()
+        assert c["ok"] and c["ask"] is None and c["songs"] == 2
+        r = client.get(f"/playlists/{pid}/zip?t=abcdefgh12")
+        assert r.status_code == 200
+        names = zipfile.ZipFile(io.BytesIO(r.content)).namelist()
+        assert names[0] == "Everything/Everything.m3u" and len(names) == 3
+        # The page follows the download by its token.
+        p = client.get("/zip/progress?t=abcdefgh12").json()
+        assert p["state"] == "done" and "2 songs" in p["text"]
+        assert client.get("/zip/progress?t=notstarted").json()["state"] == "waiting"
+        prog = {"total": 100, "songs": 2}
+        stream = export.stream_zip("Everything", sync.export_files(cfg, pid)[1], "", prog)
+        next(stream)
+        assert export.progress_text(prog)["state"] == "running"
+        stream.close()                                  # the browser cancelled
+        assert export.progress_text(prog)["state"] == "stopped"
+        monkeypatch.setattr(export, "ZIP_ASK", 10)
+        assert "(2 songs)" in client.get(f"/playlists/{pid}/zip/check").json()["ask"]
+        monkeypatch.setattr(export, "ZIP_MAX", 20)
+        c = client.get(f"/playlists/{pid}/zip/check").json()
+        assert not c["ok"] and "limit for one download" in c["error"]
+        assert client.get(f"/playlists/{pid}/zip").status_code == 413
+
+
+def test_take_songs_out_of_an_auto_playlist(cfg, monkeypatch):
+    monkeypatch.setenv("WORKER", "0")
+    monkeypatch.setenv("SLSKD_URL", "http://127.0.0.1:9")
+    from fastapi.testclient import TestClient
+    import app.web as web
+    importlib.reload(web)
+    add_files(cfg, *[(f"Albums/A/{i}.mp3", "A", f"Song {i}", "X", i) for i in range(1, 6)],
+              ("Random/t13.mp3", "B", "Track 13", "Y"), ("Random/t14.mp3", "B", "Track 14", "Y"))
+    pid = sync.add_local_playlist(cfg, "Everything", rule={})
+    sync.refresh_local(cfg, pid)
+    m3u = cfg.music_root / "Playlists/Everything/Everything.m3u"
+    key = {r["song"]["title"]: r["key"] for r in sync.summary(cfg, pid)[0]}
+
+    with TestClient(web.app) as client:
+        # One song, then every song a search finds.
+        r = client.post(f"/playlists/{pid}/songs/{key['Song 2']}/remove?back=q%3Dsong", follow_redirects=False)
+        assert r.headers["location"] == f"/playlists/{pid}?q=song"
+        page = client.get(f"/playlists/{pid}?q=track").text
+        assert "2 of 7 songs match" in page and "Remove all 2" in page and 'id="pl-pick"' in page
+        client.post(f"/playlists/{pid}/songs/remove", data={"matching": "1", "back": "q=track"})
+        rows, counts = sync.summary(cfg, pid)
+        assert counts == {"synced": 4, "skipped": 3}
+        assert "Song 2" not in m3u.read_text() and "Track 13" not in m3u.read_text()
+
+        # They stay out when the playlist refreshes, and out of its copies.
+        sync.refresh_local(cfg, pid)
+        assert sync.summary(cfg, pid)[1] == {"synced": 4, "skipped": 3}
+
+        class Fake:
+            tracks = {}
+            def __enter__(self): return self
+            def __exit__(self, *a): pass
+            def find_track(self, song): return f"spotify:track:{song['title']}"
+            def playlist_exists(self, pid): return pid in Fake.tracks
+            def create_playlist(self, name, desc): Fake.tracks["sp"] = []; return "sp"
+            def set_tracks(self, pid, uris): Fake.tracks[pid] = list(uris)
+
+        monkeypatch.setattr(mirror, "_client", lambda cfg, target: Fake())
+        mirror.run(cfg, pid, "spotify")
+        assert Fake.tracks["sp"] == [f"spotify:track:Song {i}" for i in (1, 3, 4, 5)]
+        assert mirror.get(pid, "spotify")["total"] == 4
+
+        # The songs you took out are listed, and can go back one at a time or all together.
+        page = client.get(f"/playlists/{pid}?show=left_out").text
+        assert "3 songs you took out" in page and "Put them all back" in page and "Left out" in page
+        client.post(f"/playlists/{pid}/songs/{key['Song 2']}/putback")
+        assert "Song 2" in m3u.read_text()
+        client.post(f"/playlists/{pid}/songs/putback", data={"matching": "1", "back": "show=left_out"})
+        assert sync.summary(cfg, pid)[1] == {"synced": 7}
+
+        # A hand-picked playlist drops the songs instead.
+        hand = sync.add_local_playlist(cfg, "Picks")
+        sync.add_songs(cfg, hand, [key["Song 1"], key["Song 3"]])
+        client.post(f"/playlists/{hand}/songs/remove", data={"key": [key["Song 1"]]})
+        assert [r["song"]["title"] for r in sync.summary(cfg, hand)[0]] == ["Song 3"]
+        assert client.post(f"/playlists/{pid}/songs/nope").status_code == 404
+
+
+def test_service_hiccups_are_retried_and_one_bad_search_skips_a_song(cfg, monkeypatch):
+    import httpx
+    from app import apple, spotify
+    monkeypatch.setattr(apple.time, "sleep", lambda s: None)
+    monkeypatch.setattr(spotify.time, "sleep", lambda s: None)
+    calls = []
+
+    def flaky(request):
+        calls.append(request.url.path)
+        if len(calls) == 1:
+            raise httpx.ReadTimeout("slow", request=request)
+        if len(calls) == 2:
+            return httpx.Response(504, text="Gateway Time-out")
+        return httpx.Response(200, json={"ok": 1})
+
+    a = object.__new__(apple.Client)
+    a.mode, a.http = "api", httpx.Client(transport=httpx.MockTransport(flaky), base_url="https://api.example")
+    assert a.get("/v1/x") == {"ok": 1} and len(calls) == 3
+    s = object.__new__(spotify.Client)
+    s.tok = {"access_token": "t", "expires_at": 9e12}
+    s.http = httpx.Client(transport=httpx.MockTransport(flaky), base_url="https://api.example")
+    calls.clear()
+    assert s.get("/v1/x") == {"ok": 1} and len(calls) == 3
+
+    # A search that still fails skips that song; the rest of the copy carries on.
+    add_files(cfg, *[(f"Albums/A/{i}.mp3", "A", f"Song {i}", "X", i) for i in range(1, 6)])
+    pid = sync.add_local_playlist(cfg, "Everything", rule={})
+    sync.refresh_local(cfg, pid)
+
+    class Fake:
+        tracks, down = {}, False
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+        def find_track(self, song):
+            if Fake.down or song["title"] == "Song 2":
+                raise httpx.HTTPStatusError("504", request=httpx.Request("GET", "https://x"), response=httpx.Response(504))
+            return f"spotify:track:{song['title']}"
+        def playlist_exists(self, pid): return pid in Fake.tracks
+        def create_playlist(self, name, desc): Fake.tracks["sp"] = []; return "sp"
+        def set_tracks(self, pid, uris): Fake.tracks[pid] = list(uris)
+
+    monkeypatch.setattr(mirror, "_client", lambda cfg, target: Fake())
+    mirror.run(cfg, pid, "spotify")
+    m = mirror.get(pid, "spotify")
+    assert Fake.tracks["sp"] == [f"spotify:track:Song {i}" for i in (1, 3, 4, 5)]
+    assert "1 song couldn't be looked up" in m["note"] and m["missing"] == []
+    with db.connect() as c:          # not remembered as missing, so the next update looks again
+        assert c.execute("SELECT COUNT(*) FROM song_links WHERE target = 'spotify'").fetchone()[0] == 4
+    # When the service is down, the copy stops instead of skipping everything.
+    with db.connect() as c:
+        c.execute("DELETE FROM song_links")
+    Fake.down = True
+    monkeypatch.setattr(mirror, "GIVE_UP", 3)
+    with pytest.raises(httpx.HTTPStatusError):
+        mirror.run(cfg, pid, "spotify")

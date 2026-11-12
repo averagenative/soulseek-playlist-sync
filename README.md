@@ -218,15 +218,23 @@ The **My music** page lists every song the app found under your music folder. Se
 
 You can make a playlist from it in two ways:
 
-- **Everything that matches:** in the **Make a playlist** panel, name the playlist and click **Make playlist**. With **Keep up to date** ticked, the playlist is a filter rather than a fixed list: songs you add to those folders later join it, and songs you delete leave it. The app checks every 6 hours, and whenever you click **Refresh** or update a copy. A song that's in two albums or folders is listed once.
-- **Songs you pick:** tick songs, choose **New playlist** or one you made before, and click **Add**. To build a playlist across several pages, add from one page, go to the next, and add again; the menu remembers the playlist you added to last. Use **Remove** on the playlist's page to take a song out.
+- **Everything that matches:** with no songs selected, name the playlist in the **Make a playlist** panel and click **Make playlist of all N songs**. With **Keep up to date** ticked, the playlist is a filter rather than a fixed list: songs you add to those folders later join it, and songs you delete leave it. The app checks every 6 hours, and whenever you click **Refresh** or update a copy. A song that's in two albums or folders is listed once.
+- **Songs you pick:** tick songs, choose **New playlist** or one you made before, and click **Add**. To build a playlist across several pages, add from one page, go to the next, and add again; the menu remembers the playlist you added to last.
 
 To put your whole collection on Spotify or Apple Music, clear the filters (or tick the folders you want), make a playlist with **Keep up to date** ticked, and use **Copy to Spotify** or **Copy to Apple Music** on its page. Then shuffle it in the Spotify or Music app.
+
+To take songs out of a playlist you made, open its page:
+
+1. To find songs, type in **Find songs in this playlist**. It searches titles, artists, and albums.
+2. Select songs and click **Leave out of the playlist** in the bar that appears, or click **Remove** on a song. After a search, **Remove all N** takes out every song it found.
+3. To see the songs you took out, click the **Left out** count. Click **Put back** on a song, or **Put them all back**.
+
+In a **Keep up to date** playlist, songs you take out stay out of its `.m3u`, its ZIP, its copies, and later refreshes. A playlist of songs you picked drops them instead. Take songs out before you copy the playlist to Apple Music: Apple only lets apps add songs, so a song taken out later stays in the Apple Music copy.
 
 Keep the following in mind:
 
 - **Spotify playlists hold up to 10,000 songs.** A bigger playlist's Spotify copy gets a random 10,000 of its songs, and each **Update** picks a new 10,000. Apple Music copies get every song.
-- **The first copy of a big playlist takes a while.** The app searches the service for each song, spaced out so it doesn't get rate-limited: allow one to two hours per 10,000 songs. It remembers what it found, so updates only search for new songs. If the service asks the app to pause, the copy stops with a message, and the next **Update** carries on where it left off.
+- **The first copy of a big playlist takes a while.** The app searches the service for each song, spaced out so it doesn't get rate-limited: allow one to two hours per 10,000 songs. It remembers what it found, so updates only search for new songs. If the service asks the app to pause, the copy stops with a message, and the next **Update** carries on where it left off. When the service fails for a moment, the app retries. A song whose search still fails is skipped and looked for again on the next **Update**. If 10 searches in a row fail, the copy stops.
 - **Songs are matched by artist, title, and length**, or by ISRC when your files have one. Songs the service doesn't have are listed in the copy panel.
 - **The playlist's `.m3u` points at your library files** by default, in a folder under `Playlists/`, so it takes no space and media servers such as Navidrome can import it. To get a folder you can copy to an MP3 player instead, set **Songs already in your library** to **Copy into the playlist folder** in the playlist's settings. These playlists keep your files as they are, including `.m4a` files.
 
@@ -235,7 +243,7 @@ Your Apple Music library also appears at the top of the list when you add Apple 
 ## Check songs and take them with you
 
 - Click a downloaded song's cover to play it in the browser. The player moves on to the next downloaded song. For Apple Music playlists, **Original** plays Apple's 30-second clip of the song so you can compare it with your copy.
-- **Download ZIP** sends the playlist's MP3s and its `.m3u` to the computer you're browsing from, as one ZIP file you can copy to a device.
+- **Download ZIP** sends the playlist's songs and its `.m3u` to the computer you're browsing from, as one ZIP file you can copy to a device. The app checks the size first: it asks before a ZIP bigger than 2 GB, and refuses one bigger than 20 GB, because it could fill the disk it's saved to. A line under the buttons shows how far the download has got.
 
 ## Settings
 

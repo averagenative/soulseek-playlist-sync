@@ -1,8 +1,8 @@
 {% set f = fav %}
 {% macro song_list(key, title) %}
   {% if f[key] %}
-  <details><summary>{{ title }} ({{ f[key ~ "_count"]|n }})</summary>
-    <ul class="song-list">{% for x in f[key] %}<li>{{ x }}</li>{% endfor %}</ul>
+  <details data-keep="{{ key }}"><summary>{{ title }} ({{ f[key ~ "_count"]|n }})</summary>
+    <ul class="song-list" data-keep="{{ key }}-list">{% for x in f[key] %}<li>{{ x }}</li>{% endfor %}</ul>
     {% if f[key ~ "_count"] > f[key]|length %}<p class="muted small">And {{ (f[key ~ "_count"] - f[key]|length)|n }} more.</p>{% endif %}
   </details>
   {% endif %}

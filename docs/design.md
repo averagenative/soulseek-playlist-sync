@@ -23,7 +23,7 @@ browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
 | `app/youtube.py` | YouTube playlists as a source (read with yt-dlp, no sign-in; video titles parsed into artist and song), and the YouTube fallback: YouTube Music and YouTube search, ranking, and download through yt-dlp. |
 | `app/mirror.py` | Copies a playlist to a streaming service: matches songs, creates or updates the copy, and takes a random sample when a playlist is over Spotify's 10,000-song limit. |
 | `app/favorites.py` | Favorites sync: reads Spotify Liked Songs and Apple Music Favorite Songs, matches each new song on the other service, and adds it there. Only adds, and remembers each pair. |
-| `app/export.py` | Streams a playlist as a ZIP without building it on disk. |
+| `app/export.py` | Streams a playlist as a ZIP without building it on disk. Checks the size first (asks above 2 GB, refuses above 20 GB) and records progress for the page. |
 | `app/match.py` | Text normalization and Soulseek candidate ranking. Pure functions. |
 | `app/library.py` | Index of the music already on disk (incremental, by size and modification time), plus the queries behind **My music** and auto-updating playlists. |
 | `app/art.py` | Cover thumbnails for library files, from embedded art or a `cover.jpg` next to the file, cached under `DATA_DIR/artwork/local`. |
@@ -36,7 +36,7 @@ browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
 - `playlists`: one row per tracked playlist, with its folder and options. A `local` playlist with a `rule` (a JSON filter of words, folders, artist, and album) is rebuilt from the library on every refresh; one without a rule is a fixed list.
 - `songs`: one row per song, keyed by source and ID (`apple:<catalog id>`, `spotify:<track id>`, `youtube:<video id>`, `local:<hash>`). A local song's key is a hash of its normalized artist and title, so the same song in two albums or folders is one song.
 - `entries`: the playlist's order, one row per position. A song can appear more than once.
-- `items`: what exists locally for each song in each playlist (file name, origin, skipped, wanted).
+- `items`: what exists locally for each song in each playlist (file name, origin, skipped, wanted). In a My music playlist that keeps itself up to date, a skipped song is one you took out: it stays out of the `.m3u`, the ZIP, copies, and refreshes.
 - `downloads`: one row per song, shared by every playlist that has it: the Soulseek or YouTube search, candidates, transfer progress, and the finished file.
 - `library`: the index of files under the library folders, with their tags, song key, cover key (folder plus album), and a normalized search column.
 - `mirrors`: a playlist's copy on the other service, with how many songs matched and which didn't.

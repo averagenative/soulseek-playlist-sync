@@ -13,6 +13,8 @@ import logging
 import random
 import time
 
+import httpx
+
 from . import apple, db, spotify, sync
 from .config import Config
 
@@ -21,6 +23,7 @@ RECHECK_MISSING = 7 * 86400      # look again for songs that weren't on the targ
 TARGETS = {"spotify": "Spotify", "apple": "Apple Music"}
 SPOTIFY_MAX = 10_000
 PACE = {"spotify": 0.35, "apple": 0.15}   # seconds between searches when matching a big playlist
+GIVE_UP = 10        # searches failing in a row before a copy stops: the service is down, not one song
 
 
 def targets_for(source: str) -> list[str]:
@@ -65,8 +68,11 @@ def run(cfg: Config, pid: str, target: str | None = None) -> None:
         _busy(pid, "Checking your library for changes")
         sync.refresh_local(cfg, pid)
     with db.connect() as c:
-        entries = c.execute("SELECT e.song_key FROM entries e WHERE e.playlist_id = ? ORDER BY e.position",
-                            (pid,)).fetchall()
+        # Songs you took out of a My music playlist stay out of its copies.
+        entries = c.execute("SELECT e.song_key FROM entries e JOIN items i "
+                            "ON i.playlist_id = e.playlist_id AND i.song_key = e.song_key "
+                            "WHERE e.playlist_id = ? AND (? OR i.skip = 0) ORDER BY e.position",
+                            (pid, 0 if p["source"] == "local" else 1)).fetchall()
         songs = {r["key"]: dict(r) for r in c.execute(
             "SELECT s.* FROM songs s JOIN entries e ON e.song_key = s.key WHERE e.playlist_id = ?", (pid,))}
         links = {r["song_key"]: dict(r) for r in c.execute(
@@ -83,6 +89,7 @@ def run(cfg: Config, pid: str, target: str | None = None) -> None:
     label = TARGETS[target]
     now = db.now()
     chosen, looked, searched = [], [], 0
+    failed, in_a_row = [], 0
     try:
         with _client(cfg, target) as api:
             for i, key in enumerate(pool, 1):
@@ -94,7 +101,21 @@ def run(cfg: Config, pid: str, target: str | None = None) -> None:
                     if searched and len(pool) > 100:
                         time.sleep(PACE[target])
                     searched += 1
-                    found = api.find_track(songs[key]) if target == "spotify" else api.find_song(songs[key])
+                    try:
+                        found = api.find_track(songs[key]) if target == "spotify" else api.find_song(songs[key])
+                    except (httpx.HTTPError, apple.AppleError, spotify.SpotifyError) as e:
+                        # Even after retries one search can fail. Skip the song this time rather than
+                        # stop hours of matching; it isn't remembered as missing, so an update tries again.
+                        if isinstance(e, (apple.NotConnected, spotify.NotConnected)):
+                            raise
+                        in_a_row += 1
+                        if in_a_row >= GIVE_UP:
+                            raise
+                        log.warning("%s search failed for %s, skipping it this time: %s", label, key, e)
+                        looked.pop()
+                        failed.append(key)
+                        continue
+                    in_a_row = 0
                     links[key] = {"remote_id": found or "", "checked_at": now}
                     with db.connect() as c:
                         c.execute("INSERT OR REPLACE INTO song_links (song_key, target, remote_id, checked_at) "
@@ -112,6 +133,11 @@ def run(cfg: Config, pid: str, target: str | None = None) -> None:
             missing = [f"{songs[k]['artist']} - {songs[k]['title']}" for k in looked if not links[k]["remote_id"]]
             note = (f"Spotify playlists hold up to {SPOTIFY_MAX:,} songs, so this copy has a random {len(ids):,} "
                     f"of the {len(unique):,}. Update it to pick a new mix.") if capped else None
+            if failed:
+                n = len(failed)
+                note = ((note + " ") if note else "") + (
+                    f"{n:,} {'song' if n == 1 else 'songs'} couldn't be looked up because {label} had problems. "
+                    "Update the copy to try again.")
             _busy(pid, f"Updating the {TARGETS[target]} copy")
             m = get(pid, target)
             remote = m["remote_id"] if m and m["remote_id"] and api.playlist_exists(m["remote_id"]) else None

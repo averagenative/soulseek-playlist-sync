@@ -160,6 +160,9 @@ main.narrow { max-width: 560px; }
 .notice.ok { background: var(--ok-bg); color: var(--ok); }
 .notice.warn { background: var(--warn-bg); color: var(--warn); }
 .notice.bad { background: var(--bad-bg); color: var(--bad); }
+.notice[hidden] { display: none; }
+.make-panel .notice { display: block; margin: 8px 0 0; }
+.make-panel .notice[hidden] { display: none; }
 
 /* status chips */
 .badge {
@@ -395,3 +398,15 @@ a.quiet:hover { color: var(--accent); }
 .pick-bar input[hidden] { display: none; }
 body.has-player .pick-bar { bottom: 96px; }
 @media (max-width: 640px) { body.has-player .pick-bar { bottom: 150px; } }
+.zip-status { background: var(--surface); border: 1px solid var(--line); }
+.zip-status.ok { background: var(--ok-bg); border-color: transparent; }
+.zip-status.bad { background: var(--bad-bg); border-color: transparent; }
+.zip-status .meter { flex: 1 0 100%; max-width: none; margin-top: 0; }
+.zip-status.ok .meter, .zip-status.bad .meter { display: none; }
+.pl-search { margin: 0 0 12px; }
+.find-result { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 12px; }
+a.badge { text-decoration: none; }
+/* The playlist page's bar sits outside the song table, so it's pinned to the window instead. */
+#pl-bar { position: fixed; left: 16px; right: 16px; bottom: 12px; margin: 0 auto; }
+body.has-player #pl-bar { bottom: 96px; }
+@media (max-width: 640px) { body.has-player #pl-bar { bottom: 150px; } }

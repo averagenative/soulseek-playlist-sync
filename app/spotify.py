@@ -159,8 +159,21 @@ class Client:
         return self.request("GET", url, params=params)
 
     def request(self, method: str, url: str, **kw) -> dict:
+        delay = 2.0
         for attempt in range(5):
-            r = self.http.request(method, url, headers={"Authorization": f"Bearer {self._access()}"}, **kw)
+            last = attempt == 4
+            try:
+                r = self.http.request(method, url, headers={"Authorization": f"Bearer {self._access()}"}, **kw)
+            except httpx.TransportError:
+                if last:
+                    raise
+                time.sleep(delay)
+                delay *= 2
+                continue
+            if r.status_code in (500, 502, 503, 504) and not last:
+                time.sleep(delay)         # Spotify's servers failing for a moment
+                delay *= 2
+                continue
             if r.status_code == 401 and attempt == 0:
                 self.tok["expires_at"] = 0       # force a refresh, then retry once
                 continue

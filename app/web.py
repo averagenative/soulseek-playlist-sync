@@ -5,13 +5,14 @@ import os
 import re
 import secrets
 import threading
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
-from urllib.parse import quote, urlencode, urlsplit
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -427,18 +428,25 @@ def add_playlist(source: str = Form(...), remote_id: str = Form(...), name: str 
 
 
 @app.get("/playlists/{pid}", response_class=HTMLResponse)
-def playlist_page(request: Request, pid: str, error: str | None = None, all: int = 0):
+def playlist_page(request: Request, pid: str, error: str | None = None, all: int = 0, q: str = "", show: str = ""):
     if not sync.playlist(pid):
         raise HTTPException(404)
-    return templates.TemplateResponse(request, "playlist.html",
-                                      {**_common(), **_playlist_ctx(pid, bool(all)), "form_error": error})
+    return templates.TemplateResponse(request, "playlist.html", {
+        **_common(), **_playlist_ctx(pid, bool(all), q, show), **_copies_ctx(pid), "form_error": error})
 
 
 @app.get("/playlists/{pid}/rows", response_class=HTMLResponse)
-def playlist_rows(request: Request, pid: str, all: int = 0):
+def playlist_rows(request: Request, pid: str, all: int = 0, q: str = "", show: str = ""):
     if not sync.playlist(pid):
         raise HTTPException(404)
-    return templates.TemplateResponse(request, "_songs.html", {**_common(), **_playlist_ctx(pid, bool(all))})
+    return templates.TemplateResponse(request, "_songs.html", {**_common(), **_playlist_ctx(pid, bool(all), q, show)})
+
+
+@app.get("/playlists/{pid}/copies", response_class=HTMLResponse)
+def playlist_copies(request: Request, pid: str):
+    if not sync.playlist(pid):
+        raise HTTPException(404)
+    return templates.TemplateResponse(request, "_copies.html", {**_common(), **_copies_ctx(pid)})
 
 
 def _copy_ready(cfg: Config, target: str) -> tuple[bool, str | None]:
@@ -451,21 +459,53 @@ def _copy_ready(cfg: Config, target: str) -> tuple[bool, str | None]:
     return (True, None) if apple.user_token(cfg) else (False, "Connect Apple Music first")
 
 
-def _playlist_ctx(pid: str, show_all: bool = False) -> dict:
+def _copies_ctx(pid: str) -> dict:
+    """The Copy to Spotify and Apple Music panels."""
     cfg = C()
     p = sync.playlist(pid)
-    rows, counts = sync.summary(cfg, pid)
-    active = bool(p["busy"]) or any(counts.get(s) for s in ("waiting", "searching", "found", "queued", "downloading"))
     copies = []
     for target in mirror.targets_for(p["source"]):
         ok, why = _copy_ready(cfg, target)
         copies.append({"target": target, "label": mirror.TARGETS[target], "mirror": mirror.get(pid, target),
                        "can_copy": ok, "blocker": why})
+    return {"p": p, "copies": copies, "size": sync.song_count(pid, skipped=p["source"] != "local"),
+            "spotify_max": mirror.SPOTIFY_MAX}
+
+
+SHOW = {"left_out": "skipped"}      # ?show= filters on the playlist page, by status
+
+
+def _find_rows(rows: list[dict], q: str, show: str) -> list[dict]:
+    if show in SHOW:
+        rows = [r for r in rows if r["status"] == SHOW[show]]
+    words = q.casefold().split()
+    if words:
+        def text(r):
+            s = r["song"]
+            return f"{s.get('title') or ''} {s.get('artist') or ''} {s.get('album') or ''}".casefold()
+        rows = [r for r in rows if all(w in text(r) for w in words)]
+    return rows
+
+
+def _playlist_ctx(pid: str, show_all: bool = False, q: str = "", show: str = "") -> dict:
+    cfg = C()
+    p = sync.playlist(pid)
+    rows, counts = sync.summary(cfg, pid)
+    active = bool(p["busy"]) or any(counts.get(s) for s in ("waiting", "searching", "found", "queued", "downloading"))
+    q, show = (q or "").strip(), show if show in SHOW else ""
+    found = _find_rows(rows, q, show) if q or show else rows
+    local = p["source"] == "local"
     rule = sync.rule_of(p)
-    return {"p": p, "rows": rows if show_all else rows[:ROW_LIMIT], "total_rows": len(rows), "show_all": show_all,
+    view = [("q", q), ("show", show)]
+    return {"p": p, "rows": found if show_all else found[:ROW_LIMIT], "total_rows": len(found), "show_all": show_all,
+            "song_rows": len(rows), "q": q, "show": show,
+            "removable": [r["key"] for r in found if r["status"] not in ("removed", "skipped")] if local and (q or show) else [],
+            "view_qs": urlencode([(k, v) for k, v in view if v]),
+            "rows_qs": urlencode([(k, v) for k, v in view + [("all", 1 if show_all else "")] if v]),
+            "all_qs": urlencode([(k, v) for k, v in view if v] + [("all", 1)]),
             "counts": counts, "active": active, "music_root": str(cfg.music_root), "covers": sync.covers(pid),
-            "copies": copies, "size": sum(n for s, n in counts.items() if s != "removed"),
-            "spotify_max": mirror.SPOTIFY_MAX, "local": p["source"] == "local", "rule": rule,
+            "local": local, "rule": rule,
+            "STATUS_LABELS": {**STATUS_LABELS, "skipped": "Left out"} if local else STATUS_LABELS,
             "rule_text": _rule_text(rule) if rule is not None else None,
             "rule_qs": _filter_qs(rule) if rule is not None else None,
             "todo": sum(counts.get(s, 0) for s in ("missing", "in_library", "found", "not_found", "failed", "waiting")),
@@ -531,30 +571,93 @@ def song_audio(pid: str, key: str):
     return FileResponse(path, media_type=AUDIO_TYPES.get(path.suffix.lower(), "application/octet-stream"))
 
 
+_ZIPS: dict[str, dict] = {}     # ZIP downloads in progress, by the page's token
+
+
+@app.get("/playlists/{pid}/zip/check")
+def playlist_zip_check(pid: str):
+    if not sync.playlist(pid):
+        raise HTTPException(404)
+    _, files, _ = sync.export_files(C(), pid)
+    if not files:
+        return {"ok": False, "ask": None, "error": "Nothing downloaded in this playlist yet."}
+    return export.check(files)
+
+
 @app.get("/playlists/{pid}/zip")
-def playlist_zip(pid: str):
+def playlist_zip(pid: str, t: str = ""):
     if not sync.playlist(pid):
         raise HTTPException(404)
     folder, files, m3u = sync.export_files(C(), pid)
     if not files:
         raise HTTPException(404, "Nothing downloaded in this playlist yet")
+    ok = export.check(files)
+    if not ok["ok"]:
+        raise HTTPException(413, ok["error"])
+    prog = None
+    if re.fullmatch(r"[a-z0-9]{8,32}", t):
+        now = time.time()
+        for k in [k for k, v in _ZIPS.items() if now - v["started"] > 86400]:
+            del _ZIPS[k]
+        prog = _ZIPS[t] = {"started": now, "total": ok["size"], "songs": ok["songs"], "state": None}
     name = quote(f"{folder}.zip")
-    return StreamingResponse(export.stream_zip(folder, files, m3u), media_type="application/zip",
+    return StreamingResponse(export.stream_zip(folder, files, m3u, prog), media_type="application/zip",
                              headers={"Content-Disposition": f"attachment; filename*=UTF-8''{name}"})
 
 
+@app.get("/zip/progress")
+def zip_progress(t: str = ""):
+    return export.progress_text(_ZIPS.get(t))
+
+
+def _view_qs(back: str | None) -> str:
+    """The search and filter to go back to, from a form's back field."""
+    pairs = parse_qsl(back or "")
+    return urlencode([(k, v) for k, v in pairs if k in ("q", "show", "all")])
+
+
+def _playlist_url(pid: str, back: str | None) -> str:
+    qs = _view_qs(back)
+    return f"/playlists/{pid}" + (f"?{qs}" if qs else "")
+
+
+@app.post("/playlists/{pid}/songs/{do}")
+async def change_songs(request: Request, pid: str, do: str):
+    """Take the selected songs out of a My music playlist, or put them back. With matching=1, every song
+    the page's search and filter show."""
+    if do not in ("remove", "putback"):
+        raise HTTPException(404)
+    if not sync.playlist(pid):
+        raise HTTPException(404)
+    form = await request.form()
+    back = form.get("back") or ""
+    if form.get("matching"):
+        view = dict(parse_qsl(back))
+        rows, _ = sync.summary(C(), pid)
+        keys = [r["key"] for r in _find_rows(rows, view.get("q", ""), view.get("show", ""))
+                if (r["status"] == "skipped") == (do == "putback") and r["status"] != "removed"]
+    else:
+        keys = form.getlist("key")
+    if keys:
+        try:
+            sync.leave_out(C(), pid, keys, out=do == "remove")
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+    return _back(_playlist_url(pid, back))
+
+
 @app.post("/playlists/{pid}/songs/{key}/{action}")
-def song_action(pid: str, key: str, action: str):
+def song_action(pid: str, key: str, action: str, back: str | None = None):
     if action == "skip":
         sync.set_song(pid, key, skip=1, want=0)
     elif action == "unskip":
         sync.set_song(pid, key, skip=0)
-    elif action == "remove":
-        p = sync.playlist(pid)
-        if not p or p["source"] != "local" or p["rule"]:
-            raise HTTPException(400, "Only songs in a playlist you made by hand can be removed here")
-        sync.remove_songs(C(), pid, [key])
-        return _back(f"/playlists/{pid}")
+    elif action in ("remove", "putback"):
+        try:
+            sync.leave_out(C(), pid, [key], out=action == "remove")
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        return _back(_playlist_url(pid, back))
     else:
         raise HTTPException(404)
     return _back(f"/playlists/{pid}#song-{key}")

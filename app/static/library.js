@@ -12,6 +12,11 @@
     const n = boxes().filter(b => b.checked).length;
     document.getElementById("pick-n").textContent = n;
     bar.hidden = n === 0;
+    const note = document.getElementById("pick-note");
+    if (note) {
+      note.hidden = n === 0;
+      document.getElementById("pick-note-n").textContent = n === 1 ? "1 song" : `${n} songs`;
+    }
     if (all) {
       all.checked = n > 0 && n === boxes().length;
       all.indeterminate = n > 0 && n < boxes().length;
