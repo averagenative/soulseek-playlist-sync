@@ -198,7 +198,7 @@ class Client:
 
     def find_track(self, song: dict) -> str | None:
         """Spotify track URI for a song from another service: by ISRC, else by title, artist and length."""
-        from .match import artist_matches, core_title, norm, norm_title, search_artist
+        from .match import artist_matches, core_title, search_artist, title_matches
         want_len = (song.get("duration_ms") or 0) / 1000
         candidates = []
         if song.get("isrc"):
@@ -207,7 +207,7 @@ class Client:
         if not candidates:
             q = f'track:"{core_title(song.get("title"))}" artist:"{search_artist(song.get("artist"))}"'
             found = self.get("/search", {"q": q, "type": "track", "limit": 10}).get("tracks", {}).get("items", [])
-            candidates = [t for t in found if t and norm_title(t.get("name")) == norm_title(song.get("title"))
+            candidates = [t for t in found if t and title_matches(song.get("title"), t.get("name"))
                           and artist_matches(song.get("artist"), ", ".join(a["name"] for a in t.get("artists", [])))]
         candidates = [t for t in candidates if t and t.get("uri")]
         if want_len:

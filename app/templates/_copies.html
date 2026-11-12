@@ -6,7 +6,7 @@
     <div class="eyebrow">Copy to {{ c.label }}</div>
     {% if m and m.url %}
       <div><a href="{{ m.url }}" target="_blank" rel="noopener">Open the {{ c.label }} copy</a>
-        <span class="muted small">&middot; {% if m.capped %}{{ m.matched|n }} songs{% else %}{{ m.matched|n }} of {{ m.total|n }} songs found on {{ c.label }}{% endif %} &middot; updated {{ m.updated_at|ago }}</span></div>
+        <span class="muted small">&middot; {% if p.busy and c.label in p.busy %}{{ p.busy }}{% elif m.capped %}{{ m.matched|n }} songs{% else %}{{ m.matched|n }} of {{ m.total|n }} songs found on {{ c.label }}{% endif %} &middot; updated {{ m.updated_at|ago }}</span></div>
       {% if m.note %}<div class="muted small">{{ m.note }}</div>{% endif %}
       {% if m.missing %}
         <details class="missing" data-keep="missing-{{ c.target }}"><summary class="muted small">{{ m.missing|length|n }} not on {{ c.label }}{% if m.capped %} (of the songs checked){% endif %}</summary>

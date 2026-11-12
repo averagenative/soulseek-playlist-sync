@@ -24,6 +24,7 @@ TARGETS = {"spotify": "Spotify", "apple": "Apple Music"}
 SPOTIFY_MAX = 10_000
 PACE = {"spotify": 0.35, "apple": 0.15}   # seconds between searches when matching a big playlist
 GIVE_UP = 10        # searches failing in a row before a copy stops: the service is down, not one song
+ADD_BATCH = 100     # songs per request when adding to an Apple Music copy
 
 
 def targets_for(source: str) -> list[str]:
@@ -90,8 +91,40 @@ def run(cfg: Config, pid: str, target: str | None = None) -> None:
     now = db.now()
     chosen, looked, searched = [], [], 0
     failed, in_a_row = [], 0
+    desc = ("Made from my music library" if p["source"] == "local"
+            else f"Copied from {sync.SOURCES[p['source']]}") + " by soulseek-playlist-sync."
     try:
         with _client(cfg, target) as api:
+            # Apple Music copies only ever gain songs, so songs go in as they're matched: the playlist
+            # grows while matching runs, and a copy that stops keeps what it added. A Spotify copy is
+            # replaced as a whole at the end instead, since it can be a random sample.
+            remote, have, pending, added = None, set(), [], 0
+            if target == "apple":
+                m = get(pid, target)
+                if m and m["remote_id"] and api.playlist_exists(m["remote_id"]):
+                    remote = m["remote_id"]
+                    _busy(pid, f"Reading the {label} copy")
+                    # What the copy lists, and what the app added to it: a song added in a version you
+                    # already had is listed under the other version's ID. A song you remove from the
+                    # copy in the Music app isn't added back.
+                    have = api.playlist_song_ids(remote) | _added(pid, target)
+
+            def flush():
+                nonlocal remote, added
+                if not pending:
+                    return
+                if remote is None:
+                    remote = api.create_playlist(p["name"], desc, pending)
+                    _forget_added(pid, target)          # a new playlist: what went into an old one doesn't count
+                else:
+                    api.add_tracks(remote, pending)
+                _remember_added(pid, target, pending)
+                have.update(pending)
+                added += len(pending)
+                pending.clear()
+                # Remember the playlist and how far it got, so a restart adds to this one.
+                _save(pid, target, remote, matched=len(chosen), total=len(unique))
+
             for i, key in enumerate(pool, 1):
                 if capped and len(chosen) >= SPOTIFY_MAX:
                     break
@@ -122,8 +155,14 @@ def run(cfg: Config, pid: str, target: str | None = None) -> None:
                                   "VALUES (?, ?, ?, ?)", (key, target, found or "", now))
                 if links[key]["remote_id"]:
                     chosen.append(key)
+                    rid = links[key]["remote_id"]
+                    if target == "apple" and rid not in have and rid not in pending:
+                        pending.append(rid)
+                        if len(pending) >= ADD_BATCH:
+                            flush()
                 if i % 25 == 0:
                     _busy(pid, f"Matching on {label}: {len(chosen):,} found" if capped else
+                          f"Matching on {label} ({i:,}/{len(pool):,}), {added:,} added" if target == "apple" else
                           f"Matching on {label} ({i:,}/{len(pool):,})")
 
             keep = set(chosen)
@@ -138,23 +177,38 @@ def run(cfg: Config, pid: str, target: str | None = None) -> None:
                 note = ((note + " ") if note else "") + (
                     f"{n:,} {'song' if n == 1 else 'songs'} couldn't be looked up because {label} had problems. "
                     "Update the copy to try again.")
-            _busy(pid, f"Updating the {TARGETS[target]} copy")
-            m = get(pid, target)
-            remote = m["remote_id"] if m and m["remote_id"] and api.playlist_exists(m["remote_id"]) else None
-            desc = ("Made from my music library" if p["source"] == "local"
-                    else f"Copied from {sync.SOURCES[p['source']]}") + " by soulseek-playlist-sync."
+            _busy(pid, f"Updating the {label} copy")
             if target == "spotify":
+                m = get(pid, target)
+                remote = m["remote_id"] if m and m["remote_id"] and api.playlist_exists(m["remote_id"]) else None
                 remote = remote or api.create_playlist(p["name"], desc)
                 api.set_tracks(remote, ids)
-            elif remote:
-                have = api.playlist_song_ids(remote)
-                api.add_tracks(remote, [i for i in dict.fromkeys(ids) if i not in have])
             else:
-                remote = api.create_playlist(p["name"], desc, ids)
+                flush()
+                if remote is None:
+                    remote = api.create_playlist(p["name"], desc, [])     # nothing matched: an empty copy
+                    _forget_added(pid, target)
         _save(pid, target, remote, matched=len(chosen), total=len(unique), missing=missing, note=note or "")
-    except (spotify.SpotifyError, apple.AppleError) as e:
+    except (spotify.SpotifyError, apple.AppleError, httpx.HTTPError) as e:
         _save(pid, target, (get(pid, target) or {}).get("remote_id"), error=str(e)[:300])
         raise
+
+
+def _added(pid: str, target: str) -> set[str]:
+    with db.connect() as c:
+        return {r[0] for r in c.execute("SELECT song_id FROM mirror_songs WHERE playlist_id = ? AND target = ?",
+                                        (pid, target))}
+
+
+def _remember_added(pid: str, target: str, ids: list[str]) -> None:
+    with db.connect() as c:
+        c.executemany("INSERT OR IGNORE INTO mirror_songs (playlist_id, target, song_id) VALUES (?, ?, ?)",
+                      [(pid, target, i) for i in ids])
+
+
+def _forget_added(pid: str, target: str) -> None:
+    with db.connect() as c:
+        c.execute("DELETE FROM mirror_songs WHERE playlist_id = ? AND target = ?", (pid, target))
 
 
 def _busy(pid: str, label: str) -> None:

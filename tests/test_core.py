@@ -7,7 +7,7 @@ from mutagen.id3 import ID3
 
 from app.folders import place, rename_all, safe_name, song_file_name, write_m3u
 from app.match import (artist_matches, core_title, norm, norm_title, primary_artist, rank_candidates,
-                       search_queries)
+                       search_queries, title_matches)
 from app.tagger import tag_mp3
 
 
@@ -21,6 +21,19 @@ def test_norm_and_titles():
     # Version info that changes the recording is kept.
     assert norm_title("Steve's Lava Chicken (Extended Version)") == "steves lava chicken extended version"
     assert core_title("The Claw (Pachelbel's Canon) [feat. Marly Luske & Joff Bush]") == "The Claw"
+
+
+def test_censored_titles_match():
+    # Apple Music writes "F**k"; your files say "Fuck". Each mark is one letter.
+    assert title_matches("I Don’t Give a Fuck", "I Don't Give a F**k")
+    assert title_matches("Definition of a Thug N***a", "Definition of a Thug Nigga")
+    assert title_matches("F**k Out My Face (feat. B-Real & ONYX)", "Fuck Out My Face")
+    assert title_matches("Charlie, Burt Reynolds Has Got Shit on You", "Charlie, Burt Reynolds Has Got S*%t On You")
+    assert title_matches("Fuck Wit Ya Head", "F*@# Wit' Ya Head!!")
+    assert title_matches("Pearly*", "Pearly")
+    assert not title_matches("Fuck the World", "F**k the World Tour")
+    assert not title_matches("Freak", "F**k")
+    assert not title_matches("Fucking Bullshit", "F*****g B******t Remix")
 
 
 def test_primary_artist():

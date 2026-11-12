@@ -24,13 +24,16 @@ def ascii_fold(s: str) -> str:
     return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
 
 
+def _fold(s: str) -> str:
+    s = ascii_fold(s.translate(_DASHES)).lower().replace("&", " and ")
+    return re.sub(r"[’'`]", "", s)
+
+
 def norm(s: str | None) -> str:
     """Lowercase ASCII words separated by single spaces."""
     if not s:
         return ""
-    s = ascii_fold(s.translate(_DASHES)).lower().replace("&", " and ")
-    s = re.sub(r"[’'`]", "", s)
-    return re.sub(r"[^a-z0-9]+", " ", s).strip()
+    return re.sub(r"[^a-z0-9]+", " ", _fold(s)).strip()
 
 
 def clean_title(title: str | None) -> str:
@@ -49,6 +52,21 @@ def core_title(title: str | None) -> str:
 
 def norm_title(title: str | None) -> str:
     return norm(clean_title(title))
+
+
+# Apple Music censors words in titles: "F**k", "N***a", "S*%t", "F*@#". Each mark stands for one letter.
+_MARKS = "*%#@"
+_WORD = re.compile(r"[a-z0-9]+[*%#@][a-z0-9*%#@]*|[a-z0-9]+")
+
+
+def title_matches(a: str | None, b: str | None) -> bool:
+    """Same title, allowing for a censored one: "I Don't Give a F**k" matches "I Don't Give a Fuck"."""
+    if norm_title(a) == norm_title(b):
+        return True
+    wa, wb = (_WORD.findall(_fold(clean_title(t))) for t in (a, b))
+    return len(wa) == len(wb) and all(
+        len(x) == len(y) and all(cx == cy or cx in _MARKS or cy in _MARKS for cx, cy in zip(x, y))
+        for x, y in zip(wa, wb))
 
 
 def primary_artist(artist: str | None) -> str:

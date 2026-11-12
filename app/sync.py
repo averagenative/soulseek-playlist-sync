@@ -111,7 +111,7 @@ def rule_of(p) -> dict | None:
 def remove_playlist(pid: str) -> None:
     """Stop tracking a playlist. Files on disk are left alone."""
     with db.connect() as c:
-        for t in ("entries", "items", "mirrors"):
+        for t in ("entries", "items", "mirrors", "mirror_songs"):
             c.execute(f"DELETE FROM {t} WHERE playlist_id = ?", (pid,))
         c.execute("DELETE FROM playlists WHERE id = ?", (pid,))
 

@@ -189,7 +189,7 @@ On a playlist's page, the **Copy to Spotify** or **Copy to Apple Music** panel m
 Click **Update** to bring the copy up to date later. The two directions behave differently:
 
 - **To Spotify:** the copy is made identical every time, with the same songs in the same order.
-- **To Apple Music:** new songs are added. Apple's API doesn't let apps remove or reorder songs, so songs removed from the original stay in the Apple Music copy until you remove them in the Music app.
+- **To Apple Music:** new songs are added. Apple's API doesn't let apps remove or reorder songs, so songs removed from the original stay in the Apple Music copy until you remove them in the Music app. A song you remove from the Apple Music copy isn't added back.
 
 ## Sync favorites between Spotify and Apple Music
 
@@ -234,8 +234,8 @@ In a **Keep up to date** playlist, songs you take out stay out of its `.m3u`, it
 Keep the following in mind:
 
 - **Spotify playlists hold up to 10,000 songs.** A bigger playlist's Spotify copy gets a random 10,000 of its songs, and each **Update** picks a new 10,000. Apple Music copies get every song.
-- **The first copy of a big playlist takes a while.** The app searches the service for each song, spaced out so it doesn't get rate-limited: allow one to two hours per 10,000 songs. It remembers what it found, so updates only search for new songs. If the service asks the app to pause, the copy stops with a message, and the next **Update** carries on where it left off. When the service fails for a moment, the app retries. A song whose search still fails is skipped and looked for again on the next **Update**. If 10 searches in a row fail, the copy stops.
-- **Songs are matched by artist, title, and length**, or by ISRC when your files have one. Songs the service doesn't have are listed in the copy panel.
+- **The first copy of a big playlist takes a while.** The app searches the service for each song, spaced out so it doesn't get rate-limited: allow one to two hours per 10,000 songs. It remembers what it found, so updates only search for new songs. An Apple Music copy fills up as songs are matched, so you can open it while the copy runs. If the service asks the app to pause, the copy stops with a message, and the next **Update** carries on where it left off. When the service fails for a moment, the app retries. A song whose search still fails is skipped and looked for again on the next **Update**. If 10 searches in a row fail, the copy stops.
+- **Songs are matched by artist, title, and length**, or by ISRC when your files have one. A title Apple Music censors, such as "F\*\*k", matches your file's uncensored title. Songs the service doesn't have are listed in the copy panel.
 - **The playlist's `.m3u` points at your library files** by default, in a folder under `Playlists/`, so it takes no space and media servers such as Navidrome can import it. To get a folder you can copy to an MP3 player instead, set **Songs already in your library** to **Copy into the playlist folder** in the playlist's settings. These playlists keep your files as they are, including `.m4a` files.
 
 Your Apple Music library also appears at the top of the list when you add Apple Music playlists, as **Apple Music library**. Track it like a playlist to download it, or to copy it to Spotify. Spotify's equivalent is **Liked Songs**.

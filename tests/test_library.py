@@ -383,3 +383,50 @@ def test_service_hiccups_are_retried_and_one_bad_search_skips_a_song(cfg, monkey
     monkeypatch.setattr(mirror, "GIVE_UP", 3)
     with pytest.raises(httpx.HTTPStatusError):
         mirror.run(cfg, pid, "spotify")
+
+
+def test_apple_copy_adds_songs_as_it_matches_and_a_restart_carries_on(cfg, monkeypatch):
+    from app import apple
+    add_files(cfg, *[(f"Albums/A/{i}.mp3", "A", f"Song {i}", "X", i) for i in range(1, 8)])
+    pid = sync.add_local_playlist(cfg, "Everything", rule={})
+    sync.refresh_local(cfg, pid)
+
+    class Fake:
+        lists, calls, down = {}, [], None
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+        def find_song(self, song):
+            if song["title"] == Fake.down:
+                raise apple.AppleError("Apple Music kept failing")
+            return None if song["title"] == "Song 4" else f"c{song['title'][-1]}"
+        def playlist_exists(self, rid): return rid in Fake.lists
+        def playlist_song_ids(self, rid): return set(Fake.lists[rid])
+        def create_playlist(self, name, desc, ids):
+            Fake.lists["am"] = list(ids); Fake.calls.append(("create", list(ids))); return "am"
+        def add_tracks(self, rid, ids):
+            Fake.lists[rid] += ids; Fake.calls.append(("add", list(ids)))
+
+    monkeypatch.setattr(mirror, "_client", lambda cfg, target: Fake())
+    monkeypatch.setattr(mirror, "ADD_BATCH", 2)
+    monkeypatch.setattr(mirror, "GIVE_UP", 1)
+    # Apple stops answering at Song 6: what was matched before is already in the playlist.
+    Fake.down = "Song 6"
+    with pytest.raises(apple.AppleError):
+        mirror.run(cfg, pid, "apple")
+    assert Fake.calls == [("create", ["c1", "c2"]), ("add", ["c3", "c5"])]
+    m = mirror.get(pid, "apple")
+    assert m["remote_id"] == "am" and m["matched"] == 4 and "kept failing" in m["error"]
+    # Run it again: same playlist, nothing added twice, and the rest goes in.
+    Fake.down = None
+    mirror.run(cfg, pid, "apple")
+    assert Fake.calls[2:] == [("add", ["c6", "c7"])]
+    assert Fake.lists == {"am": ["c1", "c2", "c3", "c5", "c6", "c7"]}
+    m = mirror.get(pid, "apple")
+    assert m["matched"] == 6 and m["total"] == 7 and m["missing"] == ["A - Song 4"] and not m["error"]
+
+    # Apple lists a song you already had in another version under that version's ID, and you can delete
+    # songs from the copy in the Music app. An update adds neither back, only the new song.
+    Fake.lists["am"] = ["c1", "c2", "x3", "c6", "c7"]          # c3 shows as x3; c5 deleted in the Music app
+    add_files(cfg, ("Albums/A/8.mp3", "A", "Song 8", "X", 8))
+    mirror.run(cfg, pid, "apple")
+    assert Fake.calls[3:] == [("add", ["c8"])]

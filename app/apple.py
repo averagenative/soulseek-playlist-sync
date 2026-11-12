@@ -267,7 +267,7 @@ class Client:
 
     def find_song(self, song: dict) -> str | None:
         """Apple catalog ID for a song from another service: by ISRC, else by title, artist and length."""
-        from .match import artist_matches, core_title, norm_title, search_artist
+        from .match import artist_matches, core_title, search_artist, title_matches
         want_len = (song.get("duration_ms") or 0) / 1000
         sf = self.storefront()
         found = []
@@ -277,7 +277,7 @@ class Client:
             term = f"{search_artist(song.get('artist'))} {core_title(song.get('title'))}"
             res = self.get(f"/v1/catalog/{sf}/search", {"term": term, "types": "songs", "limit": 15})
             found = [s for s in res.get("results", {}).get("songs", {}).get("data", [])
-                     if norm_title(s["attributes"].get("name")) == norm_title(song.get("title"))
+                     if title_matches(song.get("title"), s["attributes"].get("name"))
                      and artist_matches(song.get("artist"), s["attributes"].get("artistName"))]
         if want_len:
             off = {s["id"]: abs((s["attributes"].get("durationInMillis") or 0) / 1000 - want_len) for s in found}

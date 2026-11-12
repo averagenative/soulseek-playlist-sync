@@ -105,6 +105,15 @@ CREATE TABLE IF NOT EXISTS mirrors (
     PRIMARY KEY (playlist_id, target)
 );
 
+-- Songs this app added to an Apple Music copy. Apple lists a song that was already in your library
+-- in another version under that version's ID, so the playlist alone can't say what was added.
+CREATE TABLE IF NOT EXISTS mirror_songs (
+    playlist_id TEXT NOT NULL,
+    target      TEXT NOT NULL,
+    song_id     TEXT NOT NULL,        -- the catalog ID the app added
+    PRIMARY KEY (playlist_id, target, song_id)
+);
+
 -- A song's match on another service ('' = looked, not there).
 CREATE TABLE IF NOT EXISTS song_links (
     song_key   TEXT NOT NULL,
