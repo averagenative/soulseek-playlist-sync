@@ -69,7 +69,7 @@ You don't need both Apple Music and Spotify. Use either one, or both.
 
    The first start downloads the images. The app's image runs on Intel, AMD, and ARM machines, including Apple Silicon Macs and a Raspberry Pi with a 64-bit OS. To build it from this folder instead, run `docker compose up -d --build`; the first build takes a few minutes.
 
-1. Open `http://localhost:8080`, or `http://<server IP>:8080` from another device on your network.
+1. Open `http://127.0.0.1:8080` on the computer that runs it, or `http://<server IP>:8080` from another device on your network.
 
 1. Connect Apple Music, Spotify, or both, as described in the following sections.
 
@@ -105,14 +105,23 @@ If you have an Apple Developer Program membership, you can use your own MusicKit
 1. In `.env`, set `APPLE_KEY_ID` to the key's 10-character ID and `APPLE_TEAM_ID` to your Team ID from [Membership details](https://developer.apple.com/account).
 1. Run `docker compose up -d`, then click **Connect Apple Music** in the app and sign in.
 
-Apple's sign-in window needs the app to be open at `http://localhost:8080` or at an HTTPS address. Each person who runs the app needs their own key: never share your `.p8` file.
+Apple's sign-in window needs the app to be open at `http://127.0.0.1:8080`, `http://localhost:8080`, or an HTTPS address. Each person who runs the app needs their own key: never share your `.p8` file.
 
 ## Connect Spotify
 
-1. Go to the [Spotify developer dashboard](https://developer.spotify.com/dashboard) and click **Create app**.
-1. Fill in a name and description. For **Redirect URIs**, enter the address shown on the app's **Settings** page and click **Add**. For a default setup, it's `http://127.0.0.1:8080/spotify/callback`.
-1. Select **Web API** and save.
-1. Copy the app's **Client ID** (you don't need the client secret) and paste it on the app's **Settings** page, or set `SPOTIFY_CLIENT_ID` in `.env`.
+You need Spotify Premium, because Spotify only lets Premium accounts use developer apps. Each person makes their own developer app, with their own Spotify account.
+
+In the app, click **Connect Spotify**. That page walks you through the following steps, with the exact redirect address for your setup and a copy button for each value.
+
+1. Go to the [Spotify developer dashboard](https://developer.spotify.com/dashboard), sign in with your Spotify account, and click **Create app**.
+1. Fill in the form:
+   - **App name** and **App description**: anything you like, such as `Playlist sync` and `Copies my playlists`.
+   - **Website**: leave it empty.
+   - **Redirect URIs**: the address shown under **Spotify** on this app's **Settings** page. Paste it and click **Add**. When the app runs on your own computer, it's `http://127.0.0.1:8080/spotify/callback`. Spotify refuses addresses that start with `http://localhost`.
+   - For the APIs you plan to use, select **Web API**.
+   - Accept Spotify's terms and save the app.
+1. On your Spotify app's page, click **Settings** and copy the **Client ID**. You don't need the client secret.
+1. On this app's **Settings** page, paste it into **Spotify Client ID** and click **Save**.
 1. Click **Connect Spotify** and approve.
 
 Spotify accepts only HTTPS redirect addresses or `127.0.0.1`. If the app runs on another machine and you don't use HTTPS, connect through an SSH tunnel once:

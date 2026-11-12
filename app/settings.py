@@ -1,6 +1,7 @@
 """Settings you can change in the web UI. Environment variables give the defaults; saved values win."""
 import dataclasses
 import json
+import re
 from pathlib import PurePosixPath
 
 from . import db
@@ -58,6 +59,25 @@ def clean_folder(value: str) -> str:
     return str(p)
 
 
+def clean_spotify_client_id(value: str) -> str:
+    """A Spotify Client ID: 32 hexadecimal characters."""
+    v = (value or "").strip().lower()
+    if not re.fullmatch(r"[0-9a-f]{32}", v):
+        raise SettingsError("That isn't a Spotify Client ID. It's 32 letters and numbers, shown under Client ID "
+                            "on your Spotify app's Settings page.")
+    return v
+
+
+def set_value(name: str, value) -> None:
+    """Save one setting, leaving the others as they are."""
+    values = overrides()
+    if value == getattr(_base, name):
+        values.pop(name, None)
+    else:
+        values[name] = value
+    save(values)
+
+
 def parse(form: dict) -> dict:
     """Validate submitted values and return the ones that differ from the environment defaults."""
     out = {}
@@ -78,6 +98,8 @@ def parse(form: dict) -> dict:
                     raise SettingsError(f"{label} must be between {lo} and {hi}")
             if name.endswith("_dir"):
                 value = clean_folder(value)
+            if name == "spotify_client_id":
+                value = clean_spotify_client_id(value)
             if name == "default_library_mode" and value not in ("copy", "reference"):
                 raise SettingsError("Library mode must be copy or reference")
         if value != getattr(_base, name):

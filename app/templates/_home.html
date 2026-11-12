@@ -3,8 +3,11 @@
 <div data-active="{{ 1 if ns.active else 0 }}">
 {% if not apple_configured %}
   <p class="notice bad">Apple Music isn't set up. Set <code>APPLE_TEAM_ID</code>, <code>APPLE_KEY_ID</code> and <code>APPLE_KEY_FILE</code>.</p>
-{% elif not apple_connected %}
-  <p class="notice warn">Connect Apple Music to see your playlists. <a class="btn small" href="/apple/connect">Connect</a></p>
+{% elif not apple_connected and playlists|selectattr("source", "equalto", "apple")|list %}
+  <p class="notice warn">Apple Music isn't connected, so your Apple Music playlists can't update. <a class="btn small" href="/apple/connect">Reconnect</a></p>
+{% endif %}
+{% if not spotify_connected and playlists|selectattr("source", "equalto", "spotify")|list %}
+  <p class="notice warn">Spotify isn't connected, so your Spotify playlists can't update. <a class="btn small" href="/spotify/setup">Reconnect</a></p>
 {% endif %}
 {% if slskd.reachable == false %}
   <div class="notice bad">slskd isn't reachable, so nothing can be searched or downloaded.
@@ -46,10 +49,15 @@
     <p class="muted">Pick a playlist and it gets its own folder of MP3s and an .m3u, ready for an MP3 player or Navidrome.
       Or make one from the music you already have and copy it to Spotify or Apple Music.</p>
     <div class="actions">
-      {% if apple_connected %}<a class="btn primary" href="/apple/playlists">Add from Apple Music</a>{% endif %}
-      {% if spotify_connected %}<a class="btn primary" href="/spotify/playlists">Add from Spotify</a>{% endif %}
+      {% if apple_connected %}<a class="btn primary" href="/apple/playlists">Add from Apple Music</a>
+      {% else %}<a class="btn" href="/apple/connect">Connect Apple Music</a>{% endif %}
+      {% if spotify_connected %}<a class="btn primary" href="/spotify/playlists">Add from Spotify</a>
+      {% else %}<a class="btn" href="/spotify/setup">Connect Spotify</a>{% endif %}
       {% if library.files %}<a class="btn" href="/library">Make one from my music</a>{% endif %}
     </div>
+    {% if not apple_connected and not spotify_connected %}
+    <p class="muted small">Connect Apple Music, Spotify, or both. Each button walks you through it.</p>
+    {% endif %}
   </div>
 {% endif %}
 </div>

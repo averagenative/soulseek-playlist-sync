@@ -163,3 +163,41 @@ def test_titles_and_names_from_the_services_compare_cleanly():
     assert norm_title("Wait For Me - Live Version") != norm_title("Wait For Me")
     assert norm_title("Under Pressure - Remastered 2011") == "under pressure"
     assert artist_matches("Dick Dale and His Del\u2010Tones", "Dick Dale and His Del-Tones")
+
+
+def test_spotify_setup_guides_you_through_connecting(cfg, monkeypatch):
+    monkeypatch.setenv("WORKER", "0")
+    monkeypatch.setenv("SLSKD_URL", "http://127.0.0.1:9")
+    from urllib.parse import parse_qs, urlsplit
+    from fastapi.testclient import TestClient
+    import app.web as web
+    importlib.reload(web)
+    warning = "Spotify won't accept this page's address"
+    with TestClient(web.app, base_url="http://localhost:8080") as client:      # the README's old address
+        for page in ("/", "/settings"):
+            assert 'href="/spotify/setup"' in client.get(page).text            # every way in leads to the guide
+        assert "isn't connected" not in client.get("/").text                   # no nagging without playlists
+        r = client.get("/spotify/setup")
+        assert 'data-copy="http://127.0.0.1:8080/spotify/callback"' in r.text and "localhost" not in r.text
+        assert warning not in r.text
+        # A bad Client ID stays on the guide with a reason; a good one is saved and goes straight to Spotify.
+        r = client.post("/spotify/setup", data={"client_id": "not-an-id"}, follow_redirects=False)
+        assert r.headers["location"].startswith("/spotify/setup?error=")
+        assert "32 letters and numbers" in client.get(r.headers["location"]).text
+        r = client.post("/spotify/setup", data={"client_id": " 0123456789ABCDEF0123456789abcdef "}, follow_redirects=False)
+        assert r.headers["location"] == "/spotify/connect"
+        assert settings.current().spotify_client_id == "0123456789abcdef0123456789abcdef"
+        r = client.get("/spotify/connect", follow_redirects=False)
+        q = parse_qs(urlsplit(r.headers["location"]).query)
+        assert r.headers["location"].startswith("https://accounts.spotify.com/authorize")
+        assert q["redirect_uri"] == ["http://127.0.0.1:8080/spotify/callback"]
+        assert q["client_id"] == ["0123456789abcdef0123456789abcdef"]
+        # Saying no on Spotify's page comes back to the guide with an explanation.
+        r = client.get("/spotify/callback?error=access_denied", follow_redirects=False)
+        assert "approve" in client.get(r.headers["location"]).text
+    with TestClient(web.app, base_url="http://192.168.1.20:8080") as client:  # another device on the network
+        r = client.get("/spotify/setup")
+        assert warning in r.text and 'href="http://127.0.0.1:8080/spotify/setup"' in r.text
+    with TestClient(web.app, base_url="https://music.example.com") as client:
+        r = client.get("/spotify/setup")
+        assert 'data-copy="https://music.example.com/spotify/callback"' in r.text and warning not in r.text

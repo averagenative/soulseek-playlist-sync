@@ -7,7 +7,7 @@
 # This downloads the published image. To build it from this folder instead, run
 # `docker compose up -d --build`.
 #
-# Then open http://localhost:8080 (or http://<this machine's IP>:8080 on your network).
+# Then open http://127.0.0.1:8080 (or http://<this machine's IP>:8080 on your network).
 
 services:
   playlist-sync:

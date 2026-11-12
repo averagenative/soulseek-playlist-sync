@@ -11,7 +11,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode, urlsplit
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -138,7 +138,19 @@ def _active_downloads() -> int:
 
 def _spotify_redirect(request: Request) -> str:
     cfg = C()
-    return cfg.spotify_redirect_uri or str(request.url_for("spotify_callback"))
+    if cfg.spotify_redirect_uri:
+        return cfg.spotify_redirect_uri
+    url = request.url_for("spotify_callback")
+    # Spotify refuses "localhost" but accepts the loopback address, which reaches the same app.
+    if url.hostname == "localhost":
+        url = url.replace(hostname="127.0.0.1")
+    return str(url)
+
+
+def _spotify_accepts(uri: str) -> bool:
+    """Spotify takes HTTPS redirect addresses, and plain HTTP only on a loopback address."""
+    u = urlsplit(uri)
+    return u.scheme == "https" or (u.scheme == "http" and u.hostname in ("127.0.0.1", "::1"))
 
 
 # ------------------------------------------------------------------ pages
@@ -187,7 +199,7 @@ def _home_playlists() -> list[dict]:
 def settings_page(request: Request, saved: int = 0, error: str | None = None):
     return templates.TemplateResponse(request, "settings.html", {
         **_common(), "cfg": C(), "base": base_cfg, "fields": settings.EDITABLE, "overridden": settings.overrides(),
-        "spotify_redirect": _spotify_redirect(request), "saved": saved, "error": error,
+        "saved": saved, "error": error,
     })
 
 
@@ -256,28 +268,55 @@ def apple_playlists(request: Request):
 
 # ------------------------------------------------------------------ Spotify
 
+def _setup_error(message: str) -> RedirectResponse:
+    return _back(f"/spotify/setup?error={quote(message)}")
+
+
+@app.get("/spotify/setup", response_class=HTMLResponse)
+def spotify_setup(request: Request, error: str | None = None):
+    cfg = C()
+    redirect = _spotify_redirect(request)
+    return templates.TemplateResponse(request, "spotify_setup.html", {
+        **_common(), "client_id": cfg.spotify_client_id or "", "redirect": redirect,
+        "redirect_ok": _spotify_accepts(redirect),
+        "loopback": str(request.url.replace(hostname="127.0.0.1", query="")),
+        "can_write": spotify.connected(cfg) and spotify.can_write(cfg), "error": error,
+    })
+
+
+@app.post("/spotify/setup")
+def spotify_setup_save(client_id: str = Form("")):
+    try:
+        settings.set_value("spotify_client_id", settings.clean_spotify_client_id(client_id))
+    except settings.SettingsError as e:
+        return _setup_error(str(e))
+    return _back("/spotify/connect")
+
+
 @app.get("/spotify/connect")
 def spotify_connect(request: Request):
     if not spotify.configured(C()):
-        return _back("/settings?error=Enter your Spotify Client ID first")
+        return _back("/spotify/setup")
     return RedirectResponse(spotify.auth_url(C(), _spotify_redirect(request)), status_code=303)
 
 
 @app.get("/spotify/callback", name="spotify_callback")
 def spotify_callback(code: str | None = None, state: str | None = None, error: str | None = None):
+    if error == "access_denied":
+        return _setup_error("You didn't approve on Spotify's page, so Spotify isn't connected. Click Save and connect to try again.")
     if error or not code:
-        return _back(f"/settings?error=Spotify sign-in failed: {error or 'no code'}")
+        return _setup_error(f"Spotify sign-in failed: {error or 'Spotify sent no sign-in code'}")
     try:
         spotify.finish_auth(C(), code, state)
     except spotify.SpotifyError as e:
-        return _back(f"/settings?error={e}")
+        return _setup_error(str(e))
     return _back("/spotify/playlists")
 
 
 @app.post("/spotify/disconnect")
-def spotify_disconnect():
+def spotify_disconnect(back: str | None = None):
     spotify.disconnect(C())
-    return _back("/settings")
+    return _back("/spotify/setup" if back == "/spotify/setup" else "/settings")
 
 
 @app.get("/spotify/playlists", response_class=HTMLResponse)
@@ -286,9 +325,9 @@ def spotify_playlists(request: Request):
         with spotify.Client(C()) as api:
             remote = api.playlists()
     except spotify.NotConnected:
-        return _back("/spotify/connect")
+        return _back("/spotify/setup")
     except spotify.SpotifyError as e:
-        return _back(f"/settings?error={e}")
+        return _setup_error(str(e))
     return _pick(request, "spotify", remote)
 
 

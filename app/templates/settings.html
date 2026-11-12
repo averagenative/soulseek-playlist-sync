@@ -57,20 +57,17 @@
 
   <fieldset>
     <legend>Spotify</legend>
-    <p class="muted small">Create an app at <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a>
-      (Web API), add this redirect URI to it, and paste its Client ID here. No client secret is needed.</p>
-    <p><code class="copy">{{ spotify_redirect }}</code></p>
-    {{ field("spotify_client_id") }}
     <p>
       {% if spotify_connected %}
         <span class="badge synced">Connected</span>
+        <a class="btn small" href="/spotify/setup">Details</a>
         <button class="btn small" formaction="/spotify/disconnect" formmethod="post" formnovalidate>Disconnect</button>
-      {% elif spotify_configured %}
-        <a class="btn small primary" href="/spotify/connect">Connect Spotify</a>
       {% else %}
-        <span class="muted small">Save a Client ID, then connect.</span>
+        <a class="btn small primary" href="/spotify/setup">Connect Spotify</a>
+        <span class="muted small">Walks you through creating the Spotify app this needs.</span>
       {% endif %}
     </p>
+    {{ field("spotify_client_id") }}
   </fieldset>
 
   <fieldset>

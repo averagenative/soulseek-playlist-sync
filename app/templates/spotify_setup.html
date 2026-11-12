@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Connect Spotify · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><span class="here">Connect Spotify</span>{% endblock %}
+{% block content %}
+{% macro copyable(value) %}<span class="copy-row"><code class="copy">{{ value }}</code><button type="button" class="btn tiny" data-copy="{{ value }}">Copy</button></span>{% endmacro %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">{{ 'Connected' if spotify_connected else 'Takes about 5 minutes, once' }}</div>
+    <h1>Connect Spotify</h1>
+  </div>
+  {% if spotify_connected %}
+  <div class="actions">
+    <a class="btn primary" href="/spotify/playlists">Add Spotify playlists</a>
+    <form method="post" action="/spotify/disconnect?back=/spotify/setup" class="inline"><button class="btn">Disconnect</button></form>
+  </div>
+  {% endif %}
+</section>
+{% if error %}<p class="notice bad">{{ error }}</p>{% endif %}
+
+{% if spotify_connected %}
+  {% if can_write %}
+  <p class="notice ok">Spotify is connected. You can add Spotify playlists, and copy any playlist to Spotify.</p>
+  {% else %}
+  <p class="notice warn">Spotify is connected, but without permission to create playlists, so copies to Spotify can't be made.
+    <a class="btn small" href="/spotify/connect">Reconnect</a></p>
+  {% endif %}
+{% endif %}
+
+{% if not redirect_ok %}
+<p class="notice warn">Spotify won't accept this page's address, because it isn't HTTPS or 127.0.0.1.
+  On the computer that runs the app, open <a href="{{ loopback }}">{{ loopback }}</a> and follow the steps there.
+  If the app runs on another computer, connect through the SSH tunnel described in the README.</p>
+{% endif %}
+
+<div class="settings-form">
+  <p class="muted">Spotify only lets an app read your playlists after you create a free "developer app" on Spotify's site and give
+    this app its Client ID. You need Spotify Premium, because Spotify only lets Premium accounts use developer apps.
+    Use your own Spotify account: each person makes their own developer app.</p>
+
+  <fieldset>
+    <legend>1. Create a Spotify app</legend>
+    <p><a class="btn primary small" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">Open the Spotify developer dashboard</a></p>
+    <p>Sign in with your Spotify account, click <b>Create app</b>, and fill in the form:</p>
+    <dl class="form-values">
+      <dt>App name</dt><dd>Anything, such as {{ copyable("Playlist sync") }}</dd>
+      <dt>App description</dt><dd>Anything, such as {{ copyable("Copies my playlists") }}</dd>
+      <dt>Website</dt><dd>Leave it empty.</dd>
+      <dt>Redirect URIs</dt><dd>{{ copyable(redirect) }}<br>Paste this exact address and click <b>Add</b>.</dd>
+      <dt>APIs used</dt><dd>Select <b>Web API</b>.</dd>
+    </dl>
+    <p>Then accept Spotify's terms and save the app.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>2. Copy the Client ID</legend>
+    <p>On your new app's page, click <b>Settings</b> and copy the <b>Client ID</b>: 32 letters and numbers.
+      You don't need the client secret.</p>
+  </fieldset>
+
+  <form method="post" action="/spotify/setup" class="settings-form" style="gap:0">
+    <fieldset>
+      <legend>3. Paste it here and connect</legend>
+      <label class="field"><span class="label">Client ID</span>
+        <input type="text" name="client_id" value="{{ client_id }}" required spellcheck="false" autocomplete="off"
+               placeholder="32 letters and numbers" pattern="\s*[0-9A-Fa-f]{32}\s*"
+               title="32 letters and numbers, from your Spotify app's Settings">
+      </label>
+      <p class="muted small">Spotify then asks you to approve access to your playlists. After you approve, you come back
+        here to pick which playlists to add.</p>
+      <div class="actions"><button class="btn primary">{{ 'Save and reconnect' if spotify_connected else 'Save and connect' }}</button></div>
+    </fieldset>
+  </form>
+
+  <details class="help" {% if error %}open{% endif %}>
+    <summary>If something goes wrong</summary>
+    <ul>
+      <li><b>Spotify's dashboard says the redirect URI isn't secure.</b> The address starts with <code>http://</code> but isn't
+        127.0.0.1. Open this page at <code>http://127.0.0.1:&lt;port&gt;</code> on the computer that runs the app, and use the address it shows.</li>
+      <li><b>Spotify shows "INVALID_CLIENT: Invalid redirect URI".</b> The address saved in your Spotify app doesn't match. In the
+        dashboard, open your app, click <b>Settings</b>, then <b>Edit</b>, and set <b>Redirect URIs</b> to exactly
+        <code>{{ redirect }}</code>.</li>
+      <li><b>Spotify shows "INVALID_CLIENT: Invalid client".</b> The Client ID is wrong. Copy it again from your app's
+        <b>Settings</b>, and make sure it isn't the client secret.</li>
+      <li><b>Spotify returns a 403 error, or says your account isn't registered for this app.</b> The developer app belongs to a
+        different Spotify account. Create your own app, or ask its owner to add your account under <b>User Management</b>.</li>
+    </ul>
+  </details>
+</div>
+<script src="/static/copy.js" defer></script>
+{% endblock %}

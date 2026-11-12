@@ -5,8 +5,8 @@
     {% endif %}
     {% if spotify_connected %}
       <span class="pill ok" title="Spotify is connected"><span class="dot"></span>Spotify</span>
-    {% elif spotify_configured %}
-      <a class="pill warn" href="/spotify/connect"><span class="dot"></span>Connect Spotify</a>
+    {% else %}
+      <a class="pill {{ 'warn' if spotify_configured else '' }}" href="/spotify/setup"><span class="dot"></span>Connect Spotify</a>
     {% endif %}
     {% if slskd.reachable and slskd.connected == false %}
       <span class="pill warn" title="{{ slskd.error or '' }}"><span class="dot"></span>Soulseek offline</span>
