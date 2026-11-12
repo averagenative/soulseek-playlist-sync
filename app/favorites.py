@@ -101,7 +101,7 @@ def run(cfg: Config, apply: bool) -> dict:
         return _run(cfg, apply)
     except Exception as e:
         log.exception("favorites sync failed")
-        _set_status(state="error", error=str(e)[:300], finished=time.time())
+        _set_status(state="error", error=str(e)[:500], finished=time.time())
         raise
     finally:
         _lock.release()

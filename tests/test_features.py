@@ -181,3 +181,30 @@ def test_apple_paging_keeps_offset_and_page_size(monkeypatch):
 
     assert Fake().get_all("/v1/me/library/songs", {"limit": 100}) == [1, 2]
     assert seen[1] == ("/v1/me/library/songs?offset=100&limit=100", None)
+
+
+def test_apple_retries_gateway_errors_then_gives_up(monkeypatch):
+    import httpx
+    import pytest
+    from app import apple
+    monkeypatch.setattr(apple.time, "sleep", lambda s: None)
+
+    def client(statuses):
+        calls = iter(statuses)
+
+        def handler(request):
+            s = next(calls)
+            if s == "timeout":
+                raise httpx.ReadTimeout("slow", request=request)
+            return httpx.Response(s, json={"data": []})
+
+        c = apple.Client.__new__(apple.Client)
+        c.mode = "developer"
+        c.http = httpx.Client(base_url="https://x.test", transport=httpx.MockTransport(handler))
+        return c
+
+    assert client([504, "timeout", 200]).get("/v1/catalog/us/songs") == {"data": []}
+    with pytest.raises(apple.AppleError, match=r"HTTP 504 Gateway Timeout.*after 6 attempts|after 6 attempts: HTTP 504"):
+        client([504] * 6).get("/v1/catalog/us/songs")
+    with pytest.raises(apple.AppleError, match="ReadTimeout: slow"):
+        client(["timeout"] * 6).get("/v1/catalog/us/songs")
