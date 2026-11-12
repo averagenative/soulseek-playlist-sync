@@ -157,10 +157,26 @@ class Client:
         self.close()
 
     def _send(self, method: str, path: str, **kw) -> httpx.Response:
-        """One request, with a retry after a rotated web token and backing off when rate-limited."""
+        """One request, with a retry after a rotated web token and backing off when rate-limited
+        or when Apple answers with a temporary server error or doesn't answer in time."""
         delay = 2.0
         for attempt in range(6):
-            r = self.http.request(method, path, **kw)
+            try:
+                r = self.http.request(method, path, **kw)
+            except (httpx.TimeoutException, httpx.TransportError) as e:
+                if attempt == 5:
+                    raise AppleError(f"{method} {path} failed after {attempt + 1} attempts: "
+                                     f"{type(e).__name__}: {e}") from e
+                time.sleep(delay)
+                delay = min(delay * 2, 60)
+                continue
+            if r.status_code in (500, 502, 503, 504):
+                if attempt == 5:
+                    raise AppleError(f"{method} {r.request.url} failed after {attempt + 1} attempts: "
+                                     f"HTTP {r.status_code} {r.reason_phrase}: {r.text[:500]}")
+                time.sleep(delay)
+                delay = min(delay * 2, 60)
+                continue
             if r.status_code == 401 and self.mode == "web" and attempt == 0:
                 self._auth(refresh=True)       # the web player's token may have been rotated
                 continue
