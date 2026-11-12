@@ -54,7 +54,10 @@
                   data-title="{{ s.title }}" data-artist="{{ s.artist }}" data-art="{{ s.thumb_url or s.artwork_url or '' }}"
                   title="Play Apple's 30-second clip of the original, to compare">Original</button>
         {% endif %}
-        {% if r.status == 'skipped' %}
+        {% if local and not rule and r.status != 'removed' %}
+          <form method="post" action="/playlists/{{ p.id }}/songs/{{ r.key }}/remove" class="inline"
+                title="Take this song out of the playlist"><button class="btn tiny">Remove</button></form>
+        {% elif r.status == 'skipped' %}
           <form method="post" action="/playlists/{{ p.id }}/songs/{{ r.key }}/unskip" class="inline"><button class="btn tiny">Unskip</button></form>
         {% elif r.status not in ('removed', 'synced') %}
           <form method="post" action="/playlists/{{ p.id }}/songs/{{ r.key }}/skip" class="inline"
@@ -66,3 +69,7 @@
   </tbody>
 </table>
 </div>
+{% if rows|length < total_rows %}
+<p class="muted small center">Showing the first {{ rows|length|n }} of {{ total_rows|n }} songs.
+  <a href="/playlists/{{ p.id }}?all=1">Show all</a></p>
+{% endif %}

@@ -165,3 +165,19 @@ def test_mirror_to_spotify_keeps_order_and_reports_missing(cfg, monkeypatch):
     Fake.searches.clear()
     mirror.run(cfg, pid)
     assert Fake.made == ["Mix"] and Fake.searches == []
+
+
+def test_apple_paging_keeps_offset_and_page_size(monkeypatch):
+    from app import apple
+    seen = []
+
+    class Fake(apple.Client):
+        def __init__(self): pass
+        def get(self, path, params=None):
+            seen.append((path, params))
+            if len(seen) == 1:
+                return {"data": [1], "next": "/v1/me/library/songs?offset=100"}
+            return {"data": [2]}
+
+    assert Fake().get_all("/v1/me/library/songs", {"limit": 100}) == [1, 2]
+    assert seen[1] == ("/v1/me/library/songs?offset=100&limit=100", None)

@@ -5,3 +5,4 @@ httpx==0.28.1
 cryptography==50.0.2
 mutagen==1.48.1
 python-multipart==0.0.33
+pillow==12.3.0

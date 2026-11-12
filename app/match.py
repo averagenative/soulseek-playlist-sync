@@ -12,6 +12,12 @@ _NOISE_BRACKET = re.compile(
 _ANY_BRACKET = re.compile(r"\s*[\(\[][^\)\]]*[\)\]]")
 _FEAT = re.compile(r"\s+(feat\.?|ft\.?|featuring)\s+.*$", re.I)
 _TRACK_PREFIX = re.compile(r"^\s*(\d{1,3}|[a-d]\d{1,2})\s*[-_. ]+\s*", re.I)
+# Spotify-style suffixes: "Song - Remastered 2002". Dropped unless they name a different recording.
+_DASH_SUFFIX = re.compile(r"\s+-\s+([^-]+)$")
+_DASH_NOISE = re.compile(r"\b(remaster(ed)?|mono|stereo|single version|album version|radio edit|explicit|clean|"
+                         r"bonus track)\b", re.I)
+_DASH_KEEP = re.compile(r"\b(live|acoustic|remix|instrumental|demo|unplugged|session)\b", re.I)
+_DASHES = str.maketrans({c: "-" for c in "\u2010\u2011\u2012\u2013\u2014\u2015\u2212"})
 
 
 def ascii_fold(s: str) -> str:
@@ -22,7 +28,7 @@ def norm(s: str | None) -> str:
     """Lowercase ASCII words separated by single spaces."""
     if not s:
         return ""
-    s = ascii_fold(s).lower().replace("&", " and ")
+    s = ascii_fold(s.translate(_DASHES)).lower().replace("&", " and ")
     s = re.sub(r"[’'`]", "", s)
     return re.sub(r"[^a-z0-9]+", " ", s).strip()
 
@@ -30,6 +36,9 @@ def norm(s: str | None) -> str:
 def clean_title(title: str | None) -> str:
     """Title without featuring credits, soundtrack notes and remaster tags."""
     t = _NOISE_BRACKET.sub("", title or "")
+    m = _DASH_SUFFIX.search(t)
+    if m and _DASH_NOISE.search(m.group(1)) and not _DASH_KEEP.search(m.group(1)):
+        t = t[:m.start()]
     return _FEAT.sub("", t).strip()
 
 

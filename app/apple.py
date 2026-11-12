@@ -16,6 +16,8 @@ API = "https://api.music.apple.com"
 WEB_API = "https://amp-api.music.apple.com"
 ARTWORK_SIZE = 600
 THUMB_SIZE = 120
+LIBRARY_SONGS = "library-songs"      # every song in your library, offered like a playlist
+LIBRARY_NAME = "Apple Music library"
 
 
 class AppleError(Exception):
@@ -199,10 +201,15 @@ class Client:
                      if norm_title(s["attributes"].get("name")) == norm_title(song.get("title"))
                      and artist_matches(song.get("artist"), s["attributes"].get("artistName"))]
         if want_len:
-            found = [s for s in found if abs((s["attributes"].get("durationInMillis") or 0) / 1000 - want_len) <= 5]
+            off = {s["id"]: abs((s["attributes"].get("durationInMillis") or 0) / 1000 - want_len) for s in found}
+            close = [s for s in found if off[s["id"]] <= 5]
+            if not close and (song.get("key") or "").startswith("local:"):
+                # Your own files are often older rips: a remaster can be several seconds longer.
+                close = [s for s in found if off[s["id"]] <= max(10, want_len * 0.03)]
+            found = close
         if not found:
             return None
-        want_explicit = song.get("content_rating") == "explicit"
+        want_explicit = song.get("content_rating") in ("explicit", "unknown")
         found.sort(key=lambda s: ((s["attributes"].get("contentRating") == "explicit") != want_explicit,
                                   abs((s["attributes"].get("durationInMillis") or 0) / 1000 - want_len)))
         return found[0]["id"]
@@ -230,10 +237,15 @@ class Client:
 
     def get_all(self, path: str, params: dict | None = None) -> list:
         items = []
+        limit = (params or {}).get("limit")
         while path:
             page = self.get(path, params)
             items += page.get("data", [])
             path, params = page.get("next"), None
+            # Keep the page size: Apple's next links don't carry it. Add it to the link itself, because
+            # httpx replaces a URL's query string when given params.
+            if path and limit and "limit=" not in path:
+                path += f"{'&' if '?' in path else '?'}limit={limit}"
         return items
 
     def storefront(self) -> str:
@@ -253,15 +265,20 @@ class Client:
                 "description": (a.get("description") or {}).get("standard"),
                 "image": ((a.get("artwork") or {}).get("url") or "").replace("{w}", "120").replace("{h}", "120") or None,
             })
-        return sorted(out, key=lambda p: p["name"].casefold())
+        library = {"remote_id": LIBRARY_SONGS, "name": LIBRARY_NAME, "can_edit": True, "modified": None,
+                   "description": None, "image": None, "note": "Every song in your Apple Music library"}
+        return [library] + sorted(out, key=lambda p: p["name"].casefold())
 
     def playlist_name(self, remote_id: str) -> str:
+        if remote_id == LIBRARY_SONGS:
+            return LIBRARY_NAME
         data = self.get(f"/v1/me/library/playlists/{remote_id}")["data"]
         return data[0]["attributes"].get("name", remote_id)
 
     def playlist_tracks(self, remote_id: str) -> list[dict]:
         """The playlist in order, as song dicts with a stable `key`."""
-        lib = self.get_all(f"/v1/me/library/playlists/{remote_id}/tracks", {"limit": 100})
+        path = "/v1/me/library/songs" if remote_id == LIBRARY_SONGS else f"/v1/me/library/playlists/{remote_id}/tracks"
+        lib = self.get_all(path, {"limit": 100})
         cids = [t.get("attributes", {}).get("playParams", {}).get("catalogId") for t in lib]
         catalog, albums = {}, {}
         wanted = [c for c in dict.fromkeys(cids) if c]

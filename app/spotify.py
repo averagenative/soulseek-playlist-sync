@@ -145,7 +145,11 @@ class Client:
                 self.tok["expires_at"] = 0       # force a refresh, then retry once
                 continue
             if r.status_code == 429:
-                time.sleep(min(int(r.headers.get("Retry-After", "5")), 60))
+                wait = int(r.headers.get("Retry-After", "5") or 5)
+                if wait > 120:
+                    raise SpotifyError(f"Spotify asked the app to pause for {wait // 60} minutes. Songs matched so far "
+                                       "are remembered, so try again later and it carries on.")
+                time.sleep(wait)
                 continue
             if r.status_code == 401:
                 raise NotConnected("Spotify rejected the sign-in; reconnect")
@@ -174,11 +178,16 @@ class Client:
                           and artist_matches(song.get("artist"), ", ".join(a["name"] for a in t.get("artists", [])))]
         candidates = [t for t in candidates if t and t.get("uri")]
         if want_len:
-            candidates = [t for t in candidates if abs((t.get("duration_ms") or 0) / 1000 - want_len) <= 5]
+            off = {id(t): abs((t.get("duration_ms") or 0) / 1000 - want_len) for t in candidates}
+            close = [t for t in candidates if off[id(t)] <= 5]
+            if not close and (song.get("key") or "").startswith("local:"):
+                # Your own files are often older rips: a remaster can be several seconds longer.
+                close = [t for t in candidates if off[id(t)] <= max(10, want_len * 0.03)]
+            candidates = close
         if not candidates:
             return None
-        # Same explicitness as the source when there's a choice.
-        want_explicit = song.get("content_rating") == "explicit"
+        # Same explicitness as the source when there's a choice; the explicit original when that's unknown.
+        want_explicit = song.get("content_rating") in ("explicit", "unknown")
         candidates.sort(key=lambda t: (bool(t.get("explicit")) != want_explicit,
                                        abs((t.get("duration_ms") or 0) / 1000 - want_len)))
         return candidates[0]["uri"]

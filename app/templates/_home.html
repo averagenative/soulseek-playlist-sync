@@ -24,12 +24,14 @@
       <a href="/playlists/{{ p.id }}" tabindex="-1">{{ cover(p.covers) }}</a>
       <div>
         <a class="name" href="/playlists/{{ p.id }}" title="{{ p.name }}">{{ p.name }}</a>
-        <div class="meta small">{{ source(p.source) }}<span class="muted">{{ done }} / {{ total.n }} synced</span></div>
+        <div class="meta small">{{ source(p.source) }}<span class="muted">{% if p.source == 'local' %}{{ total.n|n }} songs{% if p.rule %} &middot; auto{% endif %}{% else %}{{ done }} / {{ total.n }} synced{% endif %}</span></div>
       </div>
       {{ segbar(p.counts, live) }}
       <div class="foot">
         <span class="muted small">{% if p.busy %}<span class="badge busy">{{ p.busy }}</span>{% else %}Synced {{ p.synced_at|ago }}{% endif %}</span>
-        {% if done < total.n %}
+        {% if p.source == 'local' %}
+          <a class="btn small" href="/playlists/{{ p.id }}">Open</a>
+        {% elif done < total.n %}
           <form method="post" action="/playlists/{{ p.id }}/sync?back=/" class="inline">
             <button class="btn small primary" {% if p.busy %}disabled{% endif %}>Download all</button></form>
         {% else %}<span class="badge synced">Complete</span>{% endif %}
@@ -41,10 +43,12 @@
   <div class="empty">
     <img src="/static/icons/icon-192.png" alt="">
     <h2>No playlists yet</h2>
-    <p class="muted">Pick a playlist and it gets its own folder of MP3s and an .m3u, ready for an MP3 player or Navidrome.</p>
+    <p class="muted">Pick a playlist and it gets its own folder of MP3s and an .m3u, ready for an MP3 player or Navidrome.
+      Or make one from the music you already have and copy it to Spotify or Apple Music.</p>
     <div class="actions">
       {% if apple_connected %}<a class="btn primary" href="/apple/playlists">Add from Apple Music</a>{% endif %}
       {% if spotify_connected %}<a class="btn primary" href="/spotify/playlists">Add from Spotify</a>{% endif %}
+      {% if library.files %}<a class="btn" href="/library">Make one from my music</a>{% endif %}
     </div>
   </div>
 {% endif %}

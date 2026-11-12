@@ -9,10 +9,18 @@
     <div class="eyebrow">{{ source(p.source) }}</div>
     <h1>{{ p.name }}</h1>
     <div class="muted small path" title="{{ folder }}/{{ m3u }}">{{ p.folder }}/{{ m3u }}</div>
+    {% if rule_text %}<div class="small"><span class="tag">AUTO</span> {{ rule_text }}, kept up to date.
+      <a href="/library?{{ rule_qs }}">Browse them</a></div>{% endif %}
   </div>
   <div class="hero-actions">
-    {% set todo = rows|selectattr('status', 'in', ['missing', 'in_library', 'found', 'not_found', 'failed', 'waiting'])|list|length %}
   <div class="toolbar">
+    {% if local %}
+    <form method="post" action="/playlists/{{ p.id }}/refresh" class="inline">
+      <button class="btn primary" {% if p.busy %}disabled{% endif %}
+              title="Look for new, changed and deleted files in your library, then update the playlist and its .m3u">Refresh</button>
+    </form>
+    {% if not rule %}<a class="btn" href="/library?to={{ p.id|urlencode }}">Add songs</a>{% endif %}
+    {% else %}
     <form method="post" action="/playlists/{{ p.id }}/sync" class="inline">
       <button class="btn primary" {% if p.busy %}disabled{% endif %}
               title="Copy songs you already have into the folder, download every missing song, retry earlier failures, and write the .m3u">
@@ -21,6 +29,7 @@
     <form method="post" action="/playlists/{{ p.id }}/preview" class="inline">
       <button class="btn" {% if p.busy %}disabled{% endif %} title="Fetch the playlist again and match it against your library. Changes no files.">Check for changes</button>
     </form>
+    {% endif %}
     {% if counts.get('synced') %}
     <a class="btn" href="/playlists/{{ p.id }}/zip" download
        title="Download the playlist's MP3s and its .m3u to this computer as one ZIP file">Download ZIP</a>
@@ -28,6 +37,10 @@
     <details class="settings">
       <summary class="btn">Settings</summary>
       <form method="post" action="/playlists/{{ p.id }}/settings" class="stack">
+        {% if local %}
+        <label class="field"><span class="label">Name</span>
+          <input type="text" name="name" value="{{ p.name }}" required></label>
+        {% endif %}
         <label class="field"><span class="label">Folder</span>
           <input type="text" name="folder" value="{{ p.folder }}" required>
           <span class="muted small">Inside {{ music_root }}. Changing it moves the folder and everything in it.</span>
@@ -39,6 +52,8 @@
             <option value="copy" {% if p.library_mode == 'copy' %}selected{% endif %}>Copy into the playlist folder (portable)</option>
             <option value="reference" {% if p.library_mode == 'reference' %}selected{% endif %}>Point the .m3u at the library copy</option>
           </select>
+          {% if local %}<span class="muted small">Copies are hard links when the library is on the same disk, so they take no extra space.
+            Music servers such as Navidrome may list them as extra songs, though.</span>{% endif %}
         </label>
         <div class="actions">
           <button class="btn small primary">Save and apply</button>
@@ -52,33 +67,40 @@
 </section>
 
 {% if form_error %}<p class="notice bad">{{ form_error }}</p>{% endif %}
+{% for c in copies %}
+{% set m = c.mirror %}
 <section class="copy-panel">
   <div>
-    <div class="eyebrow">Copy to {{ target_label }}</div>
-    {% if mirror and mirror.url %}
-      <div><a href="{{ mirror.url }}" target="_blank" rel="noopener">Open the {{ target_label }} copy</a>
-        <span class="muted small">&middot; {{ mirror.matched }} of {{ mirror.total }} songs found on {{ target_label }} &middot; updated {{ mirror.updated_at|ago }}</span></div>
-      {% if mirror.missing %}
-        <details class="missing"><summary class="muted small">{{ mirror.missing|length }} not on {{ target_label }}</summary>
-          <ul class="small muted">{% for m in mirror.missing %}<li>{{ m }}</li>{% endfor %}</ul></details>
+    <div class="eyebrow">Copy to {{ c.label }}</div>
+    {% if m and m.url %}
+      <div><a href="{{ m.url }}" target="_blank" rel="noopener">Open the {{ c.label }} copy</a>
+        <span class="muted small">&middot; {% if m.capped %}{{ m.matched|n }} songs{% else %}{{ m.matched|n }} of {{ m.total|n }} songs found on {{ c.label }}{% endif %} &middot; updated {{ m.updated_at|ago }}</span></div>
+      {% if m.note %}<div class="muted small">{{ m.note }}</div>{% endif %}
+      {% if m.missing %}
+        <details class="missing"><summary class="muted small">{{ m.missing|length|n }} not on {{ c.label }}{% if m.capped %} (of the songs checked){% endif %}</summary>
+          <ul class="small muted">{% for x in m.missing[:300] %}<li>{{ x }}</li>{% endfor %}
+            {% if m.missing|length > 300 %}<li>and {{ (m.missing|length - 300)|n }} more</li>{% endif %}</ul></details>
       {% endif %}
     {% else %}
-      <div class="muted small">Make a {{ target_label }} playlist with the same songs{{ ', in the same order' if target == 'spotify' else '' }}.</div>
+      <div class="muted small">Make {{ 'an' if c.target == 'apple' else 'a' }} {{ c.label }} playlist with the same songs{{ ', in the same order' if c.target == 'spotify' and size <= spotify_max else '' }}.
+        {% if c.target == 'spotify' and size > spotify_max %}Spotify playlists hold up to {{ spotify_max|n }} songs, so the copy gets a random {{ spotify_max|n }} of these {{ size|n }}, picked again each time you update it.{% endif %}
+        {% if size > 1000 %}Finding {{ size|n }} songs on {{ c.label }} takes a while the first time; the app remembers what it found.{% endif %}</div>
     {% endif %}
-    {% if mirror and mirror.error %}<div class="small" style="color: var(--bad)">{{ mirror.error }}</div>{% endif %}
-    {% if target == 'apple' and mirror %}<div class="muted small">Apple only lets apps add songs, so songs removed here stay in the Apple copy.</div>{% endif %}
+    {% if m and m.error %}<div class="small" style="color: var(--bad)">{{ m.error }}</div>{% endif %}
+    {% if c.target == 'apple' and m %}<div class="muted small">Apple only lets apps add songs, so songs removed here stay in the Apple copy.</div>{% endif %}
   </div>
   <div>
-    {% if can_copy %}
-      <form method="post" action="/playlists/{{ p.id }}/mirror" class="inline">
-        <button class="btn" {% if p.busy %}disabled{% endif %}>{{ 'Update' if mirror and mirror.url else 'Copy to' }} {{ target_label }}</button></form>
+    {% if c.can_copy %}
+      <form method="post" action="/playlists/{{ p.id }}/mirror?target={{ c.target }}" class="inline">
+        <button class="btn" {% if p.busy %}disabled{% endif %}>{{ 'Update' if m and m.url else 'Copy to' }} {{ c.label }}</button></form>
     {% else %}
-      <a class="btn small" href="{{ '/spotify/connect' if target == 'spotify' else '/apple/connect' }}">{{ copy_blocker }}</a>
+      <a class="btn small" href="{{ '/spotify/connect' if c.target == 'spotify' else '/apple/connect' }}">{{ c.blocker }}</a>
     {% endif %}
   </div>
 </section>
+{% endfor %}
 {% if p.error %}<p class="notice bad">{{ p.error }}</p>{% endif %}
-{% if slskd.reachable == false %}
+{% if local %}{% elif slskd.reachable == false %}
   <div class="notice bad">slskd is off, so missing songs can't be searched or downloaded.
     {% if can_turn_on %}<form method="post" action="/slskd/on" class="inline"><button class="btn small">Turn on</button></form>{% endif %}
   </div>
@@ -86,7 +108,7 @@
   <p class="notice warn">slskd is running but isn't connected to the Soulseek network, so searches are paused. The app retries every minute.</p>
 {% endif %}
 
-<div data-live="/playlists/{{ p.id }}/rows">
+<div data-live="/playlists/{{ p.id }}/rows{{ '?all=1' if show_all else '' }}">
 {% include "_songs.html" %}
 </div>
 <div class="player" id="player" hidden>

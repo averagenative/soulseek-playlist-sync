@@ -8,7 +8,7 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);
 
 CREATE TABLE IF NOT EXISTS playlists (
-    id            TEXT PRIMARY KEY,          -- source:remote id, e.g. apple:p.PkxVVPVt2R91O3
+    id            TEXT PRIMARY KEY,          -- source:remote id, e.g. apple:p.AbC123, local:9f2c41d0
     source        TEXT NOT NULL,
     remote_id     TEXT NOT NULL,
     name          TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS playlists (
 );
 
 CREATE TABLE IF NOT EXISTS songs (
-    key            TEXT PRIMARY KEY,         -- apple:<catalog id> or apple-lib:<library id>
+    key            TEXT PRIMARY KEY,         -- apple:<catalog id>, apple-lib:<library id>, spotify:<id>, local:<hash>
     isrc           TEXT,
     title          TEXT,
     artist         TEXT,
@@ -135,6 +135,20 @@ def init(path: Path) -> None:
                           ("source", "TEXT NOT NULL DEFAULT 'soulseek'")):
             if col not in have:
                 c.execute(f"ALTER TABLE downloads ADD COLUMN {col} {kind}")
+        lib_cols = {r["name"] for r in c.execute("PRAGMA table_info(library)")}
+        for col, kind in (("song_key", "TEXT"), ("art_key", "TEXT"), ("album_artist", "TEXT"),
+                          ("track_number", "INTEGER"), ("disc_number", "INTEGER"), ("year", "TEXT"),
+                          ("genre", "TEXT"), ("search", "TEXT")):
+            if col not in lib_cols:
+                c.execute(f"ALTER TABLE library ADD COLUMN {col} {kind}")
+        if "song_key" not in lib_cols:
+            c.execute("UPDATE library SET mtime = NULL")     # read every file's tags again for the new columns
+        c.execute("CREATE INDEX IF NOT EXISTS library_song_key ON library(song_key)")
+        c.execute("CREATE INDEX IF NOT EXISTS library_art_key ON library(art_key)")
+        if "rule" not in {r["name"] for r in c.execute("PRAGMA table_info(playlists)")}:
+            c.execute("ALTER TABLE playlists ADD COLUMN rule TEXT")      # JSON filter of an auto-updating playlist
+        if "note" not in {r["name"] for r in c.execute("PRAGMA table_info(mirrors)")}:
+            c.execute("ALTER TABLE mirrors ADD COLUMN note TEXT")
         # A YouTube download runs inside the app, so one in flight when it stopped has to start over.
         c.execute("UPDATE downloads SET state = 'pending' WHERE source = 'youtube' AND state IN ('searching', 'downloading')")
         # A job that was running when the app stopped is not running any more.

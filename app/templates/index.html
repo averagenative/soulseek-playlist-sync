@@ -9,6 +9,7 @@
   </div>
   <div class="actions">
     {% if apple_connected %}<a class="btn primary" href="/apple/playlists">+ Apple Music</a>{% endif %}
+    <a class="btn" href="/library">My music</a>
     {% if spotify_connected %}<a class="btn primary" href="/spotify/playlists">+ Spotify</a>
     {% elif spotify_configured %}<a class="btn" href="/spotify/connect">Connect Spotify</a>
     {% else %}<a class="btn" href="/settings">Set up Spotify</a>{% endif %}

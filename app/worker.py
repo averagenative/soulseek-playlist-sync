@@ -15,12 +15,14 @@ from .tagger import artwork, tag_mp3
 log = logging.getLogger(__name__)
 TICK = 2.0
 SEARCH_STALE = 120     # a search running this long is abandoned
+REFRESH_EVERY = 6 * 3600   # rescan the library and update auto-updating playlists
 
 
 class Worker:
     def __init__(self):
         self.stop = threading.Event()
         self.last_search = 0.0
+        self.last_refresh = time.time() - REFRESH_EVERY + 600    # first one ten minutes after starting
         self.status = {"reachable": None}
         self.thread = threading.Thread(target=self.run, daemon=True, name="worker")
 
@@ -37,6 +39,10 @@ class Worker:
         paused_until = 0.0
         while not self.stop.is_set():
             try:
+                if time.time() - self.last_refresh > REFRESH_EVERY:
+                    self.last_refresh = time.time()
+                    threading.Thread(target=sync.refresh_auto_playlists, args=(self.cfg,), daemon=True,
+                                     name="auto-refresh").start()
                 if time.time() >= paused_until and time.time() - last_status > 15:
                     self.status = client.status()
                     last_status = time.time()

@@ -2,21 +2,22 @@
 import base64
 import logging
 import os
+import re
 import secrets
 import threading
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi import FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 import httpx
 
-from . import apple, control, db, export, library, mirror, settings, spotify, sync
+from . import apple, art, control, db, export, library, mirror, settings, spotify, sync
 from .config import Config, load
 from .slskd import Slskd
 from .worker import Worker
@@ -25,6 +26,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 logging.getLogger("httpx").setLevel(logging.WARNING)
 log = logging.getLogger(__name__)
 HERE = Path(__file__).parent
+ROW_LIMIT = 500          # songs shown on a playlist page before "Show all"
+PAGE_SIZE = 100          # songs per page on My music
+AUDIO_TYPES = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".aac": "audio/aac", ".flac": "audio/flac",
+               ".ogg": "audio/ogg", ".opus": "audio/ogg", ".wma": "audio/x-ms-wma"}
 base_cfg = load()
 worker: Worker | None = None
 
@@ -66,6 +71,17 @@ def _ago(ts) -> str:
 
 
 templates.env.filters["ago"] = _ago
+templates.env.filters["n"] = lambda v: f"{v or 0:,}"
+
+
+def _length(secs) -> str:
+    if not secs:
+        return ""
+    secs = int(round(float(secs)))
+    return f"{secs // 3600}:{secs % 3600 // 60:02d}:{secs % 60:02d}" if secs >= 3600 else f"{secs // 60}:{secs % 60:02d}"
+
+
+templates.env.filters["duration"] = _length
 STATUS_LABELS = {
     "synced": "Synced", "in_library": "In library", "found": "Found", "queued": "Queued",
     "downloading": "Downloading", "searching": "Searching", "waiting": "Waiting", "not_found": "Not found",
@@ -231,7 +247,8 @@ async def apple_token(request: Request):
 def apple_playlists(request: Request):
     try:
         with apple.Client(C()) as api:
-            remote = [{**p, "readable": True, "note": "" if p["can_edit"] else "read-only"} for p in api.playlists()]
+            remote = [{**p, "readable": True, "note": p.get("note") or ("" if p["can_edit"] else "read-only")}
+                      for p in api.playlists()]
     except apple.NotConnected:
         return _back("/apple/connect")
     return _pick(request, "apple", remote)
@@ -285,7 +302,7 @@ def _pick(request: Request, source: str, remote: list[dict]):
 
 @app.post("/playlists")
 def add_playlist(source: str = Form(...), remote_id: str = Form(...), name: str = Form(...)):
-    if source not in sync.SOURCES:
+    if source not in ("apple", "spotify"):
         raise HTTPException(400)
     pid = sync.add_playlist(C(), source, remote_id, name)
     sync.run_job(pid, "Checking", sync.preview, C(), pid)
@@ -293,41 +310,54 @@ def add_playlist(source: str = Form(...), remote_id: str = Form(...), name: str 
 
 
 @app.get("/playlists/{pid}", response_class=HTMLResponse)
-def playlist_page(request: Request, pid: str, error: str | None = None):
+def playlist_page(request: Request, pid: str, error: str | None = None, all: int = 0):
     if not sync.playlist(pid):
         raise HTTPException(404)
     return templates.TemplateResponse(request, "playlist.html",
-                                      {**_common(), **_playlist_ctx(pid), "form_error": error})
+                                      {**_common(), **_playlist_ctx(pid, bool(all)), "form_error": error})
 
 
 @app.get("/playlists/{pid}/rows", response_class=HTMLResponse)
-def playlist_rows(request: Request, pid: str):
+def playlist_rows(request: Request, pid: str, all: int = 0):
     if not sync.playlist(pid):
         raise HTTPException(404)
-    return templates.TemplateResponse(request, "_songs.html", {**_common(), **_playlist_ctx(pid)})
+    return templates.TemplateResponse(request, "_songs.html", {**_common(), **_playlist_ctx(pid, bool(all))})
 
 
-def _playlist_ctx(pid: str) -> dict:
+def _copy_ready(cfg: Config, target: str) -> tuple[bool, str | None]:
+    if target == "spotify":
+        if not spotify.connected(cfg):
+            return False, "Connect Spotify first"
+        if not spotify.can_write(cfg):
+            return False, "Reconnect Spotify to allow creating playlists"
+        return True, None
+    return (True, None) if apple.user_token(cfg) else (False, "Connect Apple Music first")
+
+
+def _playlist_ctx(pid: str, show_all: bool = False) -> dict:
     cfg = C()
     p = sync.playlist(pid)
     rows, counts = sync.summary(cfg, pid)
-    active = bool(p["busy"]) or any(r["status"] in ("waiting", "searching", "found", "queued", "downloading")
-                                    for r in rows)
-    target = mirror.target_for(p["source"])
-    if target == "spotify":
-        can_copy, why = spotify.connected(cfg) and spotify.can_write(cfg), (
-            "Connect Spotify first" if not spotify.connected(cfg) else "Reconnect Spotify to allow creating playlists")
-    else:
-        can_copy, why = bool(apple.user_token(cfg)), "Connect Apple Music first"
-    return {"p": p, "rows": rows, "counts": counts, "active": active, "music_root": str(cfg.music_root),
-            "covers": sync.covers(pid), "target": target, "target_label": mirror.TARGETS[target],
-            "mirror": mirror.get(pid, target), "can_copy": can_copy, "copy_blocker": None if can_copy else why,
+    active = bool(p["busy"]) or any(counts.get(s) for s in ("waiting", "searching", "found", "queued", "downloading"))
+    copies = []
+    for target in mirror.targets_for(p["source"]):
+        ok, why = _copy_ready(cfg, target)
+        copies.append({"target": target, "label": mirror.TARGETS[target], "mirror": mirror.get(pid, target),
+                       "can_copy": ok, "blocker": why})
+    rule = sync.rule_of(p)
+    return {"p": p, "rows": rows if show_all else rows[:ROW_LIMIT], "total_rows": len(rows), "show_all": show_all,
+            "counts": counts, "active": active, "music_root": str(cfg.music_root), "covers": sync.covers(pid),
+            "copies": copies, "size": sum(n for s, n in counts.items() if s != "removed"),
+            "spotify_max": mirror.SPOTIFY_MAX, "local": p["source"] == "local", "rule": rule,
+            "rule_text": _rule_text(rule) if rule is not None else None,
+            "rule_qs": _filter_qs(rule) if rule is not None else None,
+            "todo": sum(counts.get(s, 0) for s in ("missing", "in_library", "found", "not_found", "failed", "waiting")),
             "folder": str(sync.folder_of(cfg, p)), "m3u": sync.m3u_path(cfg, p).name}
 
 
 @app.post("/playlists/{pid}/settings")
 def playlist_settings(pid: str, folder: str = Form(...), numbering: str | None = Form(None),
-                      library_mode: str = Form("copy")):
+                      library_mode: str = Form("copy"), name: str | None = Form(None)):
     p = sync.playlist(pid)
     if not p:
         raise HTTPException(404)
@@ -339,6 +369,9 @@ def playlist_settings(pid: str, folder: str = Form(...), numbering: str | None =
             if p["busy"]:
                 raise ValueError("Wait for the current job to finish before moving the folder")
             sync.move_playlist_folder(C(), pid, folder)
+        name = (name or "").strip()
+        if p["source"] == "local" and name and name != p["name"]:
+            sync.rename_playlist(C(), pid, name)     # its own name, since there's no service to take it from
     except ValueError as e:
         return _back(f"/playlists/{pid}?error={e}")
     with db.connect() as c:
@@ -349,13 +382,20 @@ def playlist_settings(pid: str, folder: str = Form(...), numbering: str | None =
 
 
 @app.post("/playlists/{pid}/{action}")
-def playlist_action(pid: str, action: str, back: str | None = None):
-    if not sync.playlist(pid):
+def playlist_action(pid: str, action: str, back: str | None = None, target: str | None = None):
+    p = sync.playlist(pid)
+    if not p:
         raise HTTPException(404)
     jobs = {"preview": ("Checking", sync.preview), "sync": ("Downloading all", sync.sync),
-            "prune": ("Pruning", sync.prune),
-            "mirror": (f"Copying to {mirror.TARGETS[mirror.target_for(sync.playlist(pid)['source'])]}", mirror.run)}
-    if action in jobs:
+            "prune": ("Pruning", sync.prune)}
+    if p["source"] == "local" and action in ("preview", "sync", "refresh"):
+        sync.run_job(pid, "Refreshing", sync.refresh_local, C(), pid)
+    elif action == "mirror":
+        target = target or mirror.target_for(p["source"])
+        if target not in mirror.targets_for(p["source"]):
+            raise HTTPException(400)
+        sync.run_job(pid, f"Copying to {mirror.TARGETS[target]}", mirror.run, C(), pid, target)
+    elif action in jobs:
         label, fn = jobs[action]
         sync.run_job(pid, label, fn, C(), pid)
     elif action == "forget":
@@ -371,7 +411,7 @@ def song_audio(pid: str, key: str):
     path = sync.song_path(C(), pid, key)
     if not path:
         raise HTTPException(404, "No local file for this song")
-    return FileResponse(path, media_type="audio/mpeg")
+    return FileResponse(path, media_type=AUDIO_TYPES.get(path.suffix.lower(), "application/octet-stream"))
 
 
 @app.get("/playlists/{pid}/zip")
@@ -392,6 +432,12 @@ def song_action(pid: str, key: str, action: str):
         sync.set_song(pid, key, skip=1, want=0)
     elif action == "unskip":
         sync.set_song(pid, key, skip=0)
+    elif action == "remove":
+        p = sync.playlist(pid)
+        if not p or p["source"] != "local" or p["rule"]:
+            raise HTTPException(400, "Only songs in a playlist you made by hand can be removed here")
+        sync.remove_songs(C(), pid, [key])
+        return _back(f"/playlists/{pid}")
     else:
         raise HTTPException(404)
     return _back(f"/playlists/{pid}#song-{key}")
@@ -413,12 +459,121 @@ def _downloads_ctx() -> dict:
     return {"rows": rows, "counts": counts, "active": active}
 
 
+# ------------------------------------------------------------------ My music
+
+def _filter(q: str = "", folders: list[str] | None = None, artist: str = "", album: str = "") -> dict:
+    return {"q": (q or "").strip(), "folders": [f for f in folders or [] if f], "artist": artist or "",
+            "album": album or ""}
+
+
+def _filter_qs(f: dict, **extra) -> str:
+    pairs = [("q", f.get("q"))] + [("folder", x) for x in f.get("folders") or []] + \
+            [("artist", f.get("artist")), ("album", f.get("album"))] + list(extra.items())
+    return urlencode([(k, v) for k, v in pairs if v])
+
+
+def _rule_text(f: dict) -> str:
+    parts = []
+    if f.get("folders"):
+        parts.append("in " + ", ".join(f["folders"]))
+    if f.get("artist"):
+        parts.append(f"by {f['artist']}")
+    if f.get("album"):
+        parts.append(f"from {f['album']}")
+    if f.get("q"):
+        parts.append(f"matching \"{f['q']}\"")
+    return "Every song in your library" + (" " + ", ".join(parts) if parts else "")
+
+
+def _suggest_name(f: dict) -> str:
+    if f.get("album"):
+        return f["album"]
+    if f.get("artist"):
+        return f["artist"]
+    if f.get("q"):
+        return f["q"]
+    if f.get("folders"):
+        return ", ".join(Path(x).name for x in f["folders"])
+    return "All my music"
+
+
+@app.get("/library", response_class=HTMLResponse)
+def library_page(request: Request, q: str = "", folder: list[str] = Query([]), artist: str = "", album: str = "",
+                 sort: str = "artist", page: int = 1, added: int | None = None, to: str | None = None,
+                 error: str | None = None):
+    cfg = C()
+    f = _filter(q, folder, artist, album)
+    sort = sort if sort in library.SORTS else "artist"
+    page = max(page, 1)
+    rows, total = library.browse(cfg, f, sort, (page - 1) * PAGE_SIZE, PAGE_SIZE)
+    fixed = [p for p in sync.tracked() if p["source"] == "local" and not p["rule"]]
+    return templates.TemplateResponse(request, "library.html", {
+        **_common(), "f": f, "sort": sort, "page": page, "rows": rows, "total": total,
+        "pages": max(1, -(-total // PAGE_SIZE)), "per_page": PAGE_SIZE, "folders": library.folders(cfg),
+        "fixed": fixed, "to": to, "added": added, "added_to": sync.playlist(to) if to else None, "error": error,
+        "qs": _filter_qs(f, sort=sort if sort != "artist" else None), "suggest": _suggest_name(f),
+        "sorts": {"artist": "Sort by artist", "album": "Sort by album", "title": "Sort by title",
+                  "added": "Newest files first"},
+        "songs": library.count_songs(cfg, f) if total else 0,
+        "filtered": any(f.values()),
+        "without": {k: _filter_qs({**f, k: ""}, sort=sort if sort != "artist" else None) for k in ("artist", "album")},
+    })
+
+
+@app.post("/library/playlist")
+async def library_playlist(request: Request):
+    form = await request.form()
+    cfg = C()
+    f = _filter(form.get("q", ""), form.getlist("folder"), form.get("artist", ""), form.get("album", ""))
+    back = "/library?" + (form.get("back") or "")
+    name = (form.get("new_name" if form.get("what") == "selected" else "name") or "").strip() or _suggest_name(f)
+    if form.get("what") == "all" and form.get("live"):
+        pid = sync.add_local_playlist(cfg, name, rule=f)
+        sync.run_job(pid, "Building the playlist", sync.refresh_local, cfg, pid)
+        return _back(f"/playlists/{pid}")
+    keys = form.getlist("key") if form.get("what") == "selected" else [s["key"] for s in library.collection(cfg, f)]
+    if not keys:
+        return _back(back + "&error=Tick some songs first")
+    pid = form.get("playlist") or ""
+    if pid:
+        p = sync.playlist(pid)
+        if not p or p["source"] != "local" or p["rule"]:
+            raise HTTPException(400, "Songs can only be added to a playlist you made by hand")
+    else:
+        pid = sync.add_local_playlist(cfg, name)
+    n = sync.add_songs(cfg, pid, keys)
+    sync.run_job(pid, "Updating the .m3u", sync.reconcile, cfg, pid, True)
+    if form.get("what") == "all":
+        return _back(f"/playlists/{pid}")
+    return _back(f"{back}&added={n}&to={quote(pid)}")
+
+
+@app.get("/library/files/{file_id}")
+def library_file(file_id: int):
+    r = library.file_by_id(file_id)
+    if not r or not os.path.isfile(r["path"]):
+        raise HTTPException(404)
+    path = Path(r["path"])
+    return FileResponse(path, media_type=AUDIO_TYPES.get(path.suffix.lower(), "application/octet-stream"))
+
+
+@app.get("/art/{key}")
+def art_image(key: str):
+    if not re.fullmatch(r"[0-9a-f]{16}", key):
+        raise HTTPException(404)
+    r = library.file_for_art(key)
+    path = art.thumbnail(C(), key, r["path"]) if r else None
+    if not path:
+        return Response(art.PLACEHOLDER, media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=3600"})
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=604800"})
+
+
 # ------------------------------------------------------------------ system
 
 @app.post("/library/scan")
-def library_scan():
+def library_scan(back: str | None = None):
     threading.Thread(target=library.scan, args=(C(),), daemon=True, name="library-scan").start()
-    return _back("/")
+    return _back("/library" if back == "/library" else "/")
 
 
 @app.post("/slskd/on")

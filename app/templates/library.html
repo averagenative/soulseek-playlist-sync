@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}My music · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><span class="here">My music</span>{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">Your library</div>
+    <h1>My music</h1>
+    <div class="muted small">{{ library.files|n }} files on disk &middot; {{ library.scan or 'not scanned yet' }}</div>
+  </div>
+  <form method="post" action="/library/scan?back=/library" class="inline"><button class="btn small">Rescan library</button></form>
+</section>
+
+{% if error %}<p class="notice bad">{{ error }}</p>{% endif %}
+{% if added is not none and added_to %}
+  <p class="notice ok">Added {{ added|n }} song{{ '' if added == 1 else 's' }} to <a href="/playlists/{{ added_to.id }}">{{ added_to.name }}</a>.{% if added == 0 %} They were already in it.{% endif %}</p>
+{% endif %}
+
+<form method="get" action="/library" class="lib-filter" role="search">
+  <div class="lib-search">
+    <input type="search" name="q" value="{{ f.q }}" placeholder="Search artists, albums, and songs" aria-label="Search your music">
+    <select name="sort" aria-label="Sort by" onchange="this.form.submit()">
+      {% for k, label in sorts.items() %}<option value="{{ k }}" {% if sort == k %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button class="btn">Search</button>
+  </div>
+  {% if f.artist %}<input type="hidden" name="artist" value="{{ f.artist }}">{% endif %}
+  {% if f.album %}<input type="hidden" name="album" value="{{ f.album }}">{% endif %}
+  {% if folders %}
+  <div class="chips" role="group" aria-label="Folders">
+    {% for label, n in folders %}
+      <label class="chip {{ 'on' if label in f.folders else '' }}"><input type="checkbox" name="folder" value="{{ label }}"
+        {% if label in f.folders %}checked{% endif %} onchange="this.form.submit()">{{ label }} <span class="muted">{{ n|n }}</span></label>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if f.artist or f.album or filtered %}
+  <div class="chips">
+    {% if f.artist %}<a class="chip on" href="/library?{{ without.artist }}" title="Show every artist">Artist: {{ f.artist }} &times;</a>{% endif %}
+    {% if f.album %}<a class="chip on" href="/library?{{ without.album }}" title="Show every album">Album: {{ f.album }} &times;</a>{% endif %}
+    {% if filtered %}<a class="chip" href="/library">Clear filters</a>{% endif %}
+  </div>
+  {% endif %}
+</form>
+
+<form method="post" action="/library/playlist" id="pick">
+  <input type="hidden" name="back" value="{{ qs }}{% if page > 1 %}&amp;page={{ page }}{% endif %}">
+  {% if f.q %}<input type="hidden" name="q" value="{{ f.q }}">{% endif %}
+  {% for x in f.folders %}<input type="hidden" name="folder" value="{{ x }}">{% endfor %}
+  {% if f.artist %}<input type="hidden" name="artist" value="{{ f.artist }}">{% endif %}
+  {% if f.album %}<input type="hidden" name="album" value="{{ f.album }}">{% endif %}
+
+  {% if total %}
+  <section class="copy-panel make-panel">
+    <div>
+      <div class="eyebrow">Make a playlist</div>
+      <div class="muted small">Of all {{ songs|n }} {{ 'matching songs' if filtered else 'songs in your library' }}{% if songs < total %}
+        (a song in more than one album or folder counts once){% endif %}. Then copy it to Spotify or Apple Music from its page.</div>
+    </div>
+    <div class="actions">
+      <input type="text" name="name" value="{{ suggest }}" aria-label="Playlist name">
+      <label class="check small" title="Songs you add to these folders later join the playlist, and ones you delete leave it">
+        <input type="checkbox" name="live" value="1" checked>Keep up to date</label>
+      <button class="btn primary" name="what" value="all">Make playlist</button>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if rows %}
+  <div class="table-wrap">
+  <table class="songs lib">
+    <thead><tr>
+      <th class="pick"><input type="checkbox" id="pick-all" aria-label="Select every song on this page"></th>
+      <th>Song</th><th class="hide-sm">Album</th><th class="hide-sm num">Time</th>
+    </tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr id="song-f{{ r.id }}">
+        <td class="pick"><input type="checkbox" name="key" value="{{ r.song_key }}" aria-label="Select {{ r.display_title }}"></td>
+        <td>
+          <div class="song">
+            <button type="button" class="play-thumb" data-play data-kind="file" data-key="f{{ r.id }}"
+                    data-src="/library/files/{{ r.id }}" data-title="{{ r.display_title }}" data-artist="{{ r.artist or '' }}"
+                    data-art="/art/{{ r.art_key }}" aria-label="Play {{ r.display_title }}" title="Play">
+              <img class="thumb" src="/art/{{ r.art_key }}" alt="" loading="lazy"><span class="play-icon" aria-hidden="true"></span></button>
+            <div>
+              <div class="title" title="{{ r.display_title }}">{{ r.display_title }}</div>
+              <div class="muted small">{% if r.artist %}<a class="quiet" href="/library?{{ {'artist': r.artist}|urlencode }}">{{ r.artist }}</a>{% else %}Unknown artist{% endif %}</div>
+              {% if r.album %}<div class="show-sm muted small">{{ r.album }}</div>{% endif %}
+            </div>
+          </div>
+        </td>
+        <td class="hide-sm small">
+          {% if r.album %}<a class="quiet" href="/library?{{ {'album': r.album, 'artist': r.album_artist or r.artist or ''}|urlencode }}">{{ r.album }}</a>{% endif %}
+          {% if r.year %}<span class="muted">{{ r.year }}</span>{% endif %}
+          <div class="muted small">{{ r.folder or '' }}</div>
+        </td>
+        <td class="hide-sm num small">{{ r.duration|duration }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <nav class="pager" aria-label="Pages">
+    {% if page > 1 %}<a class="btn small" href="/library?{{ qs }}&amp;page={{ page - 1 }}">Previous</a>{% endif %}
+    <span class="muted small">{{ ((page - 1) * per_page + 1)|n }} to {{ ([page * per_page, total]|min)|n }} of {{ total|n }}</span>
+    {% if page < pages %}<a class="btn small" href="/library?{{ qs }}&amp;page={{ page + 1 }}">Next</a>{% endif %}
+  </nav>
+
+  <div class="pick-bar" id="pick-bar" hidden>
+    <span class="small"><b id="pick-n">0</b> selected</span>
+    <select name="playlist" id="pick-to" aria-label="Add the selected songs to">
+      <option value="">New playlist</option>
+      {% for lp in fixed %}<option value="{{ lp.id }}" {% if lp.id == to %}selected{% endif %}>{{ lp.name }}</option>{% endfor %}
+    </select>
+    <input type="text" name="new_name" id="pick-name" placeholder="Name of the new playlist" aria-label="Name of the new playlist">
+    <button class="btn primary small" name="what" value="selected">Add</button>
+    <button type="button" class="btn small" id="pick-clear">Clear</button>
+  </div>
+  {% else %}
+  <div class="empty">
+    {% if library.files %}
+      <h2>Nothing matches</h2>
+      <p class="muted">Try fewer words, or <a href="/library">clear the filters</a>.</p>
+    {% else %}
+      <h2>No music indexed yet</h2>
+      <p class="muted">The app indexes the music under its music folder when it starts. Rescan if you just added some.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+</form>
+
+<div class="player" id="player" hidden>
+  <img class="thumb" id="pl-art" alt="">
+  <div class="pl-meta">
+    <div class="title" id="pl-title"></div>
+    <div class="muted small"><span id="pl-artist"></span> <span class="tag" id="pl-kind"></span></div>
+  </div>
+  <audio id="pl-audio" controls preload="none"></audio>
+  <button class="btn tiny" id="pl-close" aria-label="Close the player">Close</button>
+</div>
+<script src="/static/player.js" defer></script>
+<script src="/static/library.js" defer></script>
+{% endblock %}

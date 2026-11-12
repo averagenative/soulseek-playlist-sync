@@ -1,6 +1,8 @@
 """Playlist sync: fetch from the service, match local files, place them, write the .m3u."""
+import json
 import logging
 import os
+import secrets
 import shutil
 import threading
 import time
@@ -10,7 +12,7 @@ from . import apple, db, library, spotify
 from .config import Config
 from .folders import place, rename_all, safe_name, song_file_name, write_m3u
 
-SOURCES = {"apple": "Apple Music", "spotify": "Spotify"}
+SOURCES = {"apple": "Apple Music", "spotify": "Spotify", "local": "My music"}
 
 log = logging.getLogger(__name__)
 SONG_FIELDS = ("isrc", "title", "artist", "album", "album_artist", "track_number", "disc_number",
@@ -76,7 +78,7 @@ def run_job(pid: str, label: str, fn, *args) -> bool:
 # ------------------------------------------------------------------ add / fetch
 
 def add_playlist(cfg: Config, source: str, remote_id: str, name: str) -> str:
-    if source not in SOURCES:
+    if source not in ("apple", "spotify"):
         raise ValueError(f"unknown source {source!r}")
     pid = f"{source}:{remote_id}"
     with db.connect() as c:
@@ -87,6 +89,23 @@ def add_playlist(cfg: Config, source: str, remote_id: str, name: str) -> str:
     return pid
 
 
+def add_local_playlist(cfg: Config, name: str, rule: dict | None = None) -> str:
+    """A playlist made from your own music: a fixed list you add songs to, or, with a rule,
+    every song matching a filter, kept up to date as the library changes."""
+    name = (name or "").strip() or "My playlist"
+    pid = f"local:{secrets.token_hex(4)}"
+    with db.connect() as c:
+        c.execute("INSERT INTO playlists (id, source, remote_id, name, folder, numbering, library_mode, rule) "
+                  "VALUES (?, 'local', ?, ?, ?, ?, 'reference', ?)",
+                  (pid, pid[6:], name, _unique_folder(cfg, "local", name), 1 if cfg.default_numbering else 0,
+                   json.dumps(rule) if rule is not None else None))
+    return pid
+
+
+def rule_of(p) -> dict | None:
+    return json.loads(p["rule"]) if p and p["rule"] else None
+
+
 def remove_playlist(pid: str) -> None:
     """Stop tracking a playlist. Files on disk are left alone."""
     with db.connect() as c:
@@ -95,25 +114,96 @@ def remove_playlist(pid: str) -> None:
         c.execute("DELETE FROM playlists WHERE id = ?", (pid,))
 
 
+def _save_songs(c, tracks: list[dict]) -> None:
+    c.executemany(
+        f"INSERT INTO songs (key, {', '.join(SONG_FIELDS)}) VALUES (?{', ?' * len(SONG_FIELDS)}) "
+        f"ON CONFLICT(key) DO UPDATE SET {', '.join(f'{f}=excluded.{f}' for f in SONG_FIELDS)}",
+        [(s["key"], *(s.get(f) for f in SONG_FIELDS)) for s in tracks])
+
+
 def fetch(cfg: Config, pid: str) -> None:
     p = playlist(pid)
+    if p["source"] == "local":
+        _fetch_local(cfg, p)
+        return
     with _client(cfg, p["source"]) as api:
         name = api.playlist_name(p["remote_id"])
         tracks = api.playlist_tracks(p["remote_id"])
+    _replace_entries(pid, tracks)
+    if name != p["name"]:
+        _rename_playlist(cfg, p, name)
+
+
+def _replace_entries(pid: str, tracks: list[dict]) -> None:
     t = db.now()
     with db.connect() as c:
-        c.executemany(
-            f"INSERT INTO songs (key, {', '.join(SONG_FIELDS)}) VALUES (?{', ?' * len(SONG_FIELDS)}) "
-            f"ON CONFLICT(key) DO UPDATE SET {', '.join(f'{f}=excluded.{f}' for f in SONG_FIELDS)}",
-            [(s["key"], *(s.get(f) for f in SONG_FIELDS)) for s in tracks])
+        _save_songs(c, tracks)
         c.execute("DELETE FROM entries WHERE playlist_id = ?", (pid,))
         c.executemany("INSERT INTO entries (playlist_id, position, song_key) VALUES (?, ?, ?)",
                       [(pid, i, s["key"]) for i, s in enumerate(tracks, 1)])
         c.executemany("INSERT OR IGNORE INTO items (playlist_id, song_key, updated_at) VALUES (?, ?, ?)",
                       [(pid, s["key"], t) for s in tracks])
         c.execute("UPDATE playlists SET fetched_at = ? WHERE id = ?", (t, pid))
-    if name != p["name"]:
-        _rename_playlist(cfg, p, name)
+
+
+def _fetch_local(cfg: Config, p) -> None:
+    """An auto-updating playlist lists what matches its filter now; a fixed one keeps its songs
+    but picks up tag changes."""
+    rule = rule_of(p)
+    if rule is not None:
+        _replace_entries(p["id"], library.collection(cfg, rule))
+        return
+    with db.connect() as c:
+        keys = [r[0] for r in c.execute("SELECT DISTINCT song_key FROM entries WHERE playlist_id = ?", (p["id"],))]
+    with db.connect() as c:
+        _save_songs(c, library.songs_for_keys(keys))
+        c.execute("UPDATE playlists SET fetched_at = ? WHERE id = ?", (db.now(), p["id"]))
+
+
+def add_songs(cfg: Config, pid: str, keys: list[str]) -> int:
+    """Append library songs to a fixed playlist. Songs already in it are left where they are."""
+    tracks = library.songs_for_keys(keys)
+    t = db.now()
+    with db.connect() as c:
+        have = {r[0] for r in c.execute("SELECT song_key FROM entries WHERE playlist_id = ?", (pid,))}
+        new = [s for s in tracks if s["key"] not in have]
+        pos = c.execute("SELECT COALESCE(MAX(position), 0) FROM entries WHERE playlist_id = ?", (pid,)).fetchone()[0]
+        _save_songs(c, new)
+        c.executemany("INSERT INTO entries (playlist_id, position, song_key) VALUES (?, ?, ?)",
+                      [(pid, pos + i, s["key"]) for i, s in enumerate(new, 1)])
+        c.executemany("INSERT OR IGNORE INTO items (playlist_id, song_key, updated_at) VALUES (?, ?, ?)",
+                      [(pid, s["key"], t) for s in new])
+        c.execute("UPDATE playlists SET fetched_at = ? WHERE id = ?", (t, pid))
+    return len(new)
+
+
+def remove_songs(cfg: Config, pid: str, keys: list[str]) -> None:
+    """Take songs out of a fixed playlist, and delete the copies this app made of them."""
+    with db.connect() as c:
+        order = [r[0] for r in c.execute("SELECT song_key FROM entries WHERE playlist_id = ? ORDER BY position", (pid,))]
+        drop = set(keys)
+        c.execute("DELETE FROM entries WHERE playlist_id = ?", (pid,))
+        c.executemany("INSERT INTO entries (playlist_id, position, song_key) VALUES (?, ?, ?)",
+                      [(pid, i, k) for i, k in enumerate((k for k in order if k not in drop), 1)])
+    prune(cfg, pid)
+    reconcile(cfg, pid, apply=True)
+
+
+def refresh_local(cfg: Config, pid: str, scan: bool = True) -> None:
+    """Rescan the library for changes, then bring the playlist and its .m3u up to date."""
+    if scan:
+        library.scan(cfg)
+    fetch(cfg, pid)
+    prune(cfg, pid)
+    reconcile(cfg, pid, apply=True)
+
+
+def refresh_auto_playlists(cfg: Config) -> None:
+    """Rescan the library, then update every auto-updating playlist (not their copies on the services)."""
+    library.scan(cfg)
+    for p in tracked():
+        if p["source"] == "local" and p["rule"] is not None:
+            run_job(p["id"], "Refreshing", refresh_local, cfg, p["id"], False)
 
 
 def _rename_playlist(cfg: Config, p, name: str) -> None:
@@ -132,6 +222,11 @@ def _rename_playlist(cfg: Config, p, name: str) -> None:
     stale = cfg.music_root / folder / old_m3u.name
     if stale.exists():
         stale.unlink()
+
+
+def rename_playlist(cfg: Config, pid: str, name: str) -> None:
+    _rename_playlist(cfg, playlist(pid), name)
+    write_playlist_m3u(cfg, pid)
 
 
 def _move_files(cfg: Config, old: str, new: str) -> None:
@@ -198,6 +293,8 @@ def reconcile(cfg: Config, pid: str, apply: bool, want_downloads: bool = False,
     p = playlist(pid)
     folder = folder_of(cfg, p)
     entries, items, songs, downloads = _load(pid)
+    local = p["source"] == "local"
+    local_paths = library.key_paths(exclude_dir=folder) if local else {}
     first_pos: dict[str, int] = {}
     for e in entries:
         first_pos.setdefault(e["song_key"], e["position"])
@@ -209,15 +306,16 @@ def reconcile(cfg: Config, pid: str, apply: bool, want_downloads: bool = False,
         it, s = items[key], songs[key]
         if it["skip"]:
             continue
-        name = song_file_name(s, pos if p["numbering"] else None, width)
-        if name.lower() in used:     # two songs with the same artist and title, no numbering
-            stem, n = name[:-4], 2
-            while f"{stem} ({n}).mp3".lower() in used:
+        stem = song_file_name(s, pos if p["numbering"] else None, width)[:-4]
+        if stem.lower() in used:     # two songs with the same artist and title, no numbering
+            n = 2
+            while f"{stem} ({n})".lower() in used:
                 n += 1
-            name = f"{stem} ({n}).mp3"
-        used.add(name.lower())
+            stem = f"{stem} ({n})"
+        used.add(stem.lower())
 
         if _placed(folder, it) and not (it["origin"] == "reference" and p["library_mode"] == "copy"):
+            name = stem + Path(it["file"] or ".mp3").suffix.lower()
             if it["origin"] != "reference" and it["file"] != name:
                 renames[it["file"]] = name
                 updates.append((key, {"file": name}))
@@ -226,12 +324,15 @@ def reconcile(cfg: Config, pid: str, apply: bool, want_downloads: bool = False,
         d = downloads.get(key)
         src = d["path"] if d and d["state"] == "done" and d["path"] and os.path.exists(d["path"]) else None
         origin = "download" if src else "library"
-        src = src or library.find(s, cfg.length_tolerance, exclude_dir=folder)
+        if not src and local_paths.get(key) and os.path.exists(local_paths[key]):
+            src = local_paths[key]
+        # Playlists from the streaming services stay MP3-only for MP3 players; your own music is what it is.
+        src = src or library.find(s, cfg.length_tolerance, mp3_only=not local, exclude_dir=folder)
         if src:
             if p["library_mode"] == "reference" and origin == "library":
                 updates.append((key, {"origin": "reference", "library_path": src, "file": None}))
             else:
-                placements.append((key, src, name, origin))
+                placements.append((key, src, stem + Path(src).suffix.lower(), origin))
                 updates.append((key, {"library_path": src if origin == "library" else it["library_path"]}))
             continue
         updates.append((key, {"library_path": None}))
@@ -487,8 +588,9 @@ def export_files(cfg: Config, pid: str) -> tuple[str, list[tuple[str, Path]], st
             continue
         if key not in names:
             if it["origin"] == "reference":
-                names[key] = song_file_name(s, e["position"] if p["numbering"] else None, width)
-                files.append((names[key], Path(it["library_path"])))
+                src = Path(it["library_path"])
+                names[key] = song_file_name(s, e["position"] if p["numbering"] else None, width)[:-4] + src.suffix.lower()
+                files.append((names[key], src))
             else:
                 names[key] = it["file"]
                 files.append((names[key], folder / it["file"]))

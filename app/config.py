@@ -25,6 +25,7 @@ class Config:
     library_dirs: tuple[Path, ...]
 
     spotify_dir: str
+    local_dir: str
     default_numbering: bool
     default_library_mode: str
 
@@ -61,7 +62,7 @@ class Config:
         return self.music_root / self.spotify_dir
 
     def source_dir(self, source: str) -> str:
-        return {"apple": self.apple_dir, "spotify": self.spotify_dir}[source]
+        return {"apple": self.apple_dir, "spotify": self.spotify_dir, "local": self.local_dir}[source]
 
     @property
     def spotify_token_file(self) -> Path:
@@ -89,6 +90,7 @@ def load() -> Config:
         music_root=music_root,
         apple_dir=_env("APPLE_DIR", "AppleMusic"),
         spotify_dir=_env("SPOTIFY_DIR", "SpotifyMusic"),
+        local_dir=_env("LOCAL_DIR", "Playlists"),
         default_numbering=_env("DEFAULT_NUMBERING", "1") not in ("0", "false", "no"),
         default_library_mode=_env("DEFAULT_LIBRARY_MODE", "copy"),
         library_dirs=tuple(Path(p) for p in library.split(",")) if library else (music_root,),

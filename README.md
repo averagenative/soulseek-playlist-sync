@@ -1,12 +1,12 @@
 # soulseek-playlist-sync
 
-Keep local MP3 copies of your Apple Music and Spotify playlists. Pick a playlist, and soulseek-playlist-sync gives it its own folder of tagged MP3s plus an `.m3u`, ready to copy onto an MP3 player or to play in Navidrome, Jellyfin, or Plex. Songs you already own are copied from your library; missing songs are downloaded one by one from Soulseek through [slskd](https://github.com/slskd/slskd), with an optional YouTube fallback for songs Soulseek doesn't have. Self-hosted, runs in Docker, and works without an Apple Developer account.
+Keep local MP3 copies of your Apple Music and Spotify playlists. Pick a playlist, and soulseek-playlist-sync gives it its own folder of tagged MP3s plus an `.m3u`, ready to copy onto an MP3 player or to play in Navidrome, Jellyfin, or Plex. Songs you already own are copied from your library; missing songs are downloaded one by one from Soulseek through [slskd](https://github.com/slskd/slskd), with an optional YouTube fallback for songs Soulseek doesn't have. It also goes the other way: browse the music you already have, make playlists from it, and copy them to Spotify or Apple Music, up to your whole collection. Self-hosted, runs in Docker, and works without an Apple Developer account.
 
 ![Playlist cards with cover art, sync progress, and a Download all button](docs/screenshots/home.png)
 
 ## Features
 
-- **Apple Music and Spotify playlists**, including Apple collaborative playlists, Apple Favorite Songs, and Spotify Liked Songs.
+- **Apple Music and Spotify playlists**, including Apple collaborative playlists, Apple Favorite Songs, your whole Apple Music library, and Spotify Liked Songs.
 - **One folder per playlist**, with numbered files (`001 - Artist - Title.mp3`) and a relative-path `.m3u`, so the folder works when you copy it to a phone, an SD card, or an MP3 player. File names are safe for FAT32 and exFAT.
 - **Per-song sync status**: synced, in your library, downloading (with speed and time left), not found, removed from the playlist, and so on.
 - **Reuses what you have.** Songs already in your library are matched by ISRC or by artist, title, and length, and hardlinked into the playlist folder instead of downloaded again.
@@ -14,6 +14,8 @@ Keep local MP3 copies of your Apple Music and Spotify playlists. Pick a playlist
 - **Clean tags.** Every file is retagged from the streaming service: title, artist, album, album artist, track number, year, ISRC, and cover art (ID3v2.3, which every player reads).
 - **YouTube fallback (optional).** For songs Soulseek doesn't have, it searches YouTube Music first for official "Artist - Topic" audio uploads, and skips covers, live takes, and sped-up edits.
 - **Copy playlists between services.** Make a Spotify copy of an Apple Music playlist, or an Apple Music copy of a Spotify playlist, matched by ISRC.
+- **Browse your own music** on the **My music** page: search, filter by folder, play songs, and see album art from your files.
+- **Make playlists from your music**, by hand or as "every song in these folders" playlists that keep up as your library changes, and copy them to Spotify, Apple Music, or both. Put your whole collection on your phone's music app and shuffle it.
 - **Check songs by ear.** Play any downloaded song in the browser, and compare it with Apple's 30-second clip of the original.
 - **Download a playlist as a ZIP** to the computer you're browsing from, with its `.m3u`.
 - **Download all** button per playlist, live progress from slskd, a Downloads page for everything in flight, and pages that refresh themselves.
@@ -163,6 +165,26 @@ Click **Update** to bring the copy up to date later. The two directions behave d
 - **To Spotify:** the copy is made identical every time, with the same songs in the same order.
 - **To Apple Music:** new songs are added. Apple's API doesn't let apps remove or reorder songs, so songs removed from the original stay in the Apple Music copy until you remove them in the Music app.
 
+## Make playlists from your own music
+
+The **My music** page lists every song the app found under your music folder. Search by artist, album, or title, tick folders to narrow the list, and click an artist or album name to see only that. Click a song's cover to play it.
+
+You can make a playlist from it in two ways:
+
+- **Everything that matches:** in the **Make a playlist** panel, name the playlist and click **Make playlist**. With **Keep up to date** ticked, the playlist is a filter rather than a fixed list: songs you add to those folders later join it, and songs you delete leave it. The app checks every 6 hours, and whenever you click **Refresh** or update a copy. A song that's in two albums or folders is listed once.
+- **Songs you pick:** tick songs, choose **New playlist** or one you made before, and click **Add**. To build a playlist across several pages, add from one page, go to the next, and add again; the menu remembers the playlist you added to last. Use **Remove** on the playlist's page to take a song out.
+
+To put your whole collection on Spotify or Apple Music, clear the filters (or tick the folders you want), make a playlist with **Keep up to date** ticked, and use **Copy to Spotify** or **Copy to Apple Music** on its page. Then shuffle it in the Spotify or Music app.
+
+Keep the following in mind:
+
+- **Spotify playlists hold up to 10,000 songs.** A bigger playlist's Spotify copy gets a random 10,000 of its songs, and each **Update** picks a new 10,000. Apple Music copies get every song.
+- **The first copy of a big playlist takes a while.** The app searches the service for each song, spaced out so it doesn't get rate-limited: allow one to two hours per 10,000 songs. It remembers what it found, so updates only search for new songs. If the service asks the app to pause, the copy stops with a message, and the next **Update** carries on where it left off.
+- **Songs are matched by artist, title, and length**, or by ISRC when your files have one. Songs the service doesn't have are listed in the copy panel.
+- **The playlist's `.m3u` points at your library files** by default, in a folder under `Playlists/`, so it takes no space and media servers such as Navidrome can import it. To get a folder you can copy to an MP3 player instead, set **Songs already in your library** to **Copy into the playlist folder** in the playlist's settings. These playlists keep your files as they are, including `.m4a` files.
+
+Your Apple Music library also appears at the top of the list when you add Apple Music playlists, as **Apple Music library**. Track it like a playlist to download it, or to copy it to Spotify. Spotify's equivalent is **Liked Songs**.
+
 ## Check songs and take them with you
 
 - Click a downloaded song's cover to play it in the browser. The player moves on to the next downloaded song. For Apple Music playlists, **Original** plays Apple's 30-second clip of the song so you can compare it with your copy.
@@ -176,7 +198,7 @@ The following environment variables configure things that can't change while the
 
 | Variable | Default | Description |
 |---|---|---|
-| `MUSIC_ROOT` | `/music` | Music folder inside the container. Playlists go in `AppleMusic/` and `SpotifyMusic/` under it. |
+| `MUSIC_ROOT` | `/music` | Music folder inside the container. Playlists go in `AppleMusic/`, `SpotifyMusic/`, and `Playlists/` under it. |
 | `LIBRARY_DIRS` | `MUSIC_ROOT` | Comma-separated folders to look in for songs you already own. |
 | `DATA_DIR` | `/data` | Database and sign-in tokens. |
 | `SLSKD_URL` | `http://slskd:5030` | slskd's address. |
