@@ -4,12 +4,15 @@
 #   mkdir -p music data secrets slskd
 #   docker compose up -d
 #
+# This downloads the published image. To build it from this folder instead, run
+# `docker compose up -d --build`.
+#
 # Then open http://localhost:8080 (or http://<this machine's IP>:8080 on your network).
 
 services:
   playlist-sync:
+    image: ghcr.io/averagenative/soulseek-playlist-sync:latest
     build: .
-    image: soulseek-playlist-sync:local
     container_name: playlist-sync
     restart: unless-stopped
     user: "${PUID:-1000}:${PGID:-1000}"

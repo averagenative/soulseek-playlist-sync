@@ -58,3 +58,7 @@ A song's status on the playlist page comes from its item and its download row: s
 - A song used by several playlists is hardlinked into each folder when they're on the same filesystem.
 - Finished downloads are moved out of slskd's download folder right away.
 - **Prune removed** deletes only files the app created, for songs that left the playlist.
+
+## Releases
+
+The image is published to the GitHub container registry from a maintainer's machine, not from hosted CI. `scripts/publish-image.sh` builds the current commit, after it's on GitHub, for amd64 and arm64 (under emulation, or natively on an ARM machine over SSH) and pushes both under `latest` and the commit's short hash. `docker-compose.yml` keeps `build: .`, so `docker compose up -d --build` builds the same image from a checkout.

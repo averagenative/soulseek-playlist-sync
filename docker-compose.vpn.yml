@@ -37,6 +37,10 @@ services:
       # VPN providers move servers. Keep gluetun's server list current so it doesn't keep
       # trying servers that are gone.
       UPDATER_PERIOD: 24h
+    # The first connection can take a minute or more. Give it two before slskd and the app give up
+    # on it; gluetun's own health test still runs every 5 seconds.
+    healthcheck:
+      start_period: 2m
     volumes:
       - ./gluetun:/gluetun
       - ./slskd:/slskd

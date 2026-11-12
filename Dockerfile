@@ -1,5 +1,9 @@
 FROM python:3.12-slim
 
+LABEL org.opencontainers.image.source="https://github.com/averagenative/soulseek-playlist-sync" \
+      org.opencontainers.image.description="Sync Apple Music and Spotify playlists to local music folders, downloading missing songs from Soulseek" \
+      org.opencontainers.image.licenses="MIT"
+
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     DATA_DIR=/data MUSIC_ROOT=/music SLSKD_DOWNLOADS=/slskd-downloads
 

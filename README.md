@@ -67,7 +67,7 @@ You don't need both Apple Music and Spotify. Use either one, or both.
    docker compose up -d
    ```
 
-   The first build takes a few minutes.
+   The first start downloads the images. The app's image runs on Intel, AMD, and ARM machines, including Apple Silicon Macs and a Raspberry Pi with a 64-bit OS. To build it from this folder instead, run `docker compose up -d --build`; the first build takes a few minutes.
 
 1. Open `http://localhost:8080`, or `http://<server IP>:8080` from another device on your network.
 
@@ -261,14 +261,20 @@ For another provider, set `VPN_SERVICE_PROVIDER` and the settings that provider 
 
 ```sh
 git pull
+docker compose pull
+docker compose up -d
+```
+
+The published image has the yt-dlp that was current when the image was built. If YouTube downloads start failing, build the image yourself to get the newest yt-dlp:
+
+```sh
 docker compose build --pull --no-cache playlist-sync
 docker compose up -d
 ```
 
-Rebuilding with `--no-cache` also updates yt-dlp, which needs updates whenever YouTube changes.
-
 ## Troubleshooting
 
+- **`dependency failed to start: container gluetun is unhealthy`.** The VPN didn't connect within 2 minutes. Run `docker logs gluetun`. If it shows `AUTH_FAILED`, the VPN username or password in `.env` is wrong; if the password has a `$` or `#` in it, put it in single quotes, such as `VPN_PASSWORD='pa$$word'`. Then run the same `up -d` command again.
 - **The header says "Soulseek offline."** slskd is running but isn't logged in to Soulseek. Check `docker compose logs slskd`. If you use a VPN, check that it's connected.
 - **Apple Music asks you to reconnect.** Your sign-in expired. With option A, paste a fresh `media-user-token`.
 - **A song stays "Not found."** Soulseek has no MP3 with the right length. Turn on the YouTube fallback, or click **Skip**. Every **Download all** tries not-found songs again.
