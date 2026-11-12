@@ -201,3 +201,21 @@ def test_spotify_setup_guides_you_through_connecting(cfg, monkeypatch):
     with TestClient(web.app, base_url="https://music.example.com") as client:
         r = client.get("/spotify/setup")
         assert 'data-copy="https://music.example.com/spotify/callback"' in r.text and warning not in r.text
+
+
+def test_home_card_says_copied_not_synced_after_a_copy(cfg, monkeypatch):
+    monkeypatch.setenv("WORKER", "0")
+    monkeypatch.setenv("SLSKD_URL", "http://127.0.0.1:9")
+    from fastapi.testclient import TestClient
+    import app.web as web
+    importlib.reload(web)
+    pid = sync.add_playlist(cfg, "spotify", "liked", "Liked Songs")
+    with TestClient(web.app) as client:
+        assert "Synced never" in client.get("/partials/home").text
+        mirror._save(pid, "apple", "p.1", matched=1, total=1, missing=[])         # copied, nothing downloaded
+        assert "Copied to Apple Music just now" in client.get("/partials/home").text
+        mirror._save(pid, "apple", None, error="Apple refused")                   # a failed copy keeps the old time
+        assert "Copied to Apple Music just now" in client.get("/partials/home").text
+        with db.connect() as c:
+            c.execute("UPDATE playlists SET synced_at = ? WHERE id = ?", (db.now() + 1, pid))
+        assert "Synced just now" in client.get("/partials/home").text

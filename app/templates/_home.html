@@ -31,7 +31,7 @@
       </div>
       {{ segbar(p.counts, live) }}
       <div class="foot">
-        <span class="muted small">{% if p.busy %}<span class="badge busy">{{ p.busy }}</span>{% else %}Synced {{ p.synced_at|ago }}{% endif %}</span>
+        <span class="muted small">{% if p.busy %}<span class="badge busy">{{ p.busy }}</span>{% else %}{{ p.activity }} {{ p.activity_at|ago }}{% endif %}</span>
         {% if p.source == 'local' %}
           <a class="btn small" href="/playlists/{{ p.id }}">Open</a>
         {% elif done < total.n %}

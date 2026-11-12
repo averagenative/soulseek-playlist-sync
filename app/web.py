@@ -192,14 +192,20 @@ def _home_playlists() -> list[dict]:
     out = []
     for p in sync.tracked():
         _, counts = sync.summary(C(), p["id"])
-        out.append({**p, "synced_at": _last_synced(p), "counts": counts, "covers": sync.covers(p["id"])})
+        label, at = _last_activity(p)
+        out.append({**p, "activity": label, "activity_at": at, "counts": counts, "covers": sync.covers(p["id"])})
     return out
 
 
-def _last_synced(p: dict) -> float | None:
-    """Copying to another service counts as a sync too, so use whichever happened last."""
-    times = [p["synced_at"]] + [(mirror.get(p["id"], t) or {}).get("updated_at") for t in mirror.targets_for(p["source"])]
-    return max((t for t in times if t), default=None)
+def _last_activity(p) -> tuple[str, float | None]:
+    """The card's last-done line: the last download sync, or the last copy to another service if that's newer.
+    A copy isn't called a sync, because "Synced" next to "0 / 1,448 synced" would read as a contradiction."""
+    label, when = "Synced", p["synced_at"]
+    for target in mirror.targets_for(p["source"]):
+        at = (mirror.get(p["id"], target) or {}).get("updated_at")
+        if at and (not when or at > when):
+            label, when = f"Copied to {mirror.TARGETS[target]}", at
+    return label, when
 
 
 @app.get("/settings", response_class=HTMLResponse)
@@ -456,7 +462,7 @@ def _playlist_ctx(pid: str, show_all: bool = False) -> dict:
         copies.append({"target": target, "label": mirror.TARGETS[target], "mirror": mirror.get(pid, target),
                        "can_copy": ok, "blocker": why})
     rule = sync.rule_of(p)
-    return {"p": {**p, "synced_at": _last_synced(p)}, "rows": rows if show_all else rows[:ROW_LIMIT], "total_rows": len(rows), "show_all": show_all,
+    return {"p": p, "rows": rows if show_all else rows[:ROW_LIMIT], "total_rows": len(rows), "show_all": show_all,
             "counts": counts, "active": active, "music_root": str(cfg.music_root), "covers": sync.covers(pid),
             "copies": copies, "size": sum(n for s, n in counts.items() if s != "removed"),
             "spotify_max": mirror.SPOTIFY_MAX, "local": p["source"] == "local", "rule": rule,
