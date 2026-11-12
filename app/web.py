@@ -192,8 +192,14 @@ def _home_playlists() -> list[dict]:
     out = []
     for p in sync.tracked():
         _, counts = sync.summary(C(), p["id"])
-        out.append({**p, "counts": counts, "covers": sync.covers(p["id"])})
+        out.append({**p, "synced_at": _last_synced(p), "counts": counts, "covers": sync.covers(p["id"])})
     return out
+
+
+def _last_synced(p: dict) -> float | None:
+    """Copying to another service counts as a sync too, so use whichever happened last."""
+    times = [p["synced_at"]] + [(mirror.get(p["id"], t) or {}).get("updated_at") for t in mirror.targets_for(p["source"])]
+    return max((t for t in times if t), default=None)
 
 
 @app.get("/settings", response_class=HTMLResponse)
@@ -450,7 +456,7 @@ def _playlist_ctx(pid: str, show_all: bool = False) -> dict:
         copies.append({"target": target, "label": mirror.TARGETS[target], "mirror": mirror.get(pid, target),
                        "can_copy": ok, "blocker": why})
     rule = sync.rule_of(p)
-    return {"p": p, "rows": rows if show_all else rows[:ROW_LIMIT], "total_rows": len(rows), "show_all": show_all,
+    return {"p": {**p, "synced_at": _last_synced(p)}, "rows": rows if show_all else rows[:ROW_LIMIT], "total_rows": len(rows), "show_all": show_all,
             "counts": counts, "active": active, "music_root": str(cfg.music_root), "covers": sync.covers(pid),
             "copies": copies, "size": sum(n for s, n in counts.items() if s != "removed"),
             "spotify_max": mirror.SPOTIFY_MAX, "local": p["source"] == "local", "rule": rule,
