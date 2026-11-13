@@ -244,3 +244,24 @@ def test_a_refused_search_moves_on_instead_of_blocking_the_queue(cfg):
         c.execute("UPDATE downloads SET state = 'pending', query_index = 0 WHERE song_key = 'apple:1'")
     with pytest.raises(SlskdError):
         w.start_search(Refuses(None), row())
+
+
+def test_slskd_status_reads_the_login_from_application(cfg):
+    import httpx
+    from app.slskd import Slskd
+
+    def handler(app_state):
+        def h(request):
+            if request.url.path == "/api/v0/application":
+                return httpx.Response(200, json=app_state)
+            if request.url.path == "/api/v0/application/version":
+                return httpx.Response(200, json="0.26.2.0")
+            return httpx.Response(403)
+        return h
+
+    c = Slskd(cfg)
+    c.http = httpx.Client(base_url="http://slskd/api/v0", transport=httpx.MockTransport(handler(
+        {"version": {"current": "0.26.2.0"}, "server": {"isConnected": True, "isLoggedIn": False}})))
+    assert c.status() == {"reachable": True, "version": "0.26.2.0", "connected": False, "error": None}
+    c.http = httpx.Client(base_url="http://slskd/api/v0", transport=httpx.MockTransport(handler({})))
+    assert c.status()["version"] == "0.26.2.0" and c.status()["connected"] is None      # an older slskd

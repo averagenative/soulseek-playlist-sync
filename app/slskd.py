@@ -38,16 +38,21 @@ class Slskd:
 
     def status(self) -> dict:
         """{'reachable': bool, 'version': str|None, 'connected': bool|None, 'error': str|None}"""
+        # /application reports the Soulseek login to any API key; /server needs the administrator role.
         try:
-            version = self._req("GET", "/application/version")
+            app = self._req("GET", "/application") or {}
         except SlskdError as e:
-            return {"reachable": False, "version": None, "connected": None, "error": str(e)}
-        connected = None
-        try:
-            server = self._req("GET", "/server")
-            connected = bool(server.get("isConnected") and server.get("isLoggedIn"))
-        except SlskdError:
-            pass  # needs the administrator role; reachable is enough
+            if e.status is None:
+                return {"reachable": False, "version": None, "connected": None, "error": str(e)}
+            app = {}            # an older slskd: fall back to the version alone
+        version = (app.get("version") or {}).get("current")
+        if not version:
+            try:
+                version = self._req("GET", "/application/version")
+            except SlskdError as e:
+                return {"reachable": False, "version": None, "connected": None, "error": str(e)}
+        server = app.get("server")
+        connected = bool(server.get("isConnected") and server.get("isLoggedIn")) if isinstance(server, dict) else None
         return {"reachable": True, "version": version, "connected": connected, "error": None}
 
     # searches ---------------------------------------------------------
