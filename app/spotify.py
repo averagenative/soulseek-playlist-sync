@@ -225,6 +225,16 @@ class Client:
                                        abs((t.get("duration_ms") or 0) / 1000 - want_len)))
         return candidates[0]["uri"]
 
+    def search_tracks(self, term: str, limit: int = 10) -> list[dict]:
+        """Tracks for a search, for picking one by hand."""
+        items = self.get("/search", {"q": term, "type": "track", "limit": limit}).get("tracks", {}).get("items", [])
+        return [{"id": t["uri"], "title": t.get("name"), "artist": ", ".join(a["name"] for a in t.get("artists", [])),
+                 "album": (t.get("album") or {}).get("name"), "duration_ms": t.get("duration_ms"),
+                 "explicit": bool(t.get("explicit")),
+                 "art": ((t.get("album") or {}).get("images") or [{}])[-1].get("url"),
+                 "preview": t.get("preview_url"), "url": (t.get("external_urls") or {}).get("spotify")}
+                for t in items if t and t.get("uri")]
+
     def playlist_exists(self, playlist_id: str) -> bool:
         try:
             self.get(f"/playlists/{playlist_id}", {"fields": "id"})

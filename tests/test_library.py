@@ -430,3 +430,75 @@ def test_apple_copy_adds_songs_as_it_matches_and_a_restart_carries_on(cfg, monke
     add_files(cfg, ("Albums/A/8.mp3", "A", "Song 8", "X", 8))
     mirror.run(cfg, pid, "apple")
     assert Fake.calls[3:] == [("add", ["c8"])]
+
+
+def test_cover_shows_found_art_from_different_artists(cfg, monkeypatch):
+    from pathlib import Path
+    from app import art
+    add_files(cfg, ("Albums/A/X1/1.mp3", "A", "a1", "X1"), ("Albums/A/X2/1.mp3", "A", "a2", "X2"),
+              ("Albums/B/Y/1.mp3", "B", "b1", "Y"), ("Albums/C/Z/1.mp3", "C", "c1", "Z"),
+              ("Albums/D/W/1.mp3", "D", "d1", "W"))
+    # Album Y has no art: its URL would show the placeholder.
+    monkeypatch.setattr(art, "thumbnail", lambda cfg, key, path: None if "/B/" in path else Path(path))
+    pid = sync.add_local_playlist(cfg, "Everything", rule={})
+    sync.refresh_local(cfg, pid)
+    with db.connect() as c:
+        url = {r["album"]: f"/art/{r['art_key']}" for r in c.execute("SELECT album, art_key FROM library")}
+    # One album each from A, C and D, then A's other album fills the fourth tile.
+    assert sync.covers(cfg, pid) == [url["X1"], url["Z"], url["W"], url["X2"]]
+
+
+def test_find_a_song_by_hand_for_an_apple_copy(cfg, monkeypatch):
+    monkeypatch.setenv("WORKER", "0")
+    monkeypatch.setenv("SLSKD_URL", "http://127.0.0.1:9")
+    from fastapi.testclient import TestClient
+    import app.web as web
+    from app import apple
+    importlib.reload(web)
+    monkeypatch.setattr(apple, "user_token", lambda cfg: "token")
+    add_files(cfg, ("Albums/2Pac/1.mp3", "2Pac", "Bury Me a G", "Thug Life"),
+              ("Albums/2Pac/2.mp3", "2Pac", "Dear Mama", "Me Against the World"))
+    pid = sync.add_local_playlist(cfg, "Everything", rule={})
+    sync.refresh_local(cfg, pid)
+
+    class Fake:
+        lists, searches = {}, []
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+        def find_song(self, song): return None if song["title"] == "Bury Me a G" else "c-mama"
+        def playlist_exists(self, rid): return rid in Fake.lists
+        def playlist_song_ids(self, rid): return set(Fake.lists[rid])
+        def create_playlist(self, name, desc, ids): Fake.lists["am"] = list(ids); return "am"
+        def add_tracks(self, rid, ids): Fake.lists[rid] += ids
+        def search_songs(self, term):
+            Fake.searches.append(term)
+            return [{"id": "c-other", "title": "Bury Me", "artist": "Someone", "album": "", "duration_ms": 100_000,
+                     "explicit": False, "art": None, "preview": None, "url": None},
+                    {"id": "c-thug", "title": "Bury Me a G", "artist": "Thug Life", "album": "Thug Life, Vol. 1",
+                     "duration_ms": 205_000, "explicit": True, "art": None, "preview": "https://x.test/p.m4a",
+                     "url": "https://music.apple.com/x"}]
+
+    monkeypatch.setattr(mirror, "_client", lambda cfg, target: Fake())
+    mirror.run(cfg, pid, "apple")
+    assert Fake.lists == {"am": ["c-mama"]}
+    key = mirror.not_found(pid, "apple")[0]["key"]
+    assert mirror.get(pid, "apple")["not_found"] == 1
+
+    with TestClient(web.app) as client:
+        r = client.get(f"/playlists/{pid}/copies")
+        assert "1 song not found on Apple Music" in r.text
+        r = client.get(f"/playlists/{pid}/copies/apple/missing")
+        assert r.status_code == 200 and "Bury Me a G" in r.text and f"/copies/apple/find/" in r.text
+        # By artist and title, then by title alone; the same title comes first, though Thug Life isn't 2Pac.
+        r = client.get(f"/playlists/{pid}/copies/apple/find/{key}")
+        assert Fake.searches == ["2pac Bury Me a G", "Bury Me a G"]
+        assert r.text.index("Thug Life, Vol. 1") < r.text.index("Someone") and "+5 s" in r.text
+        r = client.post(f"/playlists/{pid}/copies/apple/find/{key}", data={"remote_id": "c-thug"},
+                        follow_redirects=False)
+        assert r.status_code == 303 and "Added+to+the+Apple+Music+copy" in r.headers["location"]
+        assert client.get(f"/playlists/{pid}/copies/spotify/find/{key}").status_code == 200    # local: both targets
+    assert Fake.lists == {"am": ["c-mama", "c-thug"]}
+    assert mirror.not_found(pid, "apple") == [] and mirror.get(pid, "apple")["matched"] == 2
+    # An update keeps your pick and doesn't add it again.
+    mirror.run(cfg, pid, "apple")
+    assert Fake.lists == {"am": ["c-mama", "c-thug"]}

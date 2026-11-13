@@ -8,10 +8,9 @@
       <div><a href="{{ m.url }}" target="_blank" rel="noopener">Open the {{ c.label }} copy</a>
         <span class="muted small">&middot; {% if p.busy and c.label in p.busy %}{{ p.busy }}{% elif m.capped %}{{ m.matched|n }} songs{% else %}{{ m.matched|n }} of {{ m.total|n }} songs found on {{ c.label }}{% endif %} &middot; updated {{ m.updated_at|ago }}</span></div>
       {% if m.note %}<div class="muted small">{{ m.note }}</div>{% endif %}
-      {% if m.missing %}
-        <details class="missing" data-keep="missing-{{ c.target }}"><summary class="muted small">{{ m.missing|length|n }} not on {{ c.label }}{% if m.capped %} (of the songs checked){% endif %}</summary>
-          <ul class="small muted" data-keep="missing-{{ c.target }}-list">{% for x in m.missing[:300] %}<li>{{ x }}</li>{% endfor %}
-            {% if m.missing|length > 300 %}<li>and {{ (m.missing|length - 300)|n }} more</li>{% endif %}</ul></details>
+      {% if m.not_found %}
+        <div class="small"><a href="/playlists/{{ p.id }}/copies/{{ c.target }}/missing">{{ m.not_found|n }} {{ 'song' if m.not_found == 1 else 'songs' }} not found on {{ c.label }}</a>
+          <span class="muted">&middot; find them by hand</span></div>
       {% endif %}
     {% else %}
       <div class="muted small">Make {{ 'an' if c.target == 'apple' else 'a' }} {{ c.label }} playlist with the same songs{{ ', in the same order' if c.target == 'spotify' and size <= spotify_max else '' }}.

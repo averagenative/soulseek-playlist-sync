@@ -150,6 +150,7 @@ How YouTube playlists differ from the other services:
 - **Music videos don't set the song's length.** A music video often has an intro or an ending, so for those, a Soulseek file's length doesn't have to match. Lyric videos, audio uploads, and "Topic" uploads keep their length.
 - **The YouTube fallback uses the playlist's own video.** With **Try YouTube when Soulseek doesn't have a song** on, a song Soulseek doesn't have is downloaded from the video in the playlist, instead of a search.
 - **Cover art** is the middle of the video's thumbnail, which for "Topic" uploads is the album cover.
+- **Deleted and private videos are left out.** YouTube still lists them in the playlist, but with no title or artist.
 - **Private playlists, Liked videos, Liked Music, and Mixes can't be added**, because reading them needs a YouTube sign-in. Save the songs to a Public or Unlisted playlist and add that.
 - You can copy a YouTube playlist to Spotify or Apple Music from its page.
 
@@ -184,7 +185,17 @@ Media servers that scan your music folder (Navidrome, Jellyfin, Plex) pick up th
 
 ## Copy a playlist to the other service
 
-On a playlist's page, the **Copy to Spotify** or **Copy to Apple Music** panel makes a playlist with the same songs on the other service. Songs are matched by ISRC, or by title, artist, and length when there's no ISRC match. The panel lists songs the other service doesn't have.
+On a playlist's page, the **Copy to Spotify** or **Copy to Apple Music** panel makes a playlist with the same songs on the other service. Songs are matched by ISRC, or by title, artist, and length when there's no ISRC match. The copy uses the playlist's name in the app, so to give a copy another name, rename the playlist in its **Settings** first.
+
+Matching allows for the usual differences between services: a title Apple Music censors ("F\*\*k"), a dropped g ("Fuckin'" and "Fucking"), a "(Bonus Track)" tag, and a duo credited differently ("JAY-Z & Ye" and "JAY-Z & Kanye West").
+
+The panel links to the songs the other service didn't find. To find one yourself:
+
+1. Click the **songs not found** link in the panel.
+1. Next to the song, click **Find**. The app searches by artist and title, and by title alone, which finds a song credited to another artist (such as a 2Pac song credited to Thug Life). Use **Preview** to compare, or search with other words.
+1. Click **Use this**. An Apple Music copy gets the song right away; a Spotify copy gets it at the next **Update**. The app keeps your pick from then on.
+
+Songs that weren't found are searched again at the first **Update** a week later.
 
 Click **Update** to bring the copy up to date later. The two directions behave differently:
 
@@ -235,7 +246,7 @@ Keep the following in mind:
 
 - **Spotify playlists hold up to 10,000 songs.** A bigger playlist's Spotify copy gets a random 10,000 of its songs, and each **Update** picks a new 10,000. Apple Music copies get every song.
 - **The first copy of a big playlist takes a while.** The app searches the service for each song, spaced out so it doesn't get rate-limited: allow one to two hours per 10,000 songs. It remembers what it found, so updates only search for new songs. An Apple Music copy fills up as songs are matched, so you can open it while the copy runs. If the service asks the app to pause, the copy stops with a message, and the next **Update** carries on where it left off. When the service fails for a moment, the app retries. A song whose search still fails is skipped and looked for again on the next **Update**. If 10 searches in a row fail, the copy stops.
-- **Songs are matched by artist, title, and length**, or by ISRC when your files have one. A title Apple Music censors, such as "F\*\*k", matches your file's uncensored title. Songs the service doesn't have are listed in the copy panel.
+- **Songs are matched by artist, title, and length**, or by ISRC when your files have one. A title Apple Music censors, such as "F\*\*k", matches your file's uncensored title. Songs the service didn't find are linked from the copy panel, where you can find them by hand.
 - **The playlist's `.m3u` points at your library files** by default, in a folder under `Playlists/`, so it takes no space and media servers such as Navidrome can import it. To get a folder you can copy to an MP3 player instead, set **Songs already in your library** to **Copy into the playlist folder** in the playlist's settings. These playlists keep your files as they are, including `.m4a` files.
 
 Your Apple Music library also appears at the top of the list when you add Apple Music playlists, as **Apple Music library**. Track it like a playlist to download it, or to copy it to Spotify. Spotify's equivalent is **Liked Songs**.
@@ -247,7 +258,7 @@ Your Apple Music library also appears at the top of the list when you add Apple 
 
 ## Settings
 
-Most settings are on the app's **Settings** page and apply right away: output folder names, numbering, how songs from your library are handled, minimum bitrate, length tolerance, downloads at once, the YouTube fallback, and the Spotify Client ID. Each playlist also has its own settings, including its folder; changing the folder moves the files.
+Most settings are on the app's **Settings** page and apply right away: output folder names, numbering, how songs from your library are handled, minimum bitrate, length tolerance, downloads at once, the YouTube fallback, and the Spotify Client ID. Each playlist also has its own settings, including its name and folder. Changing the folder moves the files. Renaming a playlist from a streaming service gives its folder, its `.m3u`, and new copies your name, and renaming it on the service no longer changes it; clear the name to use the service's name again.
 
 The following environment variables configure things that can't change while the app runs:
 

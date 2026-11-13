@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_macros.html" import thumb %}
+{% block title %}Not on {{ label }} · {{ p.name }} · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><a href="/playlists/{{ p.id }}">{{ p.name }}</a><span class="sep">/</span><span class="here">Not on {{ label }}</span>{% endblock %}
+{% block content %}
+<h1>Not found on {{ label }}</h1>
+<p class="muted">{{ total|n }} {{ 'song' if total == 1 else 'songs' }} in {{ p.name }} weren't found when the app searched {{ label }}.
+  Some aren't on {{ label }} at all. Others are there under another title, version, or artist.
+  Click <b>Find</b> to search {{ label }} yourself and pick the right song.
+  {% if mirror and mirror.url %}{% if target == 'apple' %}It goes into the {{ label }} copy right away.{% else %}It goes into the {{ label }} copy at the next Update.{% endif %}{% endif %}</p>
+
+{% if done %}<p class="notice ok" role="status">{{ done }}</p>{% endif %}
+{% if not can_copy %}<p class="notice warn">Connect {{ label }} to search it.</p>{% endif %}
+
+{% if total %}
+<form method="get" class="lib-search" role="search" style="margin: 0 0 14px">
+  <input type="search" name="q" value="{{ q }}" placeholder="Find a song in this list" aria-label="Find a song in this list">
+  <button class="btn">Find</button>
+  {% if q %}<a class="btn" href="?">Show all</a>{% endif %}
+</form>
+{% if q %}<p class="small muted">{{ matching|n }} of {{ total|n }} match "{{ q }}".</p>{% endif %}
+
+{% if songs %}
+<div class="table-wrap">
+<table class="songs">
+  <thead><tr><th>Song</th><th class="hide-sm">Album</th><th class="hide-sm right">Length</th><th></th></tr></thead>
+  <tbody>
+  {% for s in songs %}
+    <tr>
+      <td><div class="song">{{ thumb(s) }}<div>
+        <div class="title" title="{{ s.title }}">{{ s.title }}</div>
+        <div class="muted small" title="{{ s.artist or '' }}">{{ s.artist or "Unknown artist" }}</div></div></div></td>
+      <td class="hide-sm small muted">{{ s.album or '' }}</td>
+      <td class="hide-sm small muted right">{{ ((s.duration_ms or 0) / 1000)|duration }}</td>
+      <td class="right"><a class="btn small" href="/playlists/{{ p.id }}/copies/{{ target }}/find/{{ s.key|urlencode }}?back={{ q|urlencode }}">Find</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if matching > songs|length %}<p class="small muted">Showing the first {{ songs|length|n }} of {{ matching|n }}. Search to find the others.</p>{% endif %}
+{% endif %}
+{% else %}
+<p class="notice ok">Every song was found on {{ label }}.</p>
+{% endif %}
+{% endblock %}

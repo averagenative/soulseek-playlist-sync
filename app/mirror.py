@@ -43,6 +43,7 @@ def get(pid: str, target: str) -> dict | None:
         return None
     m = dict(r)
     m["missing"] = json.loads(m["missing"] or "[]")
+    m["not_found"] = len(not_found(pid, target))
     m["capped"] = bool(m.get("note"))
     m["url"] = remote_url(target, m["remote_id"])
     return m
@@ -192,6 +193,72 @@ def run(cfg: Config, pid: str, target: str | None = None) -> None:
     except (spotify.SpotifyError, apple.AppleError, httpx.HTTPError) as e:
         _save(pid, target, (get(pid, target) or {}).get("remote_id"), error=str(e)[:300])
         raise
+
+
+# ------------------------------------------------------------------ songs the copy didn't find
+
+def not_found(pid: str, target: str) -> list[dict]:
+    """Songs in the playlist the service search didn't find, in playlist order. Songs you left out of a My
+    music playlist aren't listed, and neither are songs whose search failed (the next update tries them)."""
+    p = sync.playlist(pid)
+    with db.connect() as c:
+        return [dict(r) for r in c.execute(
+            "SELECT s.*, MIN(e.position) AS position FROM entries e "
+            "JOIN items i ON i.playlist_id = e.playlist_id AND i.song_key = e.song_key "
+            "JOIN song_links l ON l.song_key = e.song_key AND l.target = ? "
+            "JOIN songs s ON s.key = e.song_key "
+            "WHERE e.playlist_id = ? AND l.remote_id = '' AND (? OR i.skip = 0) "
+            "GROUP BY s.key ORDER BY position", (target, pid, 0 if p["source"] == "local" else 1))]
+
+
+def candidates(cfg: Config, target: str, song: dict, q: str = "") -> list[dict]:
+    """Songs on the service that could be this one, likeliest first. Without your own search words, it
+    searches by artist and title, then by title alone, which finds a song credited to someone else."""
+    from .match import artist_matches, core_title, search_artist, title_matches
+    title = core_title(song.get("title"))
+    terms = [q.strip()] if q.strip() else [f"{search_artist(song.get('artist'))} {title}".strip(), title]
+    out, seen = [], set()
+    with _client(cfg, target) as api:
+        search = api.search_tracks if target == "spotify" else api.search_songs
+        for term in dict.fromkeys(t for t in terms if t):
+            for r in search(term):
+                if r["id"] not in seen:
+                    seen.add(r["id"])
+                    out.append(r)
+    want = (song.get("duration_ms") or 0) / 1000
+    for r in out:
+        r["off"] = round((r["duration_ms"] or 0) / 1000 - want) if want and r["duration_ms"] else None
+        r["same_title"] = title_matches(song.get("title"), r["title"])
+        r["same_artist"] = artist_matches(song.get("artist"), r["artist"])
+    out.sort(key=lambda r: (not r["same_title"], not r["same_artist"], abs(r["off"]) if r["off"] is not None else 999))
+    return out
+
+
+def link(cfg: Config, pid: str, target: str, key: str, remote_id: str) -> str:
+    """Use the song you picked on the service. An Apple Music copy gets it right away; a Spotify copy at its
+    next update, since that replaces the playlist as a whole. Returns what happened, for the page."""
+    with db.connect() as c:
+        c.execute("INSERT OR REPLACE INTO song_links (song_key, target, remote_id, checked_at) VALUES (?, ?, ?, ?)",
+                  (key, target, remote_id, db.now()))
+    m = get(pid, target)
+    label = TARGETS[target]
+    if not (m and m["remote_id"]):
+        return f"Saved. It goes in when you copy the playlist to {label}."
+    if target == "spotify":
+        return "Saved. It goes in at the next Update."
+    if remote_id in _added(pid, target):
+        return f"Saved. That song is already in the {label} copy."
+    try:
+        with _client(cfg, target) as api:
+            api.add_tracks(m["remote_id"], [remote_id])
+    except (apple.AppleError, httpx.HTTPError) as e:
+        log.warning("couldn't add %s to %s: %s", remote_id, m["remote_id"], e)
+        return f"Saved, but {label} didn't take it just now. It goes in at the next Update."
+    _remember_added(pid, target, [remote_id])
+    with db.connect() as c:
+        c.execute("UPDATE mirrors SET matched = COALESCE(matched, 0) + 1 WHERE playlist_id = ? AND target = ?",
+                  (pid, target))
+    return f"Added to the {label} copy."
 
 
 def _added(pid: str, target: str) -> set[str]:

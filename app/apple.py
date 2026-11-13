@@ -293,6 +293,19 @@ class Client:
                                   abs((s["attributes"].get("durationInMillis") or 0) / 1000 - want_len)))
         return found[0]["id"]
 
+    def search_songs(self, term: str, limit: int = 15) -> list[dict]:
+        """Catalog songs for a search, for picking one by hand."""
+        res = self.get(f"/v1/catalog/{self.storefront()}/search", {"term": term, "types": "songs", "limit": limit})
+        out = []
+        for s in res.get("results", {}).get("songs", {}).get("data", []):
+            a = s.get("attributes", {})
+            art = (a.get("artwork") or {}).get("url") or ""
+            out.append({"id": s["id"], "title": a.get("name"), "artist": a.get("artistName"), "album": a.get("albumName"),
+                        "duration_ms": a.get("durationInMillis"), "explicit": a.get("contentRating") == "explicit",
+                        "art": art.replace("{w}", "120").replace("{h}", "120") or None,
+                        "preview": ((a.get("previews") or [{}])[0]).get("url"), "url": a.get("url")})
+        return out
+
     def playlist_exists(self, playlist_id: str) -> bool:
         r = self.http.get(f"/v1/me/library/playlists/{playlist_id}")
         return r.status_code == 200

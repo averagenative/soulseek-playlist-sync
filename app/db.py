@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS playlists (
     fetched_at    REAL,
     synced_at     REAL,
     busy          TEXT,                      -- what a running job is doing, or NULL
-    error         TEXT
+    error         TEXT,
+    own_name      INTEGER NOT NULL DEFAULT 0 -- you renamed it here, so the service's name doesn't replace it
 );
 
 CREATE TABLE IF NOT EXISTS songs (
@@ -165,8 +166,11 @@ def init(path: Path) -> None:
             c.execute("UPDATE library SET mtime = NULL")     # read every file's tags again for the new columns
         c.execute("CREATE INDEX IF NOT EXISTS library_song_key ON library(song_key)")
         c.execute("CREATE INDEX IF NOT EXISTS library_art_key ON library(art_key)")
-        if "rule" not in {r["name"] for r in c.execute("PRAGMA table_info(playlists)")}:
+        pl_cols = {r["name"] for r in c.execute("PRAGMA table_info(playlists)")}
+        if "rule" not in pl_cols:
             c.execute("ALTER TABLE playlists ADD COLUMN rule TEXT")      # JSON filter of an auto-updating playlist
+        if "own_name" not in pl_cols:
+            c.execute("ALTER TABLE playlists ADD COLUMN own_name INTEGER NOT NULL DEFAULT 0")
         if "note" not in {r["name"] for r in c.execute("PRAGMA table_info(mirrors)")}:
             c.execute("ALTER TABLE mirrors ADD COLUMN note TEXT")
         # A YouTube download runs inside the app, so one in flight when it stopped has to start over.

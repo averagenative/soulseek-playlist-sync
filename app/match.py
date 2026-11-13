@@ -9,6 +9,7 @@ _NOISE_BRACKET = re.compile(
     r"single version|album version|original motion picture|soundtrack)\b[^\)\]]*[\)\]]",
     re.I,
 )
+_BONUS = re.compile(r"\s*[\(\[]\s*bonus(?:\s+track)?\s*[\)\]]", re.I)
 _ANY_BRACKET = re.compile(r"\s*[\(\[][^\)\]]*[\)\]]")
 _FEAT = re.compile(r"\s+(feat\.?|ft\.?|featuring)\s+.*$", re.I)
 _TRACK_PREFIX = re.compile(r"^\s*(\d{1,3}|[a-d]\d{1,2})\s*[-_. ]+\s*", re.I)
@@ -38,7 +39,7 @@ def norm(s: str | None) -> str:
 
 def clean_title(title: str | None) -> str:
     """Title without featuring credits, soundtrack notes and remaster tags."""
-    t = _NOISE_BRACKET.sub("", title or "")
+    t = _BONUS.sub("", _NOISE_BRACKET.sub("", title or ""))
     m = _DASH_SUFFIX.search(t)
     if m and _DASH_NOISE.search(m.group(1)) and not _DASH_KEEP.search(m.group(1)):
         t = t[:m.start()]
@@ -59,14 +60,22 @@ _MARKS = "*%#@"
 _WORD = re.compile(r"[a-z0-9]+[*%#@][a-z0-9*%#@]*|[a-z0-9]+")
 
 
+def _same_letters(x: str, y: str) -> bool:
+    return len(x) == len(y) and all(cx == cy or cx in _MARKS or cy in _MARKS for cx, cy in zip(x, y))
+
+
+def _same_word(x: str, y: str) -> bool:
+    """Same word, allowing for censoring and a dropped g: "fuckin'" is "fucking" (or "f*****g")."""
+    return (_same_letters(x, y) or (len(x) >= 5 and x.endswith("in") and _same_letters(x + "g", y))
+            or (len(y) >= 5 and y.endswith("in") and _same_letters(x, y + "g")))
+
+
 def title_matches(a: str | None, b: str | None) -> bool:
     """Same title, allowing for a censored one: "I Don't Give a F**k" matches "I Don't Give a Fuck"."""
     if norm_title(a) == norm_title(b):
         return True
     wa, wb = (_WORD.findall(_fold(clean_title(t))) for t in (a, b))
-    return len(wa) == len(wb) and all(
-        len(x) == len(y) and all(cx == cy or cx in _MARKS or cy in _MARKS for cx, cy in zip(x, y))
-        for x, y in zip(wa, wb))
+    return len(wa) == len(wb) and all(_same_word(x, y) for x, y in zip(wa, wb))
 
 
 def primary_artist(artist: str | None) -> str:
@@ -77,11 +86,20 @@ def primary_artist(artist: str | None) -> str:
     return a
 
 
+_CREDIT_SPLIT = re.compile(r"\s*,\s*|\s+(?:&|x|and|with|vs\.?|feat\.?|ft\.?|featuring)\s+", re.I)
+
+
+def credited_names(artist: str | None) -> set[str]:
+    """Each name in a credit: 'JAY-Z & Kanye West' -> {'jay z', 'kanye west'}."""
+    return {n for n in (norm(x) for x in _CREDIT_SPLIT.split(artist or "")) if len(n) >= 2}
+
+
 def artist_matches(want: str | None, have: str | None) -> bool:
     w, h = norm(primary_artist(want)), norm(have)
     if not w or not h:
         return False
-    return w in h or h in norm(want)
+    # A shared name is enough for a duo credited differently: "JAY-Z & Ye" is "JAY-Z & Kanye West".
+    return w in h or h in norm(want) or bool(credited_names(want) & credited_names(have))
 
 
 def search_artist(artist: str | None) -> str:

@@ -34,6 +34,12 @@ def test_censored_titles_match():
     assert not title_matches("Fuck the World", "F**k the World Tour")
     assert not title_matches("Freak", "F**k")
     assert not title_matches("Fucking Bullshit", "F*****g B******t Remix")
+    # A dropped g, and a bonus-track tag, don't make it another song.
+    assert title_matches("HYFR (Hell Ya Fuckin’ Right)", "HYFR (Hell Ya F*****g Right) [feat. Lil Wayne]")
+    assert title_matches("Dead Whores Love to Fuck", "Dead Whores Love to F**k (Bonus Track)")
+    assert title_matches("Fuck Reality", "F**k Reality [Bonus]")
+    assert not title_matches("Sin", "Sing")
+    assert not title_matches("Song (Live Bonus Track)", "Song")
 
 
 def test_primary_artist():
@@ -41,6 +47,11 @@ def test_primary_artist():
     assert primary_artist("Bob Marley & The Wailers") == "Bob Marley & The Wailers"
     assert artist_matches("Zach Bryan & Lana Del Rey", "Zach Bryan")
     assert not artist_matches("Neil Young", "Neil Diamond")
+    # Duos credited differently share a name.
+    assert artist_matches("JAŸ-Z & Ye", "JAŸ-Z & Kanye West")
+    assert artist_matches("JAŸ-Z & Ye", "Kanye West & JAŸ-Z")
+    assert not artist_matches("Simon & Garfunkel", "Paul Simon")
+    assert not artist_matches("Tyler Childers", "Tyler, The Creator")
 
 
 def test_search_queries():

@@ -132,7 +132,7 @@ def fetch(cfg: Config, pid: str) -> None:
         name = api.playlist_name(p["remote_id"])
         tracks = api.playlist_tracks(p["remote_id"])
     _replace_entries(pid, tracks)
-    if name != p["name"]:
+    if name != p["name"] and not p["own_name"]:
         _rename_playlist(cfg, p, name)
 
 
@@ -145,6 +145,11 @@ def _replace_entries(pid: str, tracks: list[dict]) -> None:
                       [(pid, i, s["key"]) for i, s in enumerate(tracks, 1)])
         c.executemany("INSERT OR IGNORE INTO items (playlist_id, song_key, updated_at) VALUES (?, ?, ?)",
                       [(pid, s["key"], t) for s in tracks])
+        # A song that left the playlist before it had a file has nothing to prune: forget it rather than
+        # list it as removed. (Songs from your own files keep their row, and with it whether you left one out.)
+        c.execute("DELETE FROM items WHERE playlist_id = ? AND file IS NULL AND skip = 0 "
+                  "AND song_key NOT IN (SELECT song_key FROM entries WHERE playlist_id = ?) "
+                  "AND (SELECT source FROM playlists WHERE id = ?) != 'local'", (pid, pid, pid))
         c.execute("UPDATE playlists SET fetched_at = ? WHERE id = ?", (t, pid))
 
 
@@ -270,8 +275,20 @@ def _rename_playlist(cfg: Config, p, name: str) -> None:
 
 
 def rename_playlist(cfg: Config, pid: str, name: str) -> None:
-    _rename_playlist(cfg, playlist(pid), name)
+    """Your own name for a playlist. For one from a streaming service, it stays when the service's name changes,
+    and copies made after this use it."""
+    p = playlist(pid)
+    if name != p["name"]:
+        _rename_playlist(cfg, p, name)
+    with db.connect() as c:
+        c.execute("UPDATE playlists SET own_name = ? WHERE id = ?", (0 if p["source"] == "local" else 1, pid))
     write_playlist_m3u(cfg, pid)
+
+
+def use_service_name(pid: str) -> None:
+    """Go back to the streaming service's name for the playlist, from its next check."""
+    with db.connect() as c:
+        c.execute("UPDATE playlists SET own_name = 0 WHERE id = ?", (pid,))
 
 
 def _move_files(cfg: Config, old: str, new: str) -> None:
@@ -643,17 +660,38 @@ def export_files(cfg: Config, pid: str) -> tuple[str, list[tuple[str, Path]], st
     return safe_name(p["name"]), files, "\n".join(lines) + "\n"
 
 
-def covers(pid: str, n: int = 4) -> list[str]:
-    """Artwork of the first few different albums in the playlist, for a mosaic cover."""
-    out: list[str] = []
+COVER_LOOKS = 40     # albums from your own files checked for art per cover, so a page never waits long
+
+
+def covers(cfg: Config, pid: str, n: int = 4) -> list[str]:
+    """Artwork for a playlist's mosaic cover: an album each from the first few artists that have art. Albums
+    by an artist already shown fill in when the playlist has fewer artists than tiles."""
+    from . import art
+    from .match import norm, primary_artist
+    picked, spare, artists, looks = [], [], set(), 0
     with db.connect() as c:
-        for r in c.execute("SELECT COALESCE(s.thumb_url, s.artwork_url) AS art, s.album FROM entries e "
-                           "JOIN songs s ON s.key = e.song_key WHERE e.playlist_id = ? ORDER BY e.position", (pid,)):
-            if r["art"] and r["art"] not in out:
-                out.append(r["art"])
-                if len(out) >= n:
+        for r in c.execute("SELECT COALESCE(s.thumb_url, s.artwork_url) AS art, COALESCE(s.album_artist, s.artist) "
+                           "AS who FROM entries e JOIN songs s ON s.key = e.song_key WHERE e.playlist_id = ? "
+                           "ORDER BY e.position", (pid,)):
+            url, who = r["art"], norm(primary_artist(r["who"]))
+            if not url or url in picked or url in spare or (who in artists and len(picked) + len(spare) >= n):
+                continue
+            if url.startswith("/art/"):
+                # Your own files: the art URL always answers, with a placeholder when the album has no art.
+                if looks >= COVER_LOOKS:
                     break
-    return out
+                looks += 1
+                f = library.file_for_art(url[5:])
+                if not (f and art.thumbnail(cfg, url[5:], f["path"])):
+                    continue
+            if who in artists:
+                spare.append(url)
+                continue
+            artists.add(who)
+            picked.append(url)
+            if len(picked) >= n:
+                break
+    return (picked + spare)[:n]
 
 
 def tracked() -> list[dict]:

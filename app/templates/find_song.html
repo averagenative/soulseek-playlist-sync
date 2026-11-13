@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "_macros.html" import thumb %}
+{% block title %}Find on {{ label }} · {{ song.title }} · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><a href="/playlists/{{ p.id }}">{{ p.name }}</a><span class="sep">/</span><a href="/playlists/{{ p.id }}/copies/{{ target }}/missing{{ '?q=' ~ back|urlencode if back else '' }}">Not on {{ label }}</a><span class="sep">/</span><span class="here">{{ song.title }}</span>{% endblock %}
+{% block content %}
+<h1>Find on {{ label }}</h1>
+<div class="find-song">
+  <div class="song">
+    {% if has_file %}
+    <button class="play-thumb" data-play data-kind="file" data-key="{{ song.key }}"
+            data-src="/playlists/{{ p.id }}/songs/{{ song.key|urlencode }}/audio" data-title="{{ song.title }}"
+            data-artist="{{ song.artist or '' }}" data-art="{{ song.thumb_url or song.artwork_url or '' }}"
+            aria-label="Play {{ song.title }}" title="Play your copy">{{ thumb(song) }}<span class="play-icon" aria-hidden="true"></span></button>
+    {% else %}{{ thumb(song) }}{% endif %}
+    <div>
+      <div class="title">{{ song.title }}</div>
+      <div class="muted small">{{ song.artist or "Unknown artist" }}{% if song.album %} &middot; {{ song.album }}{% endif %}{% if song.duration_ms %} &middot; {{ (song.duration_ms / 1000)|duration }}{% endif %}</div>
+    </div>
+  </div>
+</div>
+
+<form method="get" class="lib-search" role="search" style="margin: 14px 0">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search {{ label }}: artist and title, or other words" aria-label="Search {{ label }}">
+  <input type="hidden" name="back" value="{{ back }}">
+  <button class="btn">Search</button>
+</form>
+{% if not q %}<p class="small muted">Searched by artist and title, and by title alone, which finds a song credited to another artist. Try other words, such as the album or a shorter title, if the right song isn't listed.</p>{% endif %}
+
+{% if error %}<p class="notice bad">{{ error }}</p>{% endif %}
+
+{% if results %}
+<div class="table-wrap">
+<table class="songs">
+  <thead><tr><th>Song on {{ label }}</th><th class="hide-sm">Album</th><th class="hide-sm right">Length</th><th></th></tr></thead>
+  <tbody>
+  {% for r in results %}
+    <tr>
+      <td><div class="song">
+        {% if r.art %}<img class="thumb" src="{{ r.art }}" alt="" loading="lazy">{% else %}<div class="thumb blank">&#9835;</div>{% endif %}
+        <div>
+          <div class="title" title="{{ r.title }}">{{ r.title }}{% if r.explicit %} <span class="tag" title="Explicit">E</span>{% endif %}</div>
+          <div class="muted small" title="{{ r.artist or '' }}">{{ r.artist }}</div>
+          <div class="show-sm muted small">{{ r.album or '' }}</div>
+        </div></div></td>
+      <td class="hide-sm small muted">{{ r.album or '' }}</td>
+      <td class="hide-sm small right">{{ ((r.duration_ms or 0) / 1000)|duration }}
+        {% if r.off is not none %}<div class="small {{ 'muted' if r.off|abs <= 5 else 'warn-text' }}">{{ 'same length' if r.off == 0 else ('%+d s'|format(r.off)) }}</div>{% endif %}</td>
+      <td class="right">
+        {% if r.preview %}<button type="button" class="btn tiny" data-play data-kind="original" data-key="{{ r.id }}" data-src="{{ r.preview }}"
+                data-title="{{ r.title }}" data-artist="{{ r.artist or '' }}" data-art="{{ r.art or '' }}" title="Play {{ label }}'s 30-second clip">Preview</button>{% endif %}
+        {% if r.url %}<a class="btn tiny" href="{{ r.url }}" target="_blank" rel="noopener" title="Open it on {{ label }}">Open</a>{% endif %}
+        <form method="post" class="inline">
+          <input type="hidden" name="remote_id" value="{{ r.id }}">
+          <input type="hidden" name="back" value="{{ back }}">
+          <button class="btn tiny primary">Use this</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% elif not error %}
+<p class="notice warn">{{ label }} found nothing for that search. Try other words.</p>
+{% endif %}
+
+<div class="player" id="player" hidden>
+  <img class="thumb" id="pl-art" alt="">
+  <div class="pl-meta">
+    <div class="title" id="pl-title"></div>
+    <div class="muted small"><span id="pl-artist"></span> <span class="tag" id="pl-kind"></span></div>
+  </div>
+  <audio id="pl-audio" controls preload="none"></audio>
+  <button class="btn tiny" id="pl-close" aria-label="Close the player">Close</button>
+</div>
+<script src="/static/player.js" defer></script>
+{% endblock %}

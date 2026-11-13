@@ -40,6 +40,10 @@
         {% if local %}
         <label class="field"><span class="label">Name</span>
           <input type="text" name="name" value="{{ p.name }}" required></label>
+        {% else %}
+        <label class="field"><span class="label">Name</span>
+          <input type="text" name="name" value="{{ p.name }}" placeholder="The name on {{ SOURCES[p.source] }}">
+          <span class="muted small">{% if p.own_name %}Your name stays when the playlist is renamed on {{ SOURCES[p.source] }}. Clear it to use {{ SOURCES[p.source] }}'s name again.{% else %}Rename it here to give the folder, the .m3u, and new copies your own name. Renaming it on {{ SOURCES[p.source] }} then doesn't change it.{% endif %}</span></label>
         {% endif %}
         <label class="field"><span class="label">Folder</span>
           <input type="text" name="folder" value="{{ p.folder }}" required>

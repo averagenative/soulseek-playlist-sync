@@ -263,6 +263,10 @@ tr.removed td, tr.skipped td { opacity: .5; }
 .settings summary { list-style: none; }
 .settings summary::-webkit-details-marker { display: none; }
 .settings[open] summary { border-color: var(--accent); }
+/* The settings panel floats over the page, so opening it doesn't push the cover around. */
+.hero .settings { position: relative; }
+.hero .settings > .stack { position: absolute; right: 0; top: 100%; z-index: 30; width: max-content; max-width: min(520px, calc(100vw - 32px)); }
+@media (max-width: 640px) { .hero .settings { position: static; } .hero .settings > .stack { left: 16px; right: 16px; width: auto; } }
 .stack { display: flex; flex-direction: column; gap: 12px; padding: 14px; margin-top: 10px; background: var(--surface);
   border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); min-width: min(440px, 88vw); }
 .settings-form { display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
@@ -334,6 +338,9 @@ details > summary { cursor: pointer; }
   border-radius: var(--radius); box-shadow: var(--shadow); }
 .copy-panel .missing ul { margin: 6px 0 0; padding-left: 18px; max-height: 180px; overflow: auto; }
 .copy-panel summary { cursor: pointer; }
+.warn-text { color: var(--warn); }
+.find-song { padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.find-song .song .muted { max-width: none; white-space: normal; }
 
 /* player */
 .play-thumb { position: relative; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 8px; flex: none; }

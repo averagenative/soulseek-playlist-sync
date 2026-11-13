@@ -55,6 +55,7 @@ def test_video_songs_and_their_own_download():
     topic = youtube.video_song({"id": "b2", "title": "Loser", "duration": 234, "channel": "Beck - Topic"})
     assert topic["duration_ms"] == 234000 and topic["artist"] == "Beck"
     assert youtube.video_song({"id": "c3", "title": "[Deleted video]", "duration": None}) is None
+    assert youtube.video_song({"id": "c4", "title": None, "duration": None}) is None
     cand = youtube.own_video(topic)
     assert cand[0]["url"] == "https://www.youtube.com/watch?v=b2" and cand[0]["duration"] == 234
     assert youtube.own_video({"key": "spotify:x", "url": "https://open.spotify.com/track/x"}) == []
@@ -78,6 +79,7 @@ def test_add_a_youtube_playlist(cfg, monkeypatch):
     info = {"title": "90s Alt", "entries": [
         {"id": "v1", "title": "Eve 6 - Inside Out", "duration": 223, "channel": "EVE6"},
         {"id": "v2", "title": "[Private video]", "duration": None},
+        {"id": "v4", "title": None, "duration": None, "channel": None},        # unavailable: no title at all
         {"id": "v3", "title": "Smells Like Teen Spirit", "duration": 301, "channel": "Nirvana - Topic"}]}
     monkeypatch.setattr(youtube.Playlists, "_info", lambda self, rid: info)
     monkeypatch.setattr(youtube, "can_read_playlists", lambda: True)     # passes without yt-dlp installed
@@ -104,4 +106,22 @@ def test_add_a_youtube_playlist(cfg, monkeypatch):
         # Adding the same playlist again opens it instead of adding a second copy.
         r = client.post("/youtube/add", data={"link": link}, follow_redirects=False)
         assert r.headers["location"] == f"/playlists/{pid}" and len(sync.tracked()) == 1
+
+        # Your own name: it renames the folder, and stays when the playlist is renamed on YouTube.
+        settings_form = {"folder": "YouTube/90s Alt", "numbering": "1", "library_mode": "copy"}
+        assert 'placeholder="The name on YouTube"' in page
+        client.post(f"/playlists/{pid}/settings", data={**settings_form, "name": "Road Trip"})
+        sync.wait_idle(pid)
+        info["title"] = "90s Alternative"
+        info["entries"] = info["entries"][:1]           # Nirvana left the playlist before it was downloaded
+        client.post(f"/playlists/{pid}/preview")
+        sync.wait_idle(pid)
+        p = sync.playlist(pid)
+        assert p["name"] == "Road Trip" and p["folder"] == "YouTube/Road Trip" and p["own_name"] == 1
+        rows, counts = sync.summary(cfg, pid)
+        assert [x["song"]["title"] for x in rows] == ["Inside Out"] and "removed" not in counts
+        # Clearing it goes back to YouTube's name.
+        client.post(f"/playlists/{pid}/settings", data={**settings_form, "folder": "YouTube/Road Trip", "name": ""})
+        sync.wait_idle(pid)
+        assert sync.playlist(pid)["name"] == "90s Alternative"
     assert mirror.targets_for("youtube") == ["spotify", "apple"]

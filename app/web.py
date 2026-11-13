@@ -194,7 +194,7 @@ def _home_playlists() -> list[dict]:
     for p in sync.tracked():
         _, counts = sync.summary(C(), p["id"])
         label, at = _last_activity(p)
-        out.append({**p, "activity": label, "activity_at": at, "counts": counts, "covers": sync.covers(p["id"])})
+        out.append({**p, "activity": label, "activity_at": at, "counts": counts, "covers": sync.covers(C(), p["id"])})
     return out
 
 
@@ -449,6 +449,64 @@ def playlist_copies(request: Request, pid: str):
     return templates.TemplateResponse(request, "_copies.html", {**_common(), **_copies_ctx(pid)})
 
 
+MISSING_LIMIT = 300      # songs listed at once on the not-found page; a search narrows it
+
+
+def _copy_target(pid: str, target: str) -> dict:
+    p = sync.playlist(pid)
+    if not p or target not in mirror.targets_for(p["source"]):
+        raise HTTPException(404)
+    return p
+
+
+def _song(key: str) -> dict:
+    with db.connect() as c:
+        r = c.execute("SELECT * FROM songs WHERE key = ?", (key,)).fetchone()
+    if not r:
+        raise HTTPException(404)
+    return dict(r)
+
+
+@app.get("/playlists/{pid}/copies/{target}/missing", response_class=HTMLResponse)
+def copy_missing(request: Request, pid: str, target: str, q: str = "", done: str = ""):
+    """The songs a copy didn't find, each with a way to find it by hand."""
+    p = _copy_target(pid, target)
+    songs = mirror.not_found(pid, target)
+    words = q.casefold().split()
+    shown = [s for s in songs if all(w in f"{s['title'] or ''} {s['artist'] or ''} {s['album'] or ''}".casefold()
+                                     for w in words)] if words else songs
+    return templates.TemplateResponse(request, "missing.html", {
+        **_common(), "p": p, "target": target, "label": mirror.TARGETS[target], "total": len(songs),
+        "songs": shown[:MISSING_LIMIT], "matching": len(shown), "q": q.strip(), "done": done,
+        "mirror": mirror.get(pid, target), "can_copy": _copy_ready(C(), target)[0]})
+
+
+@app.get("/playlists/{pid}/copies/{target}/find/{key}", response_class=HTMLResponse)
+def copy_find(request: Request, pid: str, target: str, key: str, q: str = "", back: str = ""):
+    """Search the service for one song and pick the right one."""
+    p = _copy_target(pid, target)
+    song = _song(key)
+    ok, why = _copy_ready(C(), target)
+    results, error = [], why
+    if ok:
+        try:
+            results = mirror.candidates(C(), target, song, q)
+        except (apple.AppleError, spotify.SpotifyError, httpx.HTTPError) as e:
+            error = f"{mirror.TARGETS[target]} search failed: {e}"
+    return templates.TemplateResponse(request, "find_song.html", {
+        **_common(), "p": p, "target": target, "label": mirror.TARGETS[target], "song": song, "q": q.strip(),
+        "back": back, "results": results, "error": error, "has_file": bool(sync.song_path(C(), pid, key))})
+
+
+@app.post("/playlists/{pid}/copies/{target}/find/{key}")
+def copy_link(pid: str, target: str, key: str, remote_id: str = Form(...), back: str = Form("")):
+    _copy_target(pid, target)
+    song = _song(key)
+    msg = mirror.link(C(), pid, target, key, remote_id)
+    qs = urlencode([(k, v) for k, v in (("q", back), ("done", f"{song['title']}: {msg}")) if v])
+    return _back(f"/playlists/{pid}/copies/{target}/missing?{qs}")
+
+
 def _copy_ready(cfg: Config, target: str) -> tuple[bool, str | None]:
     if target == "spotify":
         if not spotify.connected(cfg):
@@ -503,7 +561,7 @@ def _playlist_ctx(pid: str, show_all: bool = False, q: str = "", show: str = "")
             "view_qs": urlencode([(k, v) for k, v in view if v]),
             "rows_qs": urlencode([(k, v) for k, v in view + [("all", 1 if show_all else "")] if v]),
             "all_qs": urlencode([(k, v) for k, v in view if v] + [("all", 1)]),
-            "counts": counts, "active": active, "music_root": str(cfg.music_root), "covers": sync.covers(pid),
+            "counts": counts, "active": active, "music_root": str(cfg.music_root), "covers": sync.covers(cfg, pid),
             "local": local, "rule": rule,
             "STATUS_LABELS": {**STATUS_LABELS, "skipped": "Left out"} if local else STATUS_LABELS,
             "rule_text": _rule_text(rule) if rule is not None else None,
@@ -520,6 +578,7 @@ def playlist_settings(pid: str, folder: str = Form(...), numbering: str | None =
         raise HTTPException(404)
     if library_mode not in ("copy", "reference"):
         raise HTTPException(400)
+    refetch = False
     try:
         folder = settings.clean_folder(folder)
         if folder != p["folder"]:
@@ -527,14 +586,22 @@ def playlist_settings(pid: str, folder: str = Form(...), numbering: str | None =
                 raise ValueError("Wait for the current job to finish before moving the folder")
             sync.move_playlist_folder(C(), pid, folder)
         name = (name or "").strip()
-        if p["source"] == "local" and name and name != p["name"]:
-            sync.rename_playlist(C(), pid, name)     # its own name, since there's no service to take it from
+        if name and name != p["name"]:
+            sync.rename_playlist(C(), pid, name)
+        elif not name and p["source"] != "local" and p["own_name"]:
+            sync.use_service_name(pid)          # the service's name comes back with the fetch below
+            refetch = True
     except ValueError as e:
         return _back(f"/playlists/{pid}?error={e}")
     with db.connect() as c:
         c.execute("UPDATE playlists SET numbering = ?, library_mode = ? WHERE id = ?",
                   (1 if numbering else 0, library_mode, pid))
-    sync.run_job(pid, "Syncing", sync.reconcile, C(), pid, True)
+
+    def apply(cfg: Config, pid: str) -> None:
+        if refetch:
+            sync.fetch(cfg, pid)
+        sync.reconcile(cfg, pid, True)
+    sync.run_job(pid, "Syncing", apply, C(), pid)
     return _back(f"/playlists/{pid}")
 
 

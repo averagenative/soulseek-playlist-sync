@@ -256,9 +256,10 @@ def _channel_artist(channel: str) -> str:
 
 
 def video_song(entry: dict) -> dict | None:
-    """A song dict, like Apple Music's and Spotify's, from a playlist entry. None for deleted or private videos."""
-    vid, title = entry.get("id"), entry.get("title") or ""
-    if not vid or title in ("[Deleted video]", "[Private video]"):
+    """A song dict, like Apple Music's and Spotify's, from a playlist entry. None for deleted or private videos:
+    YouTube lists them as "[Deleted video]" or "[Private video]", or with no title at all."""
+    vid, title = entry.get("id"), (entry.get("title") or "").strip()
+    if not vid or not title or title in ("[Deleted video]", "[Private video]"):
         return None
     artist, song, music_video = parse_video_title(title, entry.get("channel") or entry.get("uploader"))
     duration = entry.get("duration")
