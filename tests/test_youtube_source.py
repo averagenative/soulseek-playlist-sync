@@ -56,6 +56,11 @@ def test_video_songs_and_their_own_download():
     assert topic["duration_ms"] == 234000 and topic["artist"] == "Beck"
     assert youtube.video_song({"id": "c3", "title": "[Deleted video]", "duration": None}) is None
     assert youtube.video_song({"id": "c4", "title": None, "duration": None}) is None
+    for gone in ("[Private video]", "Deleted video", "[deleted video]", "Unavailable video"):
+        assert youtube.video_song({"id": "d1", "title": gone, "channel": "x", "duration": 5}) is None
+    assert youtube.video_song({"id": "d2", "title": "Some Title"}) is None          # no thumbnail, channel or length
+    ok = youtube.video_song({"id": "d3", "title": "Song", "thumbnails": [{"url": "u"}]})
+    assert ok and ok["key"] == "youtube:d3"
     cand = youtube.own_video(topic)
     assert cand[0]["url"] == "https://www.youtube.com/watch?v=b2" and cand[0]["duration"] == 234
     assert youtube.own_video({"key": "spotify:x", "url": "https://open.spotify.com/track/x"}) == []

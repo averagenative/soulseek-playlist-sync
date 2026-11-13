@@ -282,12 +282,28 @@ def _channel_artist(channel: str) -> str:
     return ch or channel.strip()
 
 
+# What YouTube lists in place of a video that was deleted, made private or taken down (any language's brackets
+# or capitalisation, with or without the brackets), and what an unreadable one parses to.
+_PLACEHOLDER_TITLE = re.compile(r"^[\[\(]?\s*(deleted|private|unavailable|removed|hidden)(\s+video)?\s*[\]\)]?$", re.I)
+
+
+def is_unavailable(entry: dict) -> bool:
+    """True for a playlist entry whose video is gone: deleted by the poster, removed by YouTube, or private.
+    YouTube's own site hides these; the data we read still lists them, with a placeholder title or, when it has
+    none, no thumbnail, channel or length at all."""
+    title = (entry.get("title") or "").strip()
+    if not entry.get("id") or not title or _PLACEHOLDER_TITLE.match(title):
+        return True
+    return not (entry.get("thumbnails") or entry.get("thumbnail") or entry.get("channel") or entry.get("uploader")
+                or entry.get("channel_id") or entry.get("duration"))
+
+
 def video_song(entry: dict) -> dict | None:
-    """A song dict, like Apple Music's and Spotify's, from a playlist entry. None for deleted or private videos:
-    YouTube lists them as "[Deleted video]" or "[Private video]", or with no title at all."""
-    vid, title = entry.get("id"), (entry.get("title") or "").strip()
-    if not vid or not title or title in ("[Deleted video]", "[Private video]"):
+    """A song dict, like Apple Music's and Spotify's, from a playlist entry. None for deleted, removed or
+    private videos (see is_unavailable), so they never reach the playlist."""
+    if is_unavailable(entry):
         return None
+    vid, title = entry["id"], entry["title"].strip()
     artist, song, music_video = parse_video_title(title, entry.get("channel") or entry.get("uploader"))
     duration = entry.get("duration")
     return {
