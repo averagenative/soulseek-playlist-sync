@@ -31,10 +31,12 @@ browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
 | `app/folders.py` | Safe file names, hardlink or copy, two-pass renames, `.m3u` writing. |
 | `app/tagger.py` | ID3v2.3 tags and cover art. |
 | `app/settings.py` | Settings page values, stored in SQLite over the environment defaults. |
+| `app/profiles.py` | Profiles: optional scrypt-hashed passwords, the admin rule, removal, and the signed cookie that remembers a browser's profile. |
 
 ## Data
 
-- `playlists`: one row per tracked playlist, with its folder and options. A `local` playlist with a `rule` (a JSON filter of words, folders, artist, and album) is rebuilt from the library on every refresh; one without a rule is a fixed list.
+- `profiles`: one row per person: name, optional password hash, whether they're an admin, the folder their new playlists go in, and a session version that's raised to sign every browser out.
+- `playlists`: one row per tracked playlist, with its owner, folder, and options. A `local` playlist with a `rule` (a JSON filter of words, folders, artist, and album) is rebuilt from the library on every refresh; one without a rule is a fixed list.
 - `songs`: one row per song, keyed by source and ID (`apple:<catalog id>`, `spotify:<track id>`, `youtube:<video id>`, `local:<hash>`). A local song's key is a hash of its normalized artist and title, so the same song in two albums or folders is one song.
 - `entries`: the playlist's order, one row per position. A song can appear more than once.
 - `items`: what exists locally for each song in each playlist (file name, origin, skipped, wanted). In a My music playlist that keeps itself up to date, a skipped song is one you took out: it stays out of the `.m3u`, the ZIP, copies, and refreshes.
@@ -42,10 +44,20 @@ browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
 - `library`: the index of files under the library folders, with their tags, song key, cover key (folder plus album), and a normalized search column. It also keeps the MusicBrainz recording, artist, and release group IDs and the album type that taggers such as Picard write.
 - `mirrors`: a playlist's copy on the other service, with how many songs matched and which didn't.
 - `song_links`: each song's match on the other service, so later updates don't search again. Songs that weren't found are looked for again after a week.
-- `favorite_pairs`: each Spotify track and Apple Music song the favorites sync has seen as the same song. A paired song is never added again, so a favorite you remove stays removed.
-- `hit_ids`, `hit_recordings`, `hit_artist_songs`, `hit_artists`, `hit_charts`, `hit_favorites`: what hits playlists know about your songs. These hold MusicBrainz IDs looked up for files without them, ListenBrainz listeners per recording, per-artist lists (listeners per title, singles with their year, Genius page views), when each artist was last fetched, the Hot 100 history reduced to each song's peak and weeks, and the song keys of your favorites. A hits playlist's `rule` is a filter plus a `hits` object with `min`, `max`, and `cutoff`.
+- `favorite_pairs`: each Spotify track and Apple Music song a profile's favorites sync has seen as the same song. A paired song is never added again, so a favorite you remove stays removed.
+- `hit_ids`, `hit_recordings`, `hit_artist_songs`, `hit_artists`, `hit_charts`, `hit_favorites`: what hits playlists know about your songs. These hold MusicBrainz IDs looked up for files without them, ListenBrainz listeners per recording, per-artist lists (listeners per title, singles with their year, Genius page views), when each artist was last fetched, the Hot 100 history reduced to each song's peak and weeks, and the song keys of each profile's favorites. A hits playlist's `rule` is a filter plus a `hits` object with `min`, `max`, and `cutoff`.
 
 A song's status on the playlist page comes from its item and its download row: synced, in library, waiting, searching, found, queued, downloading, not found, failed, removed upstream, or skipped.
+
+## Profiles
+
+Every request goes through one middleware, `gate`. It checks `APP_PASSWORD` when that's set, refuses a POST that a browser says came from another site (`Sec-Fetch-Site: cross-site`, or an `Origin` that isn't this host), and then finds the profile. The profile comes from the `profile` cookie, which holds the profile ID, its session version, and when it was issued, signed with HMAC-SHA256 under a key in `DATA_DIR/session-key`. Without a valid cookie, the only profile is used if it has no password; otherwise a page goes to `/signin`, and a live region gets a 401 with an `X-Signin` header so `poll.js` moves the whole page there. The profile is kept in a context variable for the request, so `C()` returns settings with that profile's connections.
+
+- **Connections:** `Config.profile` picks the token files. Profile 1 keeps `DATA_DIR/spotify-token.json` and `DATA_DIR/apple-music-user-token`; any other profile uses `DATA_DIR/profiles/<id>/`. The Spotify sign-in state, the Apple Music connect nonce, and the favorites options and status are stored per profile too.
+- **Ownership:** every route under `/playlists/{pid}` loads the playlist through `_playlist(pid, write)`. Anyone can read a playlist; a write by anyone but the owner answers 403. A test walks every POST route under `/playlists/{pid}` to keep it that way.
+- **Owner's connections for background work:** `sync.fetch()`, copies (`mirror.run()`), and hits picks use `cfg.for_profile(owner)`, whoever started the job.
+- **IDs:** profile 1 keeps `<source>:<remote id>`. Other profiles' playlists are `<source>:<remote id>@<profile id>`, so two people can add the same service playlist.
+- **Rolling back** to a version from before profiles: remove the playlists of profiles after the first, or turn off their copies, first. An older version ignores `owner`, so it would read and write those playlists through the first profile's accounts.
 
 ## Matching rules
 
@@ -65,7 +77,7 @@ Favorites go in first. Albums, EPs, and soundtracks then fill up to `min` by sco
 
 ## Files on disk
 
-- Playlist folders live at `MUSIC_ROOT/<AppleMusic, SpotifyMusic, YouTube, or Playlists>/<playlist name>/`, named for FAT32 and exFAT compatibility.
+- Playlist folders live at `MUSIC_ROOT/<AppleMusic, SpotifyMusic, YouTube, or Playlists>/<profile folder>/<playlist name>/`, named for FAT32 and exFAT compatibility. The first profile's folder is empty, so its playlists sit straight in the service folder.
 - If a library folder is missing or empty during a scan (for example, a disk that didn't mount), the index keeps what it had there instead of treating every song as deleted. A copy is never replaced with an empty playlist.
 - Files are numbered by their first position in the playlist. Renumbering uses a two-pass rename, so swaps don't collide.
 - A song used by several playlists is hardlinked into each folder when they're on the same filesystem.

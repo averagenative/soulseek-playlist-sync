@@ -33,10 +33,23 @@
   If the app runs on another computer, connect through the SSH tunnel described in the README.</p>
 {% endif %}
 
+{% if not is_admin %}
+<div class="settings-form">
+  {% if spotify_configured %}
+  <p>An admin set up Spotify for this app once, for everyone. Spotify lets that developer app work for up to five people,
+    each added by name: before you connect, ask the admin to add your Spotify account under <b>User Management</b> in the
+    <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">Spotify developer dashboard</a>.</p>
+  {% if not spotify_connected %}<div class="actions"><a class="btn primary" href="/spotify/connect">Connect Spotify</a></div>{% endif %}
+  {% else %}
+  <p>Spotify isn't set up yet. An admin sets it up once for everyone, on this page.</p>
+  {% endif %}
+</div>
+{% else %}
 <div class="settings-form">
   <p class="muted">Spotify only lets an app read your playlists after you create a free "developer app" on Spotify's site and give
     this app its Client ID. You need Spotify Premium, because Spotify only lets Premium accounts use developer apps.
-    Use your own Spotify account: each person makes their own developer app.</p>
+    Each person who uses this app connects their own Spotify account to the one developer app you make here: add them
+    under <b>User Management</b> in the dashboard (Spotify allows up to five).</p>
 
   <fieldset>
     <legend>1. Create a Spotify app</legend>
@@ -87,5 +100,6 @@
     </ul>
   </details>
 </div>
+{% endif %}
 <script src="/static/copy.js" defer></script>
 {% endblock %}

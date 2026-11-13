@@ -30,6 +30,8 @@
       if (el.contains(document.activeElement) && document.activeElement.matches("input, select, textarea")) return;
       try {
         const r = await fetch(el.dataset.live, {cache: "no-store", headers: {"X-Live": "1"}});
+        // Signed out of the profile (a password changed elsewhere): the whole page goes to the sign-in page.
+        if (r.status === 401 && r.headers.get("X-Signin")) { location.href = r.headers.get("X-Signin"); return; }
         if (!r.ok) return;
         const html = await r.text();
         if (last.get(el) === html) return;

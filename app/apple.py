@@ -107,7 +107,7 @@ def user_token(cfg: Config) -> str | None:
 
 def save_user_token(cfg: Config, token: str) -> None:
     import os
-    cfg.data_dir.mkdir(parents=True, exist_ok=True)
+    cfg.profile_dir.mkdir(parents=True, exist_ok=True)
     fd = os.open(cfg.apple_user_token_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as f:
         f.write(token.strip())

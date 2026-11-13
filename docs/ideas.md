@@ -46,3 +46,8 @@ AllMusic has no public API, and its terms don't allow scraping, so AllMusic link
 - **Missing hits:** list each artist's charted songs and singles that aren't in your library, and offer to download them through Soulseek.
 - **Whole albums from Apple Music.** The **Whole album** button works in this app. To do the same while listening in the Music app, add the song to an Apple Music playlist with a set name, such as "Whole albums". At its next refresh, the hits playlist reads that playlist and adds each song's album whole. A Spotify playlist could work the same way.
 - **Plays and skips from an MP3 player.** Players running Rockbox can write a `.scrobbler.log` that marks each song as listened to or skipped. Reading it would let skips push filler out of the hits playlist.
+
+## Profile follow-ups
+
+- **Copy another person's playlist** into your own, to change it or copy it to your own Apple Music or Spotify.
+- **A sign-in proxy:** a `TRUSTED_USER_HEADER` setting that maps a user from a proxy such as Authelia or Authentik to a profile, for installs that already have one.

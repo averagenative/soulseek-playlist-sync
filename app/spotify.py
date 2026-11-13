@@ -23,6 +23,11 @@ SCOPES = ("playlist-read-private playlist-read-collaborative user-library-read "
 WRITE_SCOPE = "playlist-modify-private"
 LIKES_SCOPE = "user-library-modify"    # saving songs to Liked Songs, for favorites sync
 LIKED = "liked"
+DASHBOARD = "https://developer.spotify.com/dashboard"
+NOT_REGISTERED = ("Spotify says this Spotify account isn't allowed to use the app's Spotify developer app. Spotify lets "
+                  "a developer app work for up to five people, each added by name and email: the person who set up "
+                  f"Spotify adds you under User Management in the app on the Spotify developer dashboard ({DASHBOARD}). "
+                  "Then connect again.")
 
 
 class SpotifyError(Exception):
@@ -78,10 +83,15 @@ def _b64(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
 
+def _pkce_key(cfg: Config) -> str:
+    """A sign-in in progress, one per profile so two people connecting at once don't collide."""
+    return "spotify_pkce" if cfg.profile == 1 else f"spotify_pkce:{cfg.profile}"
+
+
 def auth_url(cfg: Config, redirect_uri: str) -> str:
     verifier = _b64(secrets.token_bytes(64))
     state = secrets.token_urlsafe(24)
-    db.set_kv("spotify_pkce", json.dumps({"verifier": verifier, "state": state, "redirect_uri": redirect_uri}))
+    db.set_kv(_pkce_key(cfg), json.dumps({"verifier": verifier, "state": state, "redirect_uri": redirect_uri}))
     return f"{ACCOUNTS}/authorize?" + urlencode({
         "client_id": cfg.spotify_client_id,
         "response_type": "code",
@@ -94,10 +104,10 @@ def auth_url(cfg: Config, redirect_uri: str) -> str:
 
 
 def finish_auth(cfg: Config, code: str, state: str) -> None:
-    pending = json.loads(db.get_kv("spotify_pkce") or "{}")
+    pending = json.loads(db.get_kv(_pkce_key(cfg)) or "{}")
     if not pending or not secrets.compare_digest(state or "", pending.get("state", "")):
         raise SpotifyError("Sign-in state didn't match; start again")
-    db.set_kv("spotify_pkce", None)
+    db.set_kv(_pkce_key(cfg), None)
     _token_request(cfg, {
         "grant_type": "authorization_code",
         "code": code,
@@ -115,7 +125,7 @@ def _token_request(cfg: Config, form: dict) -> dict:
     old = _load_token(cfg) or {}
     tok.setdefault("refresh_token", old.get("refresh_token"))   # refreshes may omit it
     tok["expires_at"] = time.time() + tok.get("expires_in", 3600) - 60
-    cfg.data_dir.mkdir(parents=True, exist_ok=True)
+    cfg.profile_dir.mkdir(parents=True, exist_ok=True)
     fd = os.open(cfg.spotify_token_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as f:
         json.dump(tok, f)
@@ -187,6 +197,8 @@ class Client:
             if r.status_code == 401:
                 raise NotConnected("Spotify rejected the sign-in; reconnect")
             if r.status_code == 403:
+                if "not registered" in r.text.lower():
+                    raise SpotifyError(NOT_REGISTERED)
                 raise SpotifyError(f"Spotify refused access (403): {r.text[:200]}")
             if r.status_code == 404:
                 raise NotFound(f"Spotify: not found ({url})")

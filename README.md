@@ -18,6 +18,7 @@ Keep local MP3 copies of your Apple Music and Spotify playlists. Pick a playlist
 - **Browse your own music** on the **My music** page: search, filter by folder, play songs, and see album art from your files.
 - **Make playlists from your music**, by hand or as "every song in these folders" playlists that keep up as your library changes, and copy them to Spotify, Apple Music, or both. Put your whole collection on your phone's music app and shuffle it.
 - **Hits playlists.** Keep only the standout songs of each album in a big collection: the songs that charted, came out as singles, or get the most listeners, plus your favorites. The filler stays out.
+- **Profiles for everyone at home.** Each person picks their profile (a password is optional) and gets their own playlists and their own Apple Music and Spotify connections, while the music library and downloads are shared. You can look at each other's playlists, and only change your own.
 - **Check songs by ear.** Play any downloaded song in the browser, and compare it with Apple's 30-second clip of the original.
 - **Download a playlist as a ZIP** to the computer you're browsing from, with its `.m3u`.
 - **Download all** button per playlist, live progress from slskd, a Downloads page for everything in flight, and pages that refresh themselves.
@@ -111,7 +112,7 @@ Apple's sign-in window needs the app to be open at `http://127.0.0.1:8080`, `htt
 
 ## Connect Spotify
 
-You need Spotify Premium, because Spotify only lets Premium accounts use developer apps. Each person makes their own developer app, with their own Spotify account.
+You need Spotify Premium, because Spotify only lets Premium accounts use developer apps. The app's admin makes one developer app for everyone who uses the app. To let another person connect their own Spotify account, add them under **User Management** in that app on the Spotify developer dashboard. Spotify allows up to five people per developer app.
 
 In the app, click **Connect Spotify**. That page walks you through the following steps, with the exact redirect address for your setup and a copy button for each value.
 
@@ -291,6 +292,31 @@ Songs are found by the MusicBrainz IDs that taggers such as MusicBrainz Picard w
 
 The lookups send song titles, artists, and MusicBrainz IDs to ListenBrainz, MusicBrainz, and Genius, and download the Hot 100 history from the `utdata/rwd-billboard-data` project on GitHub. Nothing about you or your account is sent.
 
+## Share the app with your household
+
+Everyone at home can use one copy of the app. Each person has a profile with their own playlists and their own Apple Music and Spotify connections. The music library, downloads, and Soulseek are shared, so a song two people want downloads once and goes into both of their folders.
+
+The first profile is called **Me**, and it has every playlist and connection from before profiles. While it's the only profile and has no password, the app opens without asking, the same as before.
+
+To add a person:
+
+1. Click your name at the top of the page to open **Profiles**.
+1. Rename **Me** to your own name, and set a password if you want one.
+1. Under **Add a profile**, enter their name and click **Add profile**. A password is optional: without one, anyone who opens the app can use that profile and its Apple Music and Spotify accounts.
+1. If they're going to connect Spotify, add their Spotify account under **User Management** in your app on the [Spotify developer dashboard](https://developer.spotify.com/dashboard).
+
+From then on, the app asks who's using it. The browser remembers the choice for a year, until someone clicks **Switch profile** or **Sign out**. The new person then clicks their name, opens **Profiles**, and connects their own Apple Music and Spotify.
+
+How profiles work:
+
+- **Your playlists** are the ones on the home page. Use **Showing** at the top to look at another person's playlists, or everyone's. Another person's playlist opens read-only: you can play its songs and download it as a ZIP, but only its owner can change it, sync it, or copy it to a service.
+- **Folders:** a new playlist goes in a folder named for its owner inside the service's folder, such as `AppleMusic/Ana/Road Trip`, so two people's playlists with the same name don't mix. The first profile's playlists go straight in the service's folder. Each person can change their folder on **Profiles**.
+- **Admins** can open **Settings** and add, rename, and remove profiles, and clear a forgotten password. The first profile is an admin, and the app always keeps at least one.
+- **Changing a password** signs that profile out of its other browsers.
+- **Removing a profile** removes its playlists from the app, its Apple Music and Spotify connections, and its favorites history. Its playlist folders stay on disk.
+
+Profiles keep people's playlists apart. They aren't meant to protect the app on the internet. Keep the app on your home network or a VPN, and set `APP_PASSWORD` if other people can reach it.
+
 ## Check songs and take them with you
 
 - Click a downloaded song's cover to play it in the browser. The player moves on to the next downloaded song. For Apple Music playlists, **Original** plays Apple's 30-second clip of the song so you can compare it with your copy.
@@ -298,7 +324,7 @@ The lookups send song titles, artists, and MusicBrainz IDs to ListenBrainz, Musi
 
 ## Settings
 
-Most settings are on the app's **Settings** page and apply right away: output folder names, numbering, how songs from your library are handled, minimum bitrate, length tolerance, downloads at once, the YouTube fallback, and the Spotify Client ID. Each playlist also has its own settings, including its name and folder. Changing the folder moves the files. Renaming a playlist from a streaming service gives its folder, its `.m3u`, and new copies your name, and renaming it on the service no longer changes it; clear the name to use the service's name again.
+Most settings are on the app's **Settings** page, which only admins can open, and apply right away: output folder names, numbering, how songs from your library are handled, minimum bitrate, length tolerance, downloads at once, the YouTube fallback, and the Spotify Client ID. Each playlist also has its own settings, including its name and folder. Changing the folder moves the files. Renaming a playlist from a streaming service gives its folder, its `.m3u`, and new copies your name, and renaming it on the service no longer changes it; clear the name to use the service's name again.
 
 The following environment variables configure things that can't change while the app runs:
 
@@ -306,7 +332,7 @@ The following environment variables configure things that can't change while the
 |---|---|---|
 | `MUSIC_ROOT` | `/music` | Music folder inside the container. Playlists go in `AppleMusic/`, `SpotifyMusic/`, and `Playlists/` under it. |
 | `LIBRARY_DIRS` | `MUSIC_ROOT` | Comma-separated folders to look in for songs you already own. |
-| `DATA_DIR` | `/data` | Database and sign-in tokens. |
+| `DATA_DIR` | `/data` | Database, sign-in tokens, and the key that signs profile cookies. Tokens for profiles after the first go in `profiles/<id>/`. |
 | `SLSKD_URL` | `http://slskd:5030` | slskd's address. |
 | `SLSKD_API_KEY` or `SLSKD_API_KEY_FILE` | none | slskd API key. |
 | `SLSKD_DOWNLOADS` | `/slskd-downloads` | slskd's finished-downloads folder, as mounted in this container. |
@@ -315,7 +341,7 @@ The following environment variables configure things that can't change while the
 | `SPOTIFY_CLIENT_ID` | none | Spotify app Client ID. |
 | `SPOTIFY_REDIRECT_URI` | worked out from the address you open | Set it if the app is behind a proxy that hides its public address. |
 | `YOUTUBE_FALLBACK` | `0` | `1` to try YouTube for songs Soulseek doesn't have. |
-| `APP_PASSWORD` | none | Asks for a password (HTTP basic auth) before showing the app. |
+| `APP_PASSWORD` | none | Asks for one shared password (HTTP basic auth) before showing the app, before anyone picks a profile. |
 | `GENIUS_API_TOKEN` or `GENIUS_API_TOKEN_FILE` | none | Genius API client access token. Adds Genius page views to hits playlists. |
 | `LISTENBRAINZ_TOKEN` or `LISTENBRAINZ_TOKEN_FILE` | none | ListenBrainz user token. Adds each artist's listener counts to hits playlists. |
 | `YOUTUBE_COOKIES_FILE` | none | A `cookies.txt` from a browser signed in to YouTube, so age-restricted videos download. yt-dlp writes to it, so it can't be read-only. |

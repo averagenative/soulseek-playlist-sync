@@ -4,8 +4,34 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
+# Tables with a profile in their primary key: kept apart so an older table can be rebuilt into them.
+FAVORITE_PAIRS = """CREATE TABLE IF NOT EXISTS favorite_pairs (
+    profile    INTEGER NOT NULL DEFAULT 1,
+    spotify_id TEXT NOT NULL,             -- Spotify track ID
+    apple_id   TEXT NOT NULL,             -- Apple Music catalog ID
+    added_to   TEXT,                      -- 'apple' or 'spotify' when the app made the favorite, NULL when both had it
+    at         REAL,
+    PRIMARY KEY (profile, spotify_id, apple_id)
+)"""
+HIT_FAVORITES = """CREATE TABLE IF NOT EXISTS hit_favorites (
+    profile  INTEGER NOT NULL DEFAULT 1,
+    song_key TEXT NOT NULL,
+    PRIMARY KEY (profile, song_key)
+)"""
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);
+
+-- The people who use the app. Each has their own playlists and Apple Music and Spotify connections.
+CREATE TABLE IF NOT EXISTS profiles (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    name            TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    password        TEXT,                  -- scrypt hash, or NULL for a profile anyone can open
+    admin           INTEGER NOT NULL DEFAULT 0,
+    folder          TEXT NOT NULL DEFAULT '',   -- under each service folder, for this profile's new playlists
+    session_version INTEGER NOT NULL DEFAULT 1, -- raised to sign every browser out of the profile
+    created_at      REAL
+);
 
 CREATE TABLE IF NOT EXISTS playlists (
     id            TEXT PRIMARY KEY,          -- source:remote id, e.g. apple:p.AbC123, local:9f2c41d0
@@ -125,16 +151,9 @@ CREATE TABLE IF NOT EXISTS song_links (
 );
 CREATE INDEX IF NOT EXISTS library_norm_title ON library(norm_title);
 
--- Favorites sync: a Spotify Liked Song and its Apple Music Favorite Song. Once a pair is here, the
--- app never adds either one again, so a song you remove on one service stays removed.
-CREATE TABLE IF NOT EXISTS favorite_pairs (
-    spotify_id TEXT NOT NULL,             -- Spotify track ID
-    apple_id   TEXT NOT NULL,             -- Apple Music catalog ID
-    added_to   TEXT,                      -- 'apple' or 'spotify' when the app made the favorite, NULL when both had it
-    at         REAL,
-    PRIMARY KEY (spotify_id, apple_id)
-);
-CREATE INDEX IF NOT EXISTS favorite_pairs_apple ON favorite_pairs(apple_id);
+-- Favorites sync: a Spotify Liked Song and its Apple Music Favorite Song, per profile. Once a pair is
+-- here, the app never adds either one again, so a song you remove on one service stays removed.
+""" + FAVORITE_PAIRS + """;
 
 -- Hits playlists: what the app has looked up about your songs, kept so later builds cost nothing.
 -- MusicBrainz IDs found for songs whose files don't carry them ('' = looked, nothing matched).
@@ -179,8 +198,8 @@ CREATE TABLE IF NOT EXISTS hit_charts (
     first_week TEXT,
     PRIMARY KEY (title, performer)
 );
--- Song keys of your Apple Music Favorite Songs and Spotify Liked Songs.
-CREATE TABLE IF NOT EXISTS hit_favorites (song_key TEXT PRIMARY KEY);
+-- Song keys of each profile's Apple Music Favorite Songs and Spotify Liked Songs.
+""" + HIT_FAVORITES + """;
 """
 
 _path: Path | None = None
@@ -220,10 +239,28 @@ def init(path: Path) -> None:
             c.execute("ALTER TABLE playlists ADD COLUMN own_name INTEGER NOT NULL DEFAULT 0")
         if "note" not in {r["name"] for r in c.execute("PRAGMA table_info(mirrors)")}:
             c.execute("ALTER TABLE mirrors ADD COLUMN note TEXT")
+        # Profiles: everything that was here before belongs to the first one.
+        if "owner" not in pl_cols:
+            c.execute("ALTER TABLE playlists ADD COLUMN owner INTEGER NOT NULL DEFAULT 1")
+        _add_profile(c, "favorite_pairs", FAVORITE_PAIRS, "spotify_id, apple_id, added_to, at")
+        _add_profile(c, "hit_favorites", HIT_FAVORITES, "song_key")
+        c.execute("CREATE INDEX IF NOT EXISTS favorite_pairs_apple ON favorite_pairs(profile, apple_id)")
+        c.execute("INSERT INTO profiles (id, name, admin, folder, created_at) SELECT 1, 'Me', 1, '', ? "
+                  "WHERE NOT EXISTS (SELECT 1 FROM profiles)", (time.time(),))
         # A YouTube download runs inside the app, so one in flight when it stopped has to start over.
         c.execute("UPDATE downloads SET state = 'pending' WHERE source = 'youtube' AND state IN ('searching', 'downloading')")
         # A job that was running when the app stopped is not running any more.
         c.execute("UPDATE playlists SET busy = NULL")
+
+
+def _add_profile(c, table: str, create: str, cols: str) -> None:
+    """Rebuild a table from before profiles with a profile column in its primary key, in one transaction,
+    giving every old row to the first profile."""
+    if "profile" in {r["name"] for r in c.execute(f"PRAGMA table_info({table})")}:
+        return
+    c.executescript(f"BEGIN; ALTER TABLE {table} RENAME TO {table}_old; {create}; "
+                    f"INSERT INTO {table} (profile, {cols}) SELECT 1, {cols} FROM {table}_old; "
+                    f"DROP TABLE {table}_old; COMMIT;")
 
 
 @contextmanager

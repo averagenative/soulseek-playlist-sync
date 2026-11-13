@@ -142,7 +142,7 @@ def cache_counts() -> dict:
             "singles": one("SELECT COUNT(*) FROM hit_artist_songs WHERE source = 'single'"),
             "genius": one("SELECT COUNT(DISTINCT artist) FROM hit_artists WHERE source = 'genius' AND found = 1"),
             "charts": one("SELECT COUNT(*) FROM hit_charts"),
-            "favorites": one("SELECT COUNT(*) FROM hit_favorites"),
+            "favorites": one("SELECT COUNT(DISTINCT song_key) FROM hit_favorites"),
             "identified": one("SELECT COUNT(*) FROM hit_ids WHERE recording != ''"),
             "unidentified": one("SELECT COUNT(*) FROM hit_ids WHERE recording = ''"),
         }
@@ -377,7 +377,14 @@ def _charts(http: _Http) -> None:
 
 
 def _favorites(cfg: Config) -> None:
-    """Your favorites on both services, as library song keys. Kept as they were if neither can be read."""
+    """Each profile's favorites on both services, as library song keys."""
+    from . import profiles
+    for p in profiles.all_profiles():
+        _profile_favorites(cfg.for_profile(p["id"]), p["name"])
+
+
+def _profile_favorites(cfg: Config, name: str) -> None:
+    """One profile's favorites. Kept as they were if neither service can be read."""
     keys, read = set(), False
     sources = []
     if apple.configured(cfg) and apple.user_token(cfg):
@@ -386,7 +393,7 @@ def _favorites(cfg: Config) -> None:
         sources.append(("Spotify Liked Songs",
                         lambda: _read(spotify.Client(cfg), lambda s: s.playlist_tracks(spotify.LIKED))))
     for label, fn in sources:
-        _step(f"Reading your {label}")
+        _step(f"Reading {name}'s {label}")
         try:
             for s in fn():
                 if s.get("artist") and s.get("title"):
@@ -396,8 +403,9 @@ def _favorites(cfg: Config) -> None:
             log.warning("hits: couldn't read %s: %s", label, e)
     if read:
         with db.connect() as c:
-            c.execute("DELETE FROM hit_favorites")
-            c.executemany("INSERT OR IGNORE INTO hit_favorites (song_key) VALUES (?)", [(k,) for k in keys])
+            c.execute("DELETE FROM hit_favorites WHERE profile = ?", (cfg.profile,))
+            c.executemany("INSERT OR IGNORE INTO hit_favorites (profile, song_key) VALUES (?, ?)",
+                          [(cfg.profile, k) for k in keys])
 
 
 def _read(client, fn):
@@ -674,7 +682,7 @@ def _lift(values: dict[str, int | None], floor: int) -> dict[str, float]:
     return {k: v / med for k, v in values.items() if v}
 
 
-def _load_stats() -> dict:
+def _load_stats(profile: int = 1) -> dict:
     with db.connect() as c:
         recs = {r[0]: r[1] for r in c.execute("SELECT mbid, listeners FROM hit_recordings WHERE listeners IS NOT NULL")}
         lists: dict[str, dict] = defaultdict(dict)
@@ -683,7 +691,7 @@ def _load_stats() -> dict:
         charts: dict[str, list] = defaultdict(list)
         for r in c.execute("SELECT title, performer, peak, weeks FROM hit_charts"):
             charts[r[0]].append((r[1], r[2], r[3]))
-        favorites = {r[0] for r in c.execute("SELECT song_key FROM hit_favorites")}
+        favorites = {r[0] for r in c.execute("SELECT song_key FROM hit_favorites WHERE profile = ?", (profile,))}
         ids = {r[0]: (r[1], r[2]) for r in c.execute("SELECT song_key, recording, artist FROM hit_ids WHERE recording != ''")}
     return {"recs": recs, "lists": lists, "charts": charts, "favorites": favorites, "ids": ids}
 
@@ -704,7 +712,7 @@ def plan(cfg: Config, rule: dict, skip: set[str] | frozenset = frozenset()) -> l
     sql, args = library.where(cfg, rule)
     with db.connect() as c:
         rows = [dict(r) for r in c.execute(f"SELECT * FROM library{sql} ORDER BY {library.SORTS['artist']}", args)]
-    st = _load_stats()
+    st = _load_stats(cfg.profile)       # the favorites of the playlist's owner
     groups: dict[tuple, dict] = {}
     for r in rows:
         if not r["song_key"]:

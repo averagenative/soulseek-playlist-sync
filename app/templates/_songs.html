@@ -14,7 +14,7 @@
       {% endif %}
     {% endfor %}
     <span class="muted small">&middot; fetched {{ p.fetched_at|ago }}, synced {{ p.synced_at|ago }}</span>
-    {% if counts.get('removed') %}
+    {% if counts.get('removed') and mine %}
       <form method="post" action="/playlists/{{ p.id }}/prune" class="inline"
             onsubmit="return confirm('Delete the files of songs that left the playlist?')">
         <button class="btn tiny">Prune removed</button>
@@ -30,11 +30,11 @@
     {% elif show %}{{ total_rows|n }} {{ 'song' if total_rows == 1 else 'songs' }}: {{ STATUS_LABELS[show] }}{% if q %}, matching "{{ q }}"{% endif %}.
     {% if show in ('failed', 'not_found') and total_rows %}Click a reason to see the full message.{% endif %}
     {% else %}{{ total_rows|n }} of {{ song_rows|n }} songs match "{{ q }}".{% endif %}</span>
-  {% if removable|length > 1 %}
+  {% if removable|length > 1 and mine %}
     <button class="btn tiny danger" form="pl-pick" name="matching" value="1"
             onclick="return confirm('Take all {{ removable|length }} matching songs out of this playlist?')">Remove all {{ removable|length|n }}</button>
   {% endif %}
-  {% if show == 'left_out' and total_rows %}
+  {% if show == 'left_out' and total_rows and mine %}
     <button class="btn tiny" form="pl-pick" formaction="/playlists/{{ p.id }}/songs/putback" name="matching" value="1">Put {{ 'it' if total_rows == 1 else 'them all' }} back</button>
   {% endif %}
   <a class="btn tiny" href="/playlists/{{ p.id }}">Show every song</a>
@@ -44,12 +44,12 @@
 {% if rows %}
 <div class="table-wrap">
 <table class="songs">
-  <thead><tr>{% if local %}<th class="pick">{% if show != 'left_out' %}<input type="checkbox" id="pl-all" aria-label="Select every song shown">{% endif %}</th>{% endif %}<th class="num">#</th><th>Song</th><th class="hide-sm">Album</th><th class="hide-sm">Status</th><th class="hide-sm"></th></tr></thead>
+  <thead><tr>{% if local and mine %}<th class="pick">{% if show != 'left_out' %}<input type="checkbox" id="pl-all" aria-label="Select every song shown">{% endif %}</th>{% endif %}<th class="num">#</th><th>Song</th><th class="hide-sm">Album</th><th class="hide-sm">Status</th><th class="hide-sm"></th></tr></thead>
   <tbody>
   {% for r in rows %}
     {% set s = r.song %}
     <tr id="song-{{ r.key }}" class="{{ r.status }}">
-      {% if local %}<td class="pick">{% if r.status not in ('removed', 'skipped') %}<input type="checkbox" name="key" value="{{ r.key }}" form="pl-pick" aria-label="Select {{ s.title }}">{% endif %}</td>{% endif %}
+      {% if local and mine %}<td class="pick">{% if r.status not in ('removed', 'skipped') %}<input type="checkbox" name="key" value="{{ r.key }}" form="pl-pick" aria-label="Select {{ s.title }}">{% endif %}</td>{% endif %}
       <td class="num">{{ r.positions[0] if r.positions else '' }}{% if r.positions|length > 1 %}<div class="muted small" title="Also at {{ r.positions[1:]|join(', ') }}">&times;{{ r.positions|length }}</div>{% endif %}</td>
       <td>
         <div class="song">
@@ -83,7 +83,8 @@
                   data-title="{{ s.title }}" data-artist="{{ s.artist or '' }}" data-art="{{ s.thumb_url or s.artwork_url or '' }}"
                   title="Play Apple's 30-second clip of the original, to compare">Original</button>
         {% endif %}
-        {% if local and r.status == 'skipped' %}
+        {% if not mine %}
+        {% elif local and r.status == 'skipped' %}
           <form method="post" action="/playlists/{{ p.id }}/songs/{{ r.key }}/putback?back={{ rows_qs|urlencode }}" class="inline"
                 title="Put this song back in the playlist"><button class="btn tiny">Put back</button></form>
         {% elif local and r.status != 'removed' %}

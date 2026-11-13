@@ -17,6 +17,7 @@
 {% include "_hits_status.html" %}
 </div>
 
+{% if mine %}
 <details class="hits-opts">
   <summary class="btn small">Change the numbers</summary>
   <form method="post" action="/playlists/{{ p.id }}/hits/settings" class="stack">
@@ -31,6 +32,9 @@
     <div class="actions"><button class="btn small primary">Save and rebuild</button></div>
   </form>
 </details>
+{% else %}
+<p class="notice info">This is {{ owner_name }}'s hits playlist, picked with {{ owner_name }}'s favorites. {{ owner_name }} can change it.</p>
+{% endif %}
 
 <form method="get" class="lib-search" role="search" style="margin: 14px 0">
   <input type="search" name="q" value="{{ q }}" placeholder="Find an artist or album" aria-label="Find an artist or album">
@@ -50,12 +54,12 @@
     <span class="muted">&middot; {{ g.artist or 'Unknown artist' }}{% if g.year %} &middot; {{ g.year }}{% endif %}
     {% if g.kind not in ('album', 'loose') %} &middot; {{ {'ep': 'EP', 'single': 'Single', 'compilation': 'Compilation', 'live': 'Live', 'soundtrack': 'Soundtrack', 'other': 'Remixes'}[g.kind] }}{% endif %}
     &middot; {{ g.picked }} of {{ g.songs|length }} picked{% if not g.has_data and not g.whole %} &middot; no numbers{% endif %}</span>
-    <form method="post" action="/playlists/{{ p.id }}/hits/whole" class="inline">
+    {% if mine %}<form method="post" action="/playlists/{{ p.id }}/hits/whole" class="inline">
       <input type="hidden" name="album" value="{{ g.id }}">
       <input type="hidden" name="on" value="{{ '0' if g.whole else '1' }}">
       <input type="hidden" name="back" value="/playlists/{{ p.id }}/hits?{{ view_qs }}{% if page > 1 %}&amp;page={{ page }}{% endif %}#album-{{ loop.index }}">
       <button class="btn tiny" title="{{ 'Go back to the standout songs only' if g.whole else 'Put every song on this album in the playlist' }}">{{ 'Back to the picks' if g.whole else 'Whole album' }}</button>
-    </form></h2>
+    </form>{% endif %}</h2>
   <div class="table-wrap">
   <table class="songs hits">
     <tbody>

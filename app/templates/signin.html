@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Sign in · Playlist Sync</title>
+{% include "_head.html" %}
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/static/favicon.svg" alt="">Playlist Sync</a>
+  <div class="top-right">{% include "_theme.html" %}</div>
+</header>
+<main>
+<section class="bar">
+  <div>
+    <div class="eyebrow">Playlist Sync</div>
+    <h1>Who's listening?</h1>
+  </div>
+</section>
+{% if error %}<p class="notice bad" role="alert">{{ error }}</p>{% endif %}
+
+<div class="profile-pick">
+  {% for x in people %}
+    {% if x.password and chosen and chosen.id == x.id %}
+    <form method="post" action="/signin" class="profile-card open">
+      <input type="hidden" name="profile" value="{{ x.id }}">
+      <input type="hidden" name="next" value="{{ next }}">
+      <input type="text" name="username" value="{{ x.name }}" autocomplete="username" hidden>
+      <span class="avatar" aria-hidden="true">{{ x.name[:1]|upper }}</span>
+      <b>{{ x.name }}</b>
+      <label class="field"><span class="label">Password</span>
+        <input type="password" name="password" autocomplete="current-password" required autofocus></label>
+      <div class="actions">
+        <button class="btn primary">Sign in</button>
+        <a class="btn" href="/signin?next={{ next|urlencode }}">Back</a>
+      </div>
+    </form>
+    {% elif x.password %}
+    <a class="profile-card" href="/signin?p={{ x.id }}&amp;next={{ next|urlencode }}">
+      <span class="avatar" aria-hidden="true">{{ x.name[:1]|upper }}</span>
+      <b>{{ x.name }}</b>
+      <span class="muted small">Password</span>
+    </a>
+    {% else %}
+    <form method="post" action="/signin" class="profile-form">
+      <input type="hidden" name="profile" value="{{ x.id }}">
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="profile-card">
+        <span class="avatar" aria-hidden="true">{{ x.name[:1]|upper }}</span>
+        <b>{{ x.name }}</b>
+        <span class="muted small">No password</span>
+      </button>
+    </form>
+    {% endif %}
+  {% endfor %}
+</div>
+{% if current %}<p class="muted small">You're signed in as {{ current.name }}. <a href="{{ next }}">Go back</a></p>{% endif %}
+</main>
+<script src="/static/theme.js" defer></script>
+</body>
+</html>

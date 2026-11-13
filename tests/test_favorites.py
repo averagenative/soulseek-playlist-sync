@@ -64,7 +64,7 @@ def test_favorites_sync_adds_once_and_respects_removals(cfg, monkeypatch):
                    catalog={"Three": "c3"})
     monkeypatch.setattr(favorites, "_clients", lambda cfg: (fs, fa))
     monkeypatch.setattr(spotify, "can_save_likes", lambda cfg: True)
-    favorites.save_options(to_apple=True, to_spotify=True, auto=False)
+    favorites.save_options(1, to_apple=True, to_spotify=True, auto=False)
 
     # A check reports the plan and changes nothing.
     out = favorites.run(cfg, apply=False)
@@ -72,14 +72,14 @@ def test_favorites_sync_adds_once_and_respects_removals(cfg, monkeypatch):
     assert out["missing_apple"] == ["A - Four"] and out["missing_spotify"] == ["A - Six"]
     assert out["in_sync"] == 2                      # One by name, Two/Deux by ISRC, without searching
     assert fa.searches == 2 and fs.searches == 2    # Three and Four on Apple; Five and Six on Spotify
-    assert fa.added == [] and fs.saved == [] and favorites.pair_count() == 0
+    assert fa.added == [] and fs.saved == [] and favorites.pair_count(1) == 0
 
     # A sync adds only what's missing, and remembers every pair. Matches come from the cache.
     out = favorites.run(cfg, apply=True)
     assert fa.added == ["c3"] and fs.saved == ["spotify:track:s5"]
-    assert out["added_apple"] == 1 and out["added_spotify"] == 1 and favorites.pair_count() == 5   # One pairs twice
+    assert out["added_apple"] == 1 and out["added_spotify"] == 1 and favorites.pair_count(1) == 5   # One pairs twice
     assert fa.searches == 2 and fs.searches == 2
-    assert favorites.status()["state"] == "done"
+    assert favorites.status(1)["state"] == "done"
 
     # Nothing new: nothing written.
     favorites.run(cfg, apply=True)
@@ -99,11 +99,11 @@ def test_one_direction_only_and_permission_check(cfg, monkeypatch):
     monkeypatch.setattr(spotify, "can_save_likes", lambda cfg: False)
     with pytest.raises(ValueError):
         favorites.run(cfg, apply=True)              # no direction chosen
-    favorites.save_options(to_apple=False, to_spotify=True, auto=False)
+    favorites.save_options(1, to_apple=False, to_spotify=True, auto=False)
     with pytest.raises(ValueError, match="Reconnect Spotify"):
         favorites.run(cfg, apply=True)
-    assert favorites.status()["state"] == "error" and fs.saved == []
-    favorites.save_options(to_apple=True, to_spotify=False, auto=False)
+    assert favorites.status(1)["state"] == "error" and fs.saved == []
+    favorites.save_options(1, to_apple=True, to_spotify=False, auto=False)
     out = favorites.run(cfg, apply=True)            # Spotify -> Apple needs no new Spotify permission
     assert fa.added == ["c3"] and fs.saved == [] and out["to_spotify"] == []
 
@@ -120,6 +120,6 @@ def test_favorites_page(cfg, monkeypatch):
         assert r.status_code == 200 and "What to sync" in r.text and "Connect both services first" in r.text
         r = client.post("/favorites/options", data={"to_apple": "1", "auto": "1"}, follow_redirects=False)
         assert r.headers["location"] == "/favorites?saved=1"
-        assert favorites.options() == {"to_apple": True, "to_spotify": False, "auto": True}
+        assert favorites.options(1) == {"to_apple": True, "to_spotify": False, "auto": True}
         assert client.get("/partials/favorites").status_code == 200
         assert client.post("/favorites/nope").status_code == 404

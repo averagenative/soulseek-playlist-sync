@@ -63,6 +63,7 @@ def _client(cfg: Config, target: str):
 
 def run(cfg: Config, pid: str, target: str | None = None) -> None:
     p = sync.playlist(pid)
+    cfg = sync.owner_cfg(cfg, p)          # the copy goes into the owner's account
     target = target or target_for(p["source"])
     if target not in targets_for(p["source"]):
         raise ValueError(f"can't copy a {p['source']} playlist to {target}")
@@ -249,7 +250,7 @@ def link(cfg: Config, pid: str, target: str, key: str, remote_id: str) -> str:
     if remote_id in _added(pid, target):
         return f"Saved. That song is already in the {label} copy."
     try:
-        with _client(cfg, target) as api:
+        with _client(sync.owner_cfg(cfg, sync.playlist(pid)), target) as api:
             api.add_tracks(m["remote_id"], [remote_id])
     except (apple.AppleError, httpx.HTTPError) as e:
         log.warning("couldn't add %s to %s: %s", remote_id, m["remote_id"], e)

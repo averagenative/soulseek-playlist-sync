@@ -6,7 +6,7 @@
 <section class="hero">
   {{ cover(covers) }}
   <div class="info">
-    <div class="eyebrow">{{ source(p.source) }}</div>
+    <div class="eyebrow">{{ source(p.source) }}{% if not mine %} <span class="tag">{{ owner_name }}'s</span>{% endif %}</div>
     <h1>{{ p.name }}</h1>
     <div class="muted small path" title="{{ folder }}/{{ m3u }}">{{ p.folder }}/{{ m3u }}</div>
     {% if hits %}<div class="small"><span class="tag">HITS</span> {{ rule_text }}, kept up to date.
@@ -16,6 +16,12 @@
   </div>
   <div class="hero-actions">
   <div class="toolbar">
+    {% if not mine %}
+    {% if counts.get('synced') %}
+    <a class="btn" href="/playlists/{{ p.id }}/zip" data-zip-check="/playlists/{{ p.id }}/zip/check" download
+       title="Download the playlist's songs and its .m3u to this computer as one ZIP file">Download ZIP</a>
+    {% endif %}
+    {% else %}
     {% if local %}
     <form method="post" action="/playlists/{{ p.id }}/refresh" class="inline">
       <button class="btn primary" data-busy-lock {% if p.busy %}disabled{% endif %}
@@ -73,13 +79,15 @@
         </div>
       </form>
     </details>
+    {% endif %}
   </div>
   </div>
 </section>
 
 <div class="notice zip-status" id="zip-status" role="status" hidden><span></span><span class="meter"><span></span></span></div>
 {% if form_error %}<p class="notice bad">{{ form_error }}</p>{% endif %}
-{% if local %}{% elif slskd.reachable == false %}
+{% if not mine %}<p class="notice info">This is {{ owner_name }}'s playlist. You can play its songs and download it, and {{ owner_name }} can change it.</p>{% endif %}
+{% if local or not mine %}{% elif slskd.reachable == false %}
   <div class="notice bad">slskd is off, so missing songs can't be searched or downloaded.
     {% if can_turn_on %}<form method="post" action="/slskd/on" class="inline"><button class="btn small">Turn on</button></form>{% endif %}
   </div>
@@ -103,7 +111,7 @@
 {% include "_songs.html" %}
 </div>
 
-{% if local %}
+{% if local and mine %}
 <form method="post" action="/playlists/{{ p.id }}/songs/remove" id="pl-pick">
   <input type="hidden" name="back" value="{{ rows_qs }}">
   <div class="pick-bar" id="pl-bar" hidden>

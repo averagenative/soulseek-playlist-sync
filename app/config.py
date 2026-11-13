@@ -1,4 +1,5 @@
 """Settings, all from environment variables so nothing site-specific lives in the code."""
+import dataclasses
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -56,6 +57,16 @@ class Config:
     genius_token: str | None = None   # optional: Genius page views for hits playlists
     listenbrainz_token: str | None = None   # optional: ListenBrainz per-artist counts for hits playlists
     youtube_cookies: Path | None = None   # optional: cookies.txt for age-restricted YouTube videos
+    profile: int = 1                      # whose Apple Music and Spotify connections to use
+
+    def for_profile(self, profile: int) -> "Config":
+        return dataclasses.replace(self, profile=int(profile))
+
+    @property
+    def profile_dir(self) -> Path:
+        """Where a profile's service tokens live. The first profile keeps the files from before profiles,
+        so an older version of the app still finds them."""
+        return self.data_dir if self.profile == 1 else self.data_dir / "profiles" / str(self.profile)
 
     @property
     def apple_root(self) -> Path:
@@ -71,11 +82,11 @@ class Config:
 
     @property
     def spotify_token_file(self) -> Path:
-        return self.data_dir / "spotify-token.json"
+        return self.profile_dir / "spotify-token.json"
 
     @property
     def apple_user_token_file(self) -> Path:
-        return self.data_dir / "apple-music-user-token"
+        return self.profile_dir / "apple-music-user-token"
 
     @property
     def db_path(self) -> Path:

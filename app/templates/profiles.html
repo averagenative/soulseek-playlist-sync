@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Profiles · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><span class="here">Profiles</span>{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">Signed in as</div>
+    <h1>{{ me.name }}</h1>
+  </div>
+  <div class="actions">
+    {% if profile_count > 1 %}<a class="btn" href="/signin">Switch profile</a>{% endif %}
+    <form method="post" action="/signout" class="inline"><button class="btn">Sign out</button></form>
+  </div>
+</section>
+{% if saved %}<p class="notice ok" role="status">{{ {'me': 'Saved.', 'added': 'Profile added. It can sign in now.',
+  'edited': 'Saved.', 'cleared': 'Password cleared. The profile opens with a click until it sets a new one.',
+  'removed': 'Profile removed. Its playlist folders are still on disk.'}.get(saved, 'Saved.') }}</p>{% endif %}
+{% if error %}<p class="notice bad" role="alert">{{ error }}</p>{% endif %}
+{% if profile_count == 1 and not me.password %}
+<p class="notice info">You're the only profile, and without a password the app opens without asking. Add a profile for
+  each person who uses the app: each gets their own playlists and their own Apple Music and Spotify connections,
+  and everyone shares the music library and downloads.</p>
+{% endif %}
+
+<div class="settings-form">
+<form method="post" action="/profiles/me">
+  <fieldset>
+    <legend>Your profile</legend>
+    <label class="field"><span class="label">Name</span>
+      <input type="text" name="name" value="{{ me.name }}" required maxlength="40"></label>
+    <label class="field"><span class="label">Folder for your playlists</span>
+      <input type="text" name="folder" value="{{ me.folder }}" placeholder="None">
+      <span class="muted small">Your new playlists go in this folder inside each service's folder, such as
+        AppleMusic/{{ me.folder or 'Your name' }}/Road Trip. Leave it empty to put them straight in the service's folder.
+        Playlists you already have stay where they are.</span></label>
+    <label class="field"><span class="label">{{ 'New password' if me.password else 'Password' }}</span>
+      <input type="password" name="password" autocomplete="new-password"
+             placeholder="{{ 'Leave empty to keep your password' if me.password else 'Optional' }}">
+      <span class="muted small">{% if me.password %}Changing it signs your other browsers out.{% else %}Without a password,
+        anyone who opens the app can use your profile and your Apple Music and Spotify accounts.{% endif %}</span></label>
+    {% if me.password %}
+    <label class="check"><input type="checkbox" name="no_password" value="1"> Remove my password</label>
+    {% endif %}
+    <div class="actions"><button class="btn primary">Save</button></div>
+  </fieldset>
+</form>
+
+<fieldset>
+  <legend>Your connections</legend>
+  <p class="muted small">Your playlists, copies, and favorites use these. Nobody else's do.</p>
+  <div class="conn">
+    <b>Apple Music</b>
+    {% if apple_connected %}<span class="badge synced">Connected</span>
+      <a class="btn small" href="/apple/connect">Reconnect</a>
+    {% else %}<a class="btn small primary" href="/apple/connect">Connect</a>{% endif %}
+  </div>
+  <div class="conn">
+    <b>Spotify</b>
+    {% if spotify_connected %}<span class="badge synced">Connected</span>
+      <form method="post" action="/spotify/disconnect?back=/profiles" class="inline"><button class="btn small">Disconnect</button></form>
+    {% elif spotify_configured %}<a class="btn small primary" href="/spotify/connect">Connect</a>
+      {% if profile_count > 1 %}<span class="muted small">Spotify first needs your Spotify account added to the app's
+        Spotify developer app. Ask the person who set up Spotify.</span>{% endif %}
+    {% elif is_admin %}<a class="btn small primary" href="/spotify/setup">Set up Spotify</a>
+    {% else %}<span class="muted small">Spotify isn't set up yet. An admin sets it up once for everyone.</span>{% endif %}
+  </div>
+</fieldset>
+
+{% if is_admin %}
+<fieldset>
+  <legend>Everyone</legend>
+  <p class="muted small">Admins can change settings and manage profiles. Everyone can see each other's playlists, but only
+    a playlist's owner can change it.</p>
+  {% for x in people %}
+  <details class="profile-row">
+    <summary>
+      <span class="avatar small" aria-hidden="true">{{ x.name[:1]|upper }}</span>
+      <b>{{ x.name }}</b>{% if x.id == me.id %} <span class="muted small">(you)</span>{% endif %}
+      {% if x.admin %}<span class="tag">ADMIN</span>{% endif %}
+      <span class="muted small">{{ playlist_counts.get(x.id, 0) }} {{ 'playlist' if playlist_counts.get(x.id, 0) == 1 else 'playlists' }}
+        &middot; {{ 'password' if x.password else 'no password' }}</span>
+    </summary>
+    <form method="post" action="/profiles/{{ x.id }}/edit" class="stack">
+      <label class="field"><span class="label">Name</span>
+        <input type="text" name="name" value="{{ x.name }}" required maxlength="40"></label>
+      <label class="field"><span class="label">Folder for new playlists</span>
+        <input type="text" name="folder" value="{{ x.folder }}" placeholder="None"></label>
+      <label class="check"><input type="checkbox" name="admin" value="1" {% if x.admin %}checked{% endif %}
+        {% if x.admin and admins == 1 %}disabled title="The app needs at least one admin"{% endif %}> Admin</label>
+      {% if x.admin and admins == 1 %}<input type="hidden" name="admin" value="1">{% endif %}
+      <div class="actions">
+        <button class="btn small primary">Save</button>
+        {% if x.password and x.id != me.id %}
+        <button class="btn small" formaction="/profiles/{{ x.id }}/clear-password" formnovalidate
+                onclick='return confirm({{ ("Clear " ~ x.name ~ "'s password? The profile then opens with a click.")|tojson }})'>Clear password</button>
+        {% endif %}
+      </div>
+    </form>
+    {% if profile_count > 1 and not (x.admin and admins == 1) %}
+    <form method="post" action="/profiles/{{ x.id }}/remove" class="stack danger-zone">
+      <label class="field"><span class="label">Remove {{ x.name }}</span>
+        <input type="text" name="confirm" placeholder="Type {{ x.name }} to confirm" autocomplete="off" required>
+        <span class="muted small">Removes {{ x.name }}'s playlists from the app, their Apple Music and Spotify connections,
+          and their favorites history. The playlists' folders and files stay on disk.</span></label>
+      <div class="actions"><button class="btn small danger">Remove profile</button></div>
+    </form>
+    {% endif %}
+  </details>
+  {% endfor %}
+</fieldset>
+
+<form method="post" action="/profiles/add">
+  <fieldset>
+    <legend>Add a profile</legend>
+    <label class="field"><span class="label">Name</span>
+      <input type="text" name="name" required maxlength="40" autocomplete="off"></label>
+    <label class="field"><span class="label">Password</span>
+      <input type="password" name="password" autocomplete="new-password" placeholder="Optional">
+      <span class="muted small">Without one, anyone who opens the app can use the profile. They can set or change it later.</span></label>
+    <label class="check"><input type="checkbox" name="admin" value="1"> Admin: can change settings and manage profiles</label>
+    <p class="muted small">Their playlists go in a folder named after them inside each service's folder. To connect Spotify,
+      they also need their Spotify account added under <b>User Management</b> in the app's
+      <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">Spotify developer dashboard</a>
+      (up to five people).</p>
+    <div class="actions"><button class="btn primary">Add profile</button></div>
+  </fieldset>
+</form>
+{% endif %}
+</div>
+{% endblock %}

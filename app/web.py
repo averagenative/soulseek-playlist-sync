@@ -1,5 +1,6 @@
 """Web UI."""
 import base64
+import contextvars
 import json
 import logging
 import os
@@ -12,6 +13,8 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Query, Request
+from fastapi.exception_handlers import http_exception_handler
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from urllib.parse import parse_qsl, quote, urlencode, urlsplit
 from fastapi.staticfiles import StaticFiles
@@ -19,7 +22,7 @@ from fastapi.templating import Jinja2Templates
 
 import httpx
 
-from . import apple, art, control, db, export, favorites, hits, library, mirror, settings, spotify, sync, youtube
+from . import apple, art, control, db, export, favorites, hits, library, mirror, profiles, settings, spotify, sync, youtube
 from .config import Config, load
 from .slskd import Slskd
 from .worker import Worker
@@ -35,11 +38,23 @@ AUDIO_TYPES = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".aac": "audio/aac", "
                ".ogg": "audio/ogg", ".opus": "audio/ogg", ".wma": "audio/x-ms-wma"}
 base_cfg = load()
 worker: Worker | None = None
+# The profile this request is for, set by the gate middleware for everything the request runs.
+_current: contextvars.ContextVar[dict | None] = contextvars.ContextVar("profile", default=None)
 
 
 def C() -> Config:
-    """Current settings: environment defaults plus anything saved on the Settings page."""
-    return settings.current()
+    """Current settings: environment defaults plus anything saved on the Settings page, with the signed-in
+    profile's Apple Music and Spotify connections."""
+    cfg = settings.current()
+    p = _current.get()
+    return cfg.for_profile(p["id"]) if p else cfg
+
+
+def _me() -> dict:
+    p = _current.get()
+    if not p:
+        raise HTTPException(401)
+    return p
 
 
 @asynccontextmanager
@@ -47,6 +62,7 @@ async def lifespan(app: FastAPI):
     global worker
     db.init(base_cfg.db_path)
     settings.init(base_cfg)
+    profiles.load_key(base_cfg.data_dir)
     worker = Worker()
     if os.environ.get("WORKER", "1") != "0":
         worker.start()
@@ -101,9 +117,43 @@ templates.env.globals["DOWNLOAD_LABELS"] = {
 }
 
 
+# Pages anyone may load without a profile: health checks, files the browser asks for, and signing in.
+OPEN_PATHS = {"/healthz", "/favicon.ico", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png", "/signin"}
+
+
+def _same_site(request: Request) -> bool:
+    """A POST must come from the app's own pages: browsers say where a form came from."""
+    if request.headers.get("sec-fetch-site") == "cross-site":
+        return False
+    origin = request.headers.get("origin")
+    if origin is None:
+        return True                  # not a browser, or an old one
+    return origin != "null" and urlsplit(origin).netloc == request.headers.get("host")
+
+
+def _https(request: Request) -> bool:
+    return request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+
+
+def _set_profile_cookie(request: Request, response: Response, p: dict) -> None:
+    response.set_cookie(profiles.COOKIE, profiles.sign(p), max_age=profiles.COOKIE_AGE, httponly=True,
+                        samesite="lax", secure=_https(request), path="/")
+
+
+def _signin_url(request: Request) -> str:
+    here = request.url.path + (f"?{request.url.query}" if request.url.query else "")
+    if request.method != "GET" or request.headers.get("x-live") or here == "/":
+        return "/signin"
+    return "/signin?" + urlencode({"next": here})
+
+
 @app.middleware("http")
-async def basic_auth(request: Request, call_next):
-    if base_cfg.app_password and request.url.path != "/healthz":
+async def gate(request: Request, call_next):
+    """The app password (when set), then which profile this browser uses."""
+    path = request.url.path
+    if path == "/healthz":
+        return await call_next(request)
+    if base_cfg.app_password:
         header = request.headers.get("authorization", "")
         ok = False
         if header.startswith("Basic "):
@@ -114,7 +164,42 @@ async def basic_auth(request: Request, call_next):
                 ok = False
         if not ok:
             return Response(status_code=401, headers={"WWW-Authenticate": 'Basic realm="playlist-sync"'})
-    return await call_next(request)
+    if request.method == "POST" and not _same_site(request):
+        return Response("This request came from another site, so it was refused.", status_code=403,
+                        media_type="text/plain")
+    if path.startswith("/static/") or path in OPEN_PATHS:
+        return await call_next(request)
+    p = profiles.verify(request.cookies.get(profiles.COOKIE))
+    fresh = False
+    if not p:
+        p = profiles.auto()
+        fresh = p is not None
+    if not p:
+        url = _signin_url(request)
+        form = request.headers.get("content-type", "").startswith(("application/x-www-form-urlencoded", "multipart/"))
+        if request.headers.get("x-live") or (request.method != "GET" and not form):
+            # A live region or a script: tell it where to go, and poll.js takes the whole page there.
+            return Response("Sign in first.", status_code=401, headers={"X-Signin": url}, media_type="text/plain")
+        return RedirectResponse(url, status_code=303)
+    request.state.profile = p
+    token = _current.set(p)
+    try:
+        response = await call_next(request)
+    finally:
+        _current.reset(token)
+    if fresh:
+        _set_profile_cookie(request, response, p)
+    return response
+
+
+@app.exception_handler(StarletteHTTPException)
+async def refused(request: Request, exc: StarletteHTTPException):
+    """A refusal (such as another person's playlist) as a page, for a browser; anything else as usual."""
+    if exc.status_code == 403 and "text/html" in request.headers.get("accept", "") and _current.get():
+        title = "Admins only" if str(exc.detail).startswith("Only an admin") else "Not yours to change"
+        return templates.TemplateResponse(request, "message.html", {
+            **_common(), "title": title, "text": exc.detail}, status_code=403)
+    return await http_exception_handler(request, exc)
 
 
 def _back(url: str) -> RedirectResponse:
@@ -123,7 +208,11 @@ def _back(url: str) -> RedirectResponse:
 
 def _common() -> dict:
     cfg = C()
+    me = _current.get()
     return {
+        "me": me,
+        "is_admin": bool(me and me["admin"]),
+        "profile_count": len(profiles.all_profiles()),
         "apple_configured": apple.configured(cfg),
         "apple_mode": apple.mode(cfg),
         "apple_connected": bool(apple.user_token(cfg)),
@@ -178,9 +267,151 @@ def apple_touch_icon():
     return FileResponse(HERE / "static" / "icons" / "apple-touch-icon.png", media_type="image/png")
 
 
+# ------------------------------------------------------------------ profiles
+
+def _safe_next(url: str | None) -> str:
+    return url if url and url.startswith("/") and not url.startswith("//") else "/"
+
+
+@app.get("/signin", response_class=HTMLResponse)
+def signin_page(request: Request, p: int | None = None, next: str = "/", error: str | None = None):
+    people = profiles.all_profiles()
+    chosen = ([x for x in people if x["id"] == p] or [None])[0]
+    current = profiles.verify(request.cookies.get(profiles.COOKIE))
+    return templates.TemplateResponse(request, "signin.html", {
+        "people": people, "chosen": chosen, "next": _safe_next(next), "error": error, "current": current})
+
+
+@app.post("/signin")
+def signin(request: Request, profile: int = Form(...), password: str = Form(""), next: str = Form("/")):
+    p = profiles.get(profile)
+    if not p:
+        return _back("/signin")
+    if p["password"] and not profiles.check_password(p["password"], password):
+        time.sleep(1)                # slows down guessing
+        return _back("/signin?" + urlencode({"p": p["id"], "next": _safe_next(next), "error": "That password isn't right."}))
+    response = _back(_safe_next(next))
+    _set_profile_cookie(request, response, p)
+    return response
+
+
+@app.post("/signout")
+def signout():
+    response = _back("/signin")
+    response.delete_cookie(profiles.COOKIE, path="/")
+    return response
+
+
+def _admin_only() -> dict:
+    me = _me()
+    if not me["admin"]:
+        raise HTTPException(403, "Only an admin can change this. Ask the person who set up the app.")
+    return me
+
+
+def _profiles_ctx() -> dict:
+    people = profiles.all_profiles()
+    counts = {}
+    with db.connect() as c:
+        for r in c.execute("SELECT owner, COUNT(*) FROM playlists GROUP BY owner"):
+            counts[r[0]] = r[1]
+    return {"people": people, "playlist_counts": counts, "admins": sum(1 for x in people if x["admin"])}
+
+
+@app.get("/profiles", response_class=HTMLResponse)
+def profiles_page(request: Request, saved: str | None = None, error: str | None = None):
+    return templates.TemplateResponse(request, "profiles.html", {**_common(), **_profiles_ctx(),
+                                                                 "saved": saved, "error": error})
+
+
+def _profile_error(e: Exception) -> RedirectResponse:
+    return _back(f"/profiles?error={quote(str(e))}")
+
+
+@app.post("/profiles/me")
+def profile_me(request: Request, name: str = Form(""), folder: str = Form(""), password: str = Form(""),
+               no_password: str = Form("")):
+    me = _me()
+    try:
+        profiles.update(me["id"], name=name, folder=folder)
+        if password or no_password:
+            profiles.set_password(me["id"], None if no_password else password)
+    except profiles.ProfileError as e:
+        return _profile_error(e)
+    response = _back("/profiles?saved=me")
+    if password or no_password:
+        # The change signs other browsers out of this profile; this one stays signed in.
+        _set_profile_cookie(request, response, profiles.get(me["id"]))
+    return response
+
+
+@app.post("/profiles/add")
+def profile_add(name: str = Form(""), password: str = Form(""), admin: str = Form("")):
+    _admin_only()
+    try:
+        profiles.add(name, password, bool(admin))
+    except profiles.ProfileError as e:
+        return _profile_error(e)
+    return _back("/profiles?saved=added")
+
+
+@app.post("/profiles/{pid}/edit")
+def profile_edit(pid: int, name: str = Form(""), folder: str = Form(""), admin: str = Form("")):
+    _admin_only()
+    if not profiles.get(pid):
+        raise HTTPException(404)
+    try:
+        profiles.update(pid, name=name, folder=folder)
+        profiles.set_admin(pid, bool(admin))
+    except profiles.ProfileError as e:
+        return _profile_error(e)
+    return _back("/profiles?saved=edited")
+
+
+@app.post("/profiles/{pid}/clear-password")
+def profile_clear_password(pid: int):
+    _admin_only()
+    if not profiles.get(pid):
+        raise HTTPException(404)
+    profiles.set_password(pid, None)
+    return _back("/profiles?saved=cleared")
+
+
+@app.post("/profiles/{pid}/remove")
+def profile_remove(pid: int, confirm: str = Form("")):
+    me = _admin_only()
+    p = profiles.get(pid)
+    if not p:
+        raise HTTPException(404)
+    if confirm.strip().casefold() != p["name"].casefold():
+        return _profile_error(f"Type {p['name']} to remove the profile")
+    try:
+        profiles.remove(C(), pid)
+    except profiles.ProfileError as e:
+        return _profile_error(e)
+    return _back("/signin" if pid == me["id"] else "/profiles?saved=removed")
+
+
+# ------------------------------------------------------------------ home
+
+SHOWING_COOKIE = "showing"
+
+
+def _showing(request: Request) -> str:
+    """Whose playlists the home page shows: mine, all, or a profile ID."""
+    v = request.query_params.get("showing") or request.cookies.get(SHOWING_COOKIE) or "mine"
+    if v in ("mine", "all"):
+        return v
+    return v if v.isdigit() and profiles.get(v) and int(v) != _me()["id"] else "mine"
+
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return templates.TemplateResponse(request, "index.html", {**_common(), "playlists": _home_playlists()})
+    showing = _showing(request)
+    response = templates.TemplateResponse(request, "index.html", {**_common(), **_home_ctx(showing)})
+    if request.query_params.get("showing"):
+        response.set_cookie(SHOWING_COOKIE, showing, max_age=profiles.COOKIE_AGE, samesite="lax", path="/")
+    return response
 
 
 @app.get("/partials/nav", response_class=HTMLResponse)
@@ -190,12 +421,29 @@ def partial_nav(request: Request):
 
 @app.get("/partials/home", response_class=HTMLResponse)
 def partial_home(request: Request):
-    return templates.TemplateResponse(request, "_home.html", {**_common(), "playlists": _home_playlists()})
+    return templates.TemplateResponse(request, "_home.html", {**_common(), **_home_ctx(_showing(request))})
 
 
-def _home_playlists() -> list[dict]:
+def _home_ctx(showing: str) -> dict:
+    """The playlist cards, grouped by person: just yours, one other person's, or everyone's."""
+    me = _me()
+    people = profiles.all_profiles()
+    if showing == "mine":
+        shown = [me]
+    elif showing == "all":
+        shown = sorted(people, key=lambda x: x["id"] != me["id"])     # yours first
+    else:
+        shown = [x for x in people if str(x["id"]) == showing]
+    groups = [{"profile": x, "mine": x["id"] == me["id"], "playlists": _home_playlists(x["id"])} for x in shown]
+    mine = next((g["playlists"] for g in groups if g["mine"]), None)
+    return {"groups": groups, "showing": showing, "people": people,
+            "playlists": [q for g in groups for q in g["playlists"]],
+            "my_playlists": mine if mine is not None else sync.tracked(me["id"])}
+
+
+def _home_playlists(owner: int) -> list[dict]:
     out = []
-    for p in sync.tracked():
+    for p in sync.tracked(owner):
         _, counts = sync.summary(C(), p["id"])
         label, at = _last_activity(p)
         out.append({**p, "activity": label, "activity_at": at, "counts": counts, "covers": sync.covers(C(), p["id"])})
@@ -215,6 +463,7 @@ def _last_activity(p) -> tuple[str, float | None]:
 
 @app.get("/settings", response_class=HTMLResponse)
 def settings_page(request: Request, saved: int = 0, error: str | None = None):
+    _admin_only()
     return templates.TemplateResponse(request, "settings.html", {
         **_common(), "cfg": C(), "base": base_cfg, "fields": settings.EDITABLE, "overridden": settings.overrides(),
         "saved": saved, "error": error,
@@ -223,6 +472,7 @@ def settings_page(request: Request, saved: int = 0, error: str | None = None):
 
 @app.post("/settings")
 async def settings_save(request: Request):
+    _admin_only()
     form = dict(await request.form())
     try:
         settings.save(settings.parse(form))
@@ -233,6 +483,12 @@ async def settings_save(request: Request):
 
 # ------------------------------------------------------------------ Apple Music
 
+def _nonce_key() -> str:
+    """The Apple Music connect page's one-time value, one per profile."""
+    pid = _me()["id"]
+    return "apple_connect_nonce" if pid == 1 else f"apple_connect_nonce:{pid}"
+
+
 @app.get("/apple/connect", response_class=HTMLResponse)
 def apple_connect(request: Request, error: str | None = None):
     cfg = C()
@@ -241,7 +497,7 @@ def apple_connect(request: Request, error: str | None = None):
     if not apple.key_configured(cfg):
         raise HTTPException(500, "APPLE_MODE=developer needs APPLE_TEAM_ID, APPLE_KEY_ID and APPLE_KEY_FILE")
     nonce = secrets.token_urlsafe(24)
-    db.set_kv("apple_connect_nonce", nonce)
+    db.set_kv(_nonce_key(), nonce)
     return templates.TemplateResponse(request, "connect.html",
                                       {"developer_token": apple.developer_token(cfg), "nonce": nonce})
 
@@ -265,11 +521,11 @@ def apple_paste(token: str = Form(...)):
 @app.post("/apple/token")
 async def apple_token(request: Request):
     body = await request.json()
-    nonce = db.get_kv("apple_connect_nonce")
+    nonce = db.get_kv(_nonce_key())
     if not nonce or not secrets.compare_digest(str(body.get("nonce", "")), nonce) or not body.get("token"):
         raise HTTPException(403)
     apple.save_user_token(C(), body["token"])
-    db.set_kv("apple_connect_nonce", None)
+    db.set_kv(_nonce_key(), None)
     return JSONResponse({"ok": True})
 
 
@@ -304,6 +560,7 @@ def spotify_setup(request: Request, error: str | None = None):
 
 @app.post("/spotify/setup")
 def spotify_setup_save(client_id: str = Form("")):
+    _admin_only()
     try:
         settings.set_value("spotify_client_id", settings.clean_spotify_client_id(client_id))
     except settings.SettingsError as e:
@@ -334,7 +591,7 @@ def spotify_callback(code: str | None = None, state: str | None = None, error: s
 @app.post("/spotify/disconnect")
 def spotify_disconnect(back: str | None = None):
     spotify.disconnect(C())
-    return _back("/spotify/setup" if back == "/spotify/setup" else "/settings")
+    return _back(back if back in ("/spotify/setup", "/profiles", "/settings") else "/profiles")
 
 
 @app.get("/spotify/playlists", response_class=HTMLResponse)
@@ -350,7 +607,7 @@ def spotify_playlists(request: Request):
 
 
 def _pick(request: Request, source: str, remote: list[dict]):
-    tracked = {p["remote_id"]: p["id"] for p in sync.tracked() if p["source"] == source}
+    tracked = {p["remote_id"]: p["id"] for p in sync.tracked(_me()["id"]) if p["source"] == source}
     return templates.TemplateResponse(request, "pick_playlists.html",
                                       {**_common(), "source": source, "remote": remote, "tracked": tracked})
 
@@ -367,7 +624,8 @@ def youtube_add_page(request: Request, error: str | None = None, link: str = "")
 def youtube_add(link: str = Form("")):
     try:
         remote_id = youtube.playlist_id(link)
-        existing = next((p["id"] for p in sync.tracked() if p["source"] == "youtube" and p["remote_id"] == remote_id), None)
+        existing = next((p["id"] for p in sync.tracked(_me()["id"])
+                         if p["source"] == "youtube" and p["remote_id"] == remote_id), None)
         if existing:
             return _back(f"/playlists/{existing}")
         with youtube.Playlists(C()) as yt:
@@ -383,10 +641,11 @@ def youtube_add(link: str = Form("")):
 
 def _favorites_ctx() -> dict:
     cfg = C()
-    o = favorites.options()
+    o = favorites.options(cfg.profile)
     sp_ok, am_ok = spotify.connected(cfg), bool(apple.user_token(cfg))
     return {
-        "opts": o, "fav": favorites.status(), "fav_running": favorites.running(), "pairs": favorites.pair_count(),
+        "opts": o, "fav": favorites.status(cfg.profile), "fav_running": favorites.running(cfg.profile),
+        "pairs": favorites.pair_count(cfg.profile),
         "needs_likes_scope": sp_ok and o["to_spotify"] and not spotify.can_save_likes(cfg),
         "fav_ready": sp_ok and am_ok and (o["to_apple"] or o["to_spotify"]),
     }
@@ -405,7 +664,7 @@ def favorites_partial(request: Request):
 
 @app.post("/favorites/options")
 def favorites_options(to_apple: str = Form(""), to_spotify: str = Form(""), auto: str = Form("")):
-    favorites.save_options(bool(to_apple), bool(to_spotify), bool(auto))
+    favorites.save_options(_me()["id"], bool(to_apple), bool(to_spotify), bool(auto))
     return _back("/favorites?saved=1")
 
 
@@ -422,6 +681,16 @@ def favorites_action(action: str):
 
 # ------------------------------------------------------------------ playlists
 
+def _playlist(pid: str, write: bool = False):
+    """A playlist, or 404. Anyone can look at a playlist; only its owner can change it."""
+    p = sync.playlist(pid)
+    if not p:
+        raise HTTPException(404)
+    if write and p["owner"] != _me()["id"]:
+        raise HTTPException(403, f"This is {profiles.name_of(p['owner'])}'s playlist.")
+    return p
+
+
 @app.post("/playlists")
 def add_playlist(source: str = Form(...), remote_id: str = Form(...), name: str = Form(...)):
     if source not in ("apple", "spotify"):
@@ -433,32 +702,29 @@ def add_playlist(source: str = Form(...), remote_id: str = Form(...), name: str 
 
 @app.get("/playlists/{pid}", response_class=HTMLResponse)
 def playlist_page(request: Request, pid: str, error: str | None = None, all: int = 0, q: str = "", show: str = ""):
-    if not sync.playlist(pid):
-        raise HTTPException(404)
+    _playlist(pid)
     return templates.TemplateResponse(request, "playlist.html", {
         **_common(), **_playlist_ctx(pid, bool(all), q, show), **_copies_ctx(pid), "form_error": error})
 
 
 @app.get("/playlists/{pid}/rows", response_class=HTMLResponse)
 def playlist_rows(request: Request, pid: str, all: int = 0, q: str = "", show: str = ""):
-    if not sync.playlist(pid):
-        raise HTTPException(404)
+    _playlist(pid)
     return templates.TemplateResponse(request, "_songs.html", {**_common(), **_playlist_ctx(pid, bool(all), q, show)})
 
 
 @app.get("/playlists/{pid}/copies", response_class=HTMLResponse)
 def playlist_copies(request: Request, pid: str):
-    if not sync.playlist(pid):
-        raise HTTPException(404)
+    _playlist(pid)
     return templates.TemplateResponse(request, "_copies.html", {**_common(), **_copies_ctx(pid)})
 
 
 MISSING_LIMIT = 300      # songs listed at once on the not-found page; a search narrows it
 
 
-def _copy_target(pid: str, target: str) -> dict:
-    p = sync.playlist(pid)
-    if not p or target not in mirror.targets_for(p["source"]):
+def _copy_target(pid: str, target: str, write: bool = False) -> dict:
+    p = _playlist(pid, write)
+    if target not in mirror.targets_for(p["source"]):
         raise HTTPException(404)
     return p
 
@@ -482,13 +748,14 @@ def copy_missing(request: Request, pid: str, target: str, q: str = "", done: str
     return templates.TemplateResponse(request, "missing.html", {
         **_common(), "p": p, "target": target, "label": mirror.TARGETS[target], "total": len(songs),
         "songs": shown[:MISSING_LIMIT], "matching": len(shown), "q": q.strip(), "done": done,
-        "mirror": mirror.get(pid, target), "can_copy": _copy_ready(C(), target)[0]})
+        "mirror": mirror.get(pid, target), "can_copy": _copy_ready(sync.owner_cfg(C(), p), target)[0],
+        **_ownership(p)})
 
 
 @app.get("/playlists/{pid}/copies/{target}/find/{key}", response_class=HTMLResponse)
 def copy_find(request: Request, pid: str, target: str, key: str, q: str = "", back: str = ""):
     """Search the service for one song and pick the right one."""
-    p = _copy_target(pid, target)
+    p = _copy_target(pid, target, write=True)
     song = _song(key)
     ok, why = _copy_ready(C(), target)
     results, error = [], why
@@ -504,7 +771,7 @@ def copy_find(request: Request, pid: str, target: str, key: str, q: str = "", ba
 
 @app.post("/playlists/{pid}/copies/{target}/find/{key}")
 def copy_link(pid: str, target: str, key: str, remote_id: str = Form(...), back: str = Form("")):
-    _copy_target(pid, target)
+    _copy_target(pid, target, write=True)
     song = _song(key)
     msg = mirror.link(C(), pid, target, key, remote_id)
     qs = urlencode([(k, v) for k, v in (("q", back), ("done", f"{song['title']}: {msg}")) if v])
@@ -523,15 +790,21 @@ def _copy_ready(cfg: Config, target: str) -> tuple[bool, str | None]:
 
 def _copies_ctx(pid: str) -> dict:
     """The Copy to Spotify and Apple Music panels."""
-    cfg = C()
     p = sync.playlist(pid)
+    cfg = sync.owner_cfg(C(), p)          # copies go into the owner's accounts
     copies = []
     for target in mirror.targets_for(p["source"]):
         ok, why = _copy_ready(cfg, target)
         copies.append({"target": target, "label": mirror.TARGETS[target], "mirror": mirror.get(pid, target),
                        "can_copy": ok, "blocker": why})
     return {"p": p, "copies": copies, "size": sync.song_count(pid, skipped=p["source"] != "local"),
-            "spotify_max": mirror.SPOTIFY_MAX}
+            "spotify_max": mirror.SPOTIFY_MAX, **_ownership(p)}
+
+
+def _ownership(p) -> dict:
+    """Whether the signed-in profile owns the playlist, for pages that hide controls from everyone else."""
+    mine = p["owner"] == _me()["id"]
+    return {"mine": mine, "owner_name": None if mine else profiles.name_of(p["owner"])}
 
 
 # ?show= filters on the playlist page, by status. Songs you took out are "left_out".
@@ -560,7 +833,7 @@ def _playlist_ctx(pid: str, show_all: bool = False, q: str = "", show: str = "")
     local = p["source"] == "local"
     rule = sync.rule_of(p)
     view = [("q", q), ("show", show)]
-    return {"p": p, "rows": found if show_all else found[:ROW_LIMIT], "total_rows": len(found), "show_all": show_all,
+    return {**_ownership(p), "p": p, "rows": found if show_all else found[:ROW_LIMIT], "total_rows": len(found), "show_all": show_all,
             "song_rows": len(rows), "q": q, "show": show,
             "removable": [r["key"] for r in found if r["status"] not in ("removed", "skipped")] if local and (q or show) else [],
             "view_qs": urlencode([(k, v) for k, v in view if v]),
@@ -578,9 +851,7 @@ def _playlist_ctx(pid: str, show_all: bool = False, q: str = "", show: str = "")
 @app.post("/playlists/{pid}/settings")
 def playlist_settings(pid: str, folder: str = Form(...), numbering: str | None = Form(None),
                       library_mode: str = Form("copy"), name: str | None = Form(None)):
-    p = sync.playlist(pid)
-    if not p:
-        raise HTTPException(404)
+    p = _playlist(pid, write=True)
     if library_mode not in ("copy", "reference"):
         raise HTTPException(400)
     refetch = False
@@ -612,9 +883,7 @@ def playlist_settings(pid: str, folder: str = Form(...), numbering: str | None =
 
 @app.post("/playlists/{pid}/{action}")
 def playlist_action(pid: str, action: str, back: str | None = None, target: str | None = None):
-    p = sync.playlist(pid)
-    if not p:
-        raise HTTPException(404)
+    p = _playlist(pid, write=True)
     jobs = {"preview": ("Checking", sync.preview), "sync": ("Downloading all", sync.sync),
             "prune": ("Pruning", sync.prune)}
     if p["source"] == "local" and action in ("preview", "sync", "refresh"):
@@ -637,6 +906,7 @@ def playlist_action(pid: str, action: str, back: str | None = None, target: str 
 
 @app.get("/playlists/{pid}/songs/{key}/audio")
 def song_audio(pid: str, key: str):
+    _playlist(pid)
     path = sync.song_path(C(), pid, key)
     if not path:
         raise HTTPException(404, "No local file for this song")
@@ -648,8 +918,7 @@ _ZIPS: dict[str, dict] = {}     # ZIP downloads in progress, by the page's token
 
 @app.get("/playlists/{pid}/zip/check")
 def playlist_zip_check(pid: str):
-    if not sync.playlist(pid):
-        raise HTTPException(404)
+    _playlist(pid)
     _, files, _ = sync.export_files(C(), pid)
     if not files:
         return {"ok": False, "ask": None, "error": "Nothing downloaded in this playlist yet."}
@@ -658,8 +927,7 @@ def playlist_zip_check(pid: str):
 
 @app.get("/playlists/{pid}/zip")
 def playlist_zip(pid: str, t: str = ""):
-    if not sync.playlist(pid):
-        raise HTTPException(404)
+    _playlist(pid)
     folder, files, m3u = sync.export_files(C(), pid)
     if not files:
         raise HTTPException(404, "Nothing downloaded in this playlist yet")
@@ -699,8 +967,7 @@ async def change_songs(request: Request, pid: str, do: str):
     the page's search and filter show."""
     if do not in ("remove", "putback"):
         raise HTTPException(404)
-    if not sync.playlist(pid):
-        raise HTTPException(404)
+    _playlist(pid, write=True)
     form = await request.form()
     back = form.get("back") or ""
     if form.get("matching"):
@@ -720,6 +987,7 @@ async def change_songs(request: Request, pid: str, do: str):
 
 @app.post("/playlists/{pid}/songs/{key}/{action}")
 def song_action(pid: str, key: str, action: str, back: str | None = None):
+    _playlist(pid, write=True)
     if action == "skip":
         sync.set_song(pid, key, skip=1, want=0)
     elif action == "unskip":
@@ -763,9 +1031,9 @@ def _new_hits(cfg: Config, name: str, f: dict) -> str:
     return pid
 
 
-def _hits_playlist(pid: str):
-    p = sync.playlist(pid)
-    if not p or hits.options(sync.rule_of(p)) is None:
+def _hits_playlist(pid: str, write: bool = False):
+    p = _playlist(pid, write)
+    if hits.options(sync.rule_of(p)) is None:
         raise HTTPException(404)
     return p
 
@@ -779,9 +1047,9 @@ def _hits_status_ctx() -> dict:
 @app.post("/playlists/{pid}/hits/new")
 def hits_new(pid: str):
     """A hits playlist made from an auto-updating playlist: the same songs, standouts only."""
-    p = sync.playlist(pid)
+    p = _playlist(pid, write=True)
     rule = sync.rule_of(p)
-    if not p or rule is None or hits.options(rule) is not None:
+    if rule is None or hits.options(rule) is not None:
         raise HTTPException(400, "Make a hits playlist from an auto-updating My music playlist")
     new = _new_hits(C(), p["name"] + " Hits", rule)
     return _back(f"/playlists/{new}/hits")
@@ -790,7 +1058,7 @@ def hits_new(pid: str):
 @app.get("/playlists/{pid}/hits", response_class=HTMLResponse)
 def hits_page(request: Request, pid: str, q: str = "", show: str = "", page: int = 1, saved: int = 0):
     p = _hits_playlist(pid)
-    cfg = C()
+    cfg = sync.owner_cfg(C(), p)          # picks use the owner's favorites
     rule = sync.rule_of(p)
     with db.connect() as c:
         skip = {r[0] for r in c.execute("SELECT song_key FROM items WHERE playlist_id = ? AND skip = 1", (pid,))}
@@ -811,7 +1079,7 @@ def hits_page(request: Request, pid: str, q: str = "", show: str = "", page: int
     return templates.TemplateResponse(request, "hits.html", {
         **_common(), **_hits_status_ctx(), "p": p, "opts": hits.options(rule), "albums": albums[(page - 1) * HITS_PAGE:page * HITS_PAGE],
         "matching": len(albums), "total_albums": sum(1 for g in groups if g["songs"]), "picked": picked, "no_data": no_data,
-        "q": q, "show": show, "page": page, "pages": pages, "saved": saved,
+        "q": q, "show": show, "page": page, "pages": pages, "saved": saved, **_ownership(p),
         "view_qs": urlencode([(k, v) for k, v in view if v]), "rule_text": _rule_text(rule)})
 
 
@@ -823,7 +1091,7 @@ def hits_partial(request: Request, back: str = "/"):
 
 @app.post("/playlists/{pid}/hits/settings")
 def hits_settings(pid: str, min_songs: int = Form(2), max_songs: int = Form(5), cutoff: float = Form(1.25)):
-    p = _hits_playlist(pid)
+    p = _hits_playlist(pid, write=True)
     rule = sync.rule_of(p)
     rule["hits"] = hits.options({"hits": {"min": min_songs, "max": max(min_songs, max_songs), "cutoff": cutoff,
                                           "whole": hits.options(rule)["whole"]}})
@@ -836,7 +1104,7 @@ def hits_settings(pid: str, min_songs: int = Form(2), max_songs: int = Form(5), 
 @app.post("/playlists/{pid}/hits/whole")
 def hits_whole(pid: str, album: str = Form(""), key: str = Form(""), on: str = Form("1"), back: str = Form("")):
     """Put all of an album in a hits playlist (from a song on it, or from the picks page), or go back to its picks."""
-    p = _hits_playlist(pid)
+    p = _hits_playlist(pid, write=True)
     rule = sync.rule_of(p)
     album = album or (hits.album_of(key) if key else "")
     if not album:
@@ -902,7 +1170,7 @@ def library_page(request: Request, q: str = "", folder: list[str] = Query([]), a
     sort = sort if sort in library.SORTS else "artist"
     page = max(page, 1)
     rows, total = library.browse(cfg, f, sort, (page - 1) * PAGE_SIZE, PAGE_SIZE)
-    fixed = [p for p in sync.tracked() if p["source"] == "local" and not p["rule"]]
+    fixed = [p for p in sync.tracked(_me()["id"]) if p["source"] == "local" and not p["rule"]]
     return templates.TemplateResponse(request, "library.html", {
         **_common(), "f": f, "sort": sort, "page": page, "rows": rows, "total": total,
         "pages": max(1, -(-total // PAGE_SIZE)), "per_page": PAGE_SIZE, "folders": library.folders(cfg),
@@ -934,8 +1202,8 @@ async def library_playlist(request: Request):
         return _back(back + "&error=Tick some songs first")
     pid = form.get("playlist") or ""
     if pid:
-        p = sync.playlist(pid)
-        if not p or p["source"] != "local" or p["rule"]:
+        p = _playlist(pid, write=True)
+        if p["source"] != "local" or p["rule"]:
             raise HTTPException(400, "Songs can only be added to a playlist you made by hand")
     else:
         pid = sync.add_local_playlist(cfg, name)

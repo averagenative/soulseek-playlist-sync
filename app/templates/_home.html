@@ -3,10 +3,10 @@
 <div data-active="{{ 1 if ns.active else 0 }}">
 {% if not apple_configured %}
   <p class="notice bad">Apple Music isn't set up. Set <code>APPLE_TEAM_ID</code>, <code>APPLE_KEY_ID</code> and <code>APPLE_KEY_FILE</code>.</p>
-{% elif not apple_connected and playlists|selectattr("source", "equalto", "apple")|list %}
+{% elif not apple_connected and my_playlists|selectattr("source", "equalto", "apple")|list %}
   <p class="notice warn">Apple Music isn't connected, so your Apple Music playlists can't update. <a class="btn small" href="/apple/connect">Reconnect</a></p>
 {% endif %}
-{% if not spotify_connected and playlists|selectattr("source", "equalto", "spotify")|list %}
+{% if not spotify_connected and my_playlists|selectattr("source", "equalto", "spotify")|list %}
   <p class="notice warn">Spotify isn't connected, so your Spotify playlists can't update. <a class="btn small" href="/spotify/setup">Reconnect</a></p>
 {% endif %}
 {% if slskd.reachable == false %}
@@ -17,9 +17,11 @@
   <p class="notice warn">slskd is running but isn't connected to the Soulseek network, so searches are paused. The app retries every minute.</p>
 {% endif %}
 
-{% if playlists %}
+{% for g in groups %}
+{% if not g.mine or showing == 'all' %}<h2 class="group-head">{{ 'Your playlists' if g.mine else g.profile.name ~ "'s playlists" }}</h2>{% endif %}
+{% if g.playlists %}
 <div class="grid">
-  {% for p in playlists %}
+  {% for p in g.playlists %}
     {% set total = namespace(n=0) %}{% for s, n in p.counts.items() if s != 'removed' %}{% set total.n = total.n + n %}{% endfor %}
     {% set done = p.counts.get('synced', 0) %}
     {% set live = p.busy or p.counts.get('downloading') or p.counts.get('queued') or p.counts.get('searching') %}
@@ -32,7 +34,7 @@
       {{ segbar(p.counts, live) }}
       <div class="foot">
         <span class="muted small">{% if p.busy %}<span class="badge busy">{{ p.busy }}</span>{% else %}{{ p.activity }} {{ p.activity_at|ago }}{% endif %}</span>
-        {% if p.source == 'local' %}
+        {% if p.source == 'local' or not g.mine %}
           <a class="btn small" href="/playlists/{{ p.id }}">Open</a>
         {% elif done < total.n %}
           <form method="post" action="/playlists/{{ p.id }}/sync?back=/" class="inline">
@@ -42,6 +44,8 @@
     </article>
   {% endfor %}
 </div>
+{% elif not g.mine %}
+  <p class="muted">{{ g.profile.name }} has no playlists yet.</p>
 {% else %}
   <div class="empty">
     <img src="/static/icons/icon-192.png" alt="">
@@ -61,4 +65,5 @@
     {% endif %}
   </div>
 {% endif %}
+{% endfor %}
 </div>

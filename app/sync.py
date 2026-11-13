@@ -8,7 +8,7 @@ import threading
 import time
 from pathlib import Path
 
-from . import apple, db, hits, library, spotify, youtube
+from . import apple, db, hits, library, profiles, spotify, youtube
 from .config import Config
 from .folders import place, rename_all, safe_name, song_file_name, write_m3u
 
@@ -20,6 +20,10 @@ SONG_FIELDS = ("isrc", "title", "artist", "album", "album_artist", "track_number
                "preview_url")
 RETRY_AFTER = 6 * 3600   # a Sync retries songs not found on Soulseek after this long
 _locks: dict[str, threading.Lock] = {}
+
+
+class NotConnected(Exception):
+    """The playlist's owner hasn't connected the service it comes from."""
 
 
 # ------------------------------------------------------------------ helpers
@@ -43,8 +47,19 @@ def _client(cfg: Config, source: str):
     return apple.Client(cfg) if source == "apple" else spotify.Client(cfg)
 
 
-def _unique_folder(cfg: Config, source: str, name: str, pid: str | None = None) -> str:
-    base = f"{cfg.source_dir(source)}/{safe_name(name)}"
+def owner_cfg(cfg: Config, p) -> Config:
+    """Settings for work on a playlist: its owner's Apple Music and Spotify connections."""
+    return cfg.for_profile(p["owner"])
+
+
+def _base_folder(cfg: Config, source: str, name: str, owner: int) -> str:
+    """Where a new playlist goes: the service folder, then the owner's profile folder, then the name."""
+    sub = (profiles.get(owner) or {}).get("folder") or ""
+    return "/".join(x for x in (cfg.source_dir(source), sub, safe_name(name)) if x)
+
+
+def _unique_folder(cfg: Config, source: str, name: str, pid: str | None = None, owner: int | None = None) -> str:
+    base = _base_folder(cfg, source, name, cfg.profile if owner is None else owner)
     with db.connect() as c:
         taken = {r["folder"] for r in c.execute("SELECT id, folder FROM playlists") if r["id"] != pid}
     folder, n = base, 2
@@ -82,12 +97,14 @@ def run_job(pid: str, label: str, fn, *args) -> bool:
 def add_playlist(cfg: Config, source: str, remote_id: str, name: str) -> str:
     if source not in ("apple", "spotify", "youtube"):
         raise ValueError(f"unknown source {source!r}")
-    pid = f"{source}:{remote_id}"
+    # The first profile keeps the IDs from before profiles. Anyone else's carry their profile, so two
+    # people can each add their own Liked Songs, or the same shared playlist.
+    pid = f"{source}:{remote_id}" + (f"@{cfg.profile}" if cfg.profile != 1 else "")
     with db.connect() as c:
-        c.execute("INSERT OR IGNORE INTO playlists (id, source, remote_id, name, folder, numbering, library_mode) "
-                  "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        c.execute("INSERT OR IGNORE INTO playlists (id, source, remote_id, name, folder, numbering, library_mode, "
+                  "owner) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                   (pid, source, remote_id, name, _unique_folder(cfg, source, name),
-                   1 if cfg.default_numbering else 0, cfg.default_library_mode))
+                   1 if cfg.default_numbering else 0, cfg.default_library_mode, cfg.profile))
     return pid
 
 
@@ -97,10 +114,10 @@ def add_local_playlist(cfg: Config, name: str, rule: dict | None = None) -> str:
     name = (name or "").strip() or "My playlist"
     pid = f"local:{secrets.token_hex(4)}"
     with db.connect() as c:
-        c.execute("INSERT INTO playlists (id, source, remote_id, name, folder, numbering, library_mode, rule) "
-                  "VALUES (?, 'local', ?, ?, ?, ?, 'reference', ?)",
+        c.execute("INSERT INTO playlists (id, source, remote_id, name, folder, numbering, library_mode, rule, owner) "
+                  "VALUES (?, 'local', ?, ?, ?, ?, 'reference', ?, ?)",
                   (pid, pid[6:], name, _unique_folder(cfg, "local", name), 1 if cfg.default_numbering else 0,
-                   json.dumps(rule) if rule is not None else None))
+                   json.dumps(rule) if rule is not None else None, cfg.profile))
     return pid
 
 
@@ -125,12 +142,18 @@ def _save_songs(c, tracks: list[dict]) -> None:
 
 def fetch(cfg: Config, pid: str) -> None:
     p = playlist(pid)
+    cfg = owner_cfg(cfg, p)
     if p["source"] == "local":
         _fetch_local(cfg, p)
         return
-    with _client(cfg, p["source"]) as api:
-        name = api.playlist_name(p["remote_id"])
-        tracks = api.playlist_tracks(p["remote_id"])
+    try:
+        with _client(cfg, p["source"]) as api:
+            name = api.playlist_name(p["remote_id"])
+            tracks = api.playlist_tracks(p["remote_id"])
+    except (apple.NotConnected, spotify.NotConnected) as e:
+        if p["source"] == "apple" and not apple.user_token(cfg) or p["source"] == "spotify" and not spotify.connected(cfg):
+            raise NotConnected(f"{SOURCES[p['source']]} isn't connected for {profiles.name_of(p['owner'])}") from e
+        raise
     _replace_entries(pid, tracks)
     if name != p["name"] and not p["own_name"]:
         _rename_playlist(cfg, p, name)
@@ -267,10 +290,10 @@ def refresh_auto_playlists(cfg: Config) -> None:
 def _rename_playlist(cfg: Config, p, name: str) -> None:
     """The playlist was renamed on the service: rename its .m3u, and its folder unless you chose the folder."""
     old_m3u = m3u_path(cfg, p)
-    auto = f"{cfg.source_dir(p['source'])}/{safe_name(p['name'])}"
+    auto = _base_folder(cfg, p["source"], p["name"], p["owner"])
     folder = p["folder"]
     if folder == auto or folder.startswith(auto + " ("):
-        folder = _unique_folder(cfg, p["source"], name, p["id"])
+        folder = _unique_folder(cfg, p["source"], name, p["id"], owner=p["owner"])
         if not (cfg.music_root / folder).exists():
             _move_files(cfg, p["folder"], folder)
         else:
@@ -702,9 +725,13 @@ def covers(cfg: Config, pid: str, n: int = 4) -> list[str]:
     return (picked + spare)[:n]
 
 
-def tracked() -> list[dict]:
+def tracked(owner: int | None = None) -> list[dict]:
+    """Every playlist, or one profile's."""
     with db.connect() as c:
-        return [dict(r) for r in c.execute("SELECT * FROM playlists ORDER BY name COLLATE NOCASE")]
+        if owner is None:
+            return [dict(r) for r in c.execute("SELECT * FROM playlists ORDER BY name COLLATE NOCASE")]
+        return [dict(r) for r in c.execute("SELECT * FROM playlists WHERE owner = ? ORDER BY name COLLATE NOCASE",
+                                           (owner,))]
 
 
 def wait_idle(pid: str, timeout: float = 600) -> None:

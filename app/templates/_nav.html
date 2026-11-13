@@ -19,4 +19,5 @@
     {% endif %}
     <a class="pill" href="/library" title="Browse your music and make playlists from it">My music</a>
     <a class="pill {{ 'active' if downloads_active else '' }}" href="/downloads"><span class="dot"></span>Downloads{% if downloads_active %} &middot; {{ downloads_active }}{% endif %}</a>
-    <a class="pill" href="/settings" title="Settings">Settings</a>
+    {% if is_admin %}<a class="pill" href="/settings" title="Settings">Settings</a>{% endif %}
+    {% if me %}<a class="pill profile-pill" href="/profiles" title="Your profile, connections{{ ', and everyone else' if is_admin else '' }}"><span class="avatar tiny" aria-hidden="true">{{ me.name[:1]|upper }}</span>{{ me.name }}</a>{% endif %}

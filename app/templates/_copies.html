@@ -1,6 +1,7 @@
 {# The Copy to Spotify and Apple Music panels. Part of the live rows, so they follow a running job. #}
 {% for c in copies %}
 {% set m = c.mirror %}
+{% if mine or (m and m.url) %}
 <section class="copy-panel">
   <div>
     <div class="eyebrow">Copy to {{ c.label }}</div>
@@ -10,7 +11,7 @@
       {% if m.note %}<div class="muted small">{{ m.note }}</div>{% endif %}
       {% if m.not_found %}
         <div class="small"><a href="/playlists/{{ p.id }}/copies/{{ c.target }}/missing">{{ m.not_found|n }} {{ 'song' if m.not_found == 1 else 'songs' }} not found on {{ c.label }}</a>
-          <span class="muted">&middot; find them by hand</span></div>
+          {% if mine %}<span class="muted">&middot; find them by hand</span>{% endif %}</div>
       {% endif %}
     {% else %}
       <div class="muted small">Make {{ 'an' if c.target == 'apple' else 'a' }} {{ c.label }} playlist with the same songs{{ ', in the same order' if c.target == 'spotify' and size <= spotify_max else '' }}.
@@ -21,7 +22,8 @@
     {% if c.target == 'apple' and m %}<div class="muted small">Apple only lets apps add songs, so songs removed here stay in the Apple copy.</div>{% endif %}
   </div>
   <div>
-    {% if c.can_copy %}
+    {% if not mine %}
+    {% elif c.can_copy %}
       <form method="post" action="/playlists/{{ p.id }}/mirror?target={{ c.target }}" class="inline">
         <button class="btn" {% if p.busy %}disabled{% endif %}>{{ 'Update' if m and m.url else 'Copy to' }} {{ c.label }}</button></form>
     {% else %}
@@ -29,5 +31,6 @@
     {% endif %}
   </div>
 </section>
+{% endif %}
 {% endfor %}
 {% if p.error %}<p class="notice bad">{{ p.error }}</p>{% endif %}

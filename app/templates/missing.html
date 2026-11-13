@@ -10,7 +10,8 @@
   {% if mirror and mirror.url %}{% if target == 'apple' %}It goes into the {{ label }} copy right away.{% else %}It goes into the {{ label }} copy at the next Update.{% endif %}{% endif %}</p>
 
 {% if done %}<p class="notice ok" role="status">{{ done }}</p>{% endif %}
-{% if not can_copy %}<p class="notice warn">Connect {{ label }} to search it.</p>{% endif %}
+{% if not mine %}<p class="notice info">This is {{ owner_name }}'s playlist, so only {{ owner_name }} can find songs for its copy.</p>
+{% elif not can_copy %}<p class="notice warn">Connect {{ label }} to search it.</p>{% endif %}
 
 {% if total %}
 <form method="get" class="lib-search" role="search" style="margin: 0 0 14px">
@@ -32,7 +33,7 @@
         <div class="muted small" title="{{ s.artist or '' }}">{{ s.artist or "Unknown artist" }}</div></div></div></td>
       <td class="hide-sm small muted">{{ s.album or '' }}</td>
       <td class="hide-sm small muted right">{{ ((s.duration_ms or 0) / 1000)|duration }}</td>
-      <td class="right"><a class="btn small" href="/playlists/{{ p.id }}/copies/{{ target }}/find/{{ s.key|urlencode }}?back={{ q|urlencode }}">Find</a></td>
+      <td class="right">{% if mine %}<a class="btn small" href="/playlists/{{ p.id }}/copies/{{ target }}/find/{{ s.key|urlencode }}?back={{ q|urlencode }}">Find</a>{% endif %}</td>
     </tr>
   {% endfor %}
   </tbody>

@@ -18,6 +18,17 @@
   </div>
 </section>
 
+{% if profile_count > 1 %}
+<nav class="chips showing" aria-label="Whose playlists to show">
+  <span class="muted small">Showing</span>
+  <a class="chip {{ 'on' if showing == 'mine' else '' }}" href="/?showing=mine">Mine</a>
+  {% for x in people if x.id != me.id %}
+  <a class="chip {{ 'on' if showing == x.id|string else '' }}" href="/?showing={{ x.id }}">{{ x.name }}'s</a>
+  {% endfor %}
+  <a class="chip {{ 'on' if showing == 'all' else '' }}" href="/?showing=all">Everyone's</a>
+</nav>
+{% endif %}
+
 <div data-live="/partials/home">
 {% include "_home.html" %}
 </div>

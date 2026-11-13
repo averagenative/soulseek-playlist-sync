@@ -62,7 +62,7 @@
       {% if spotify_connected %}
         <span class="badge synced">Connected</span>
         <a class="btn small" href="/spotify/setup">Details</a>
-        <button class="btn small" formaction="/spotify/disconnect" formmethod="post" formnovalidate>Disconnect</button>
+        <button class="btn small" formaction="/spotify/disconnect?back=/settings" formmethod="post" formnovalidate>Disconnect</button>
       {% else %}
         <a class="btn small primary" href="/spotify/setup">Connect Spotify</a>
         <span class="muted small">Walks you through creating the Spotify app this needs.</span>
