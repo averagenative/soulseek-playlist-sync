@@ -30,3 +30,8 @@
   {% set u = song.thumb_url or song.artwork_url %}
   {% if u %}<img class="thumb" src="{{ u }}" alt="" loading="lazy">{% else %}<div class="thumb blank">&#9835;</div>{% endif %}
 {%- endmacro %}
+
+{# An artist name linked to its artist page. A credit with several artists links the first one's page. #}
+{% macro artist_link(name, cls="quiet") -%}
+  {% if name %}<a class="{{ cls }}" href="/artists/by-name?n={{ name|urlencode }}">{{ name }}</a>{% else %}Unknown artist{% endif %}
+{%- endmacro %}

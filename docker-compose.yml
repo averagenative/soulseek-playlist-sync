@@ -34,6 +34,9 @@ services:
       APP_PASSWORD: ${APP_PASSWORD:-}
       GENIUS_API_TOKEN: ${GENIUS_API_TOKEN:-}
       LISTENBRAINZ_TOKEN: ${LISTENBRAINZ_TOKEN:-}
+      LASTFM_API_KEY: ${LASTFM_API_KEY:-}
+      DISCOGS_TOKEN: ${DISCOGS_TOKEN:-}
+      THEAUDIODB_API_KEY: ${THEAUDIODB_API_KEY:-}
     volumes:
       - ${MUSIC_DIR:-./music}:/music          # playlists are written to AppleMusic/ and SpotifyMusic/ in here
       - ./data:/data                          # database and sign-in tokens

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Suggestions · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><a href="/artists">Artists</a><span class="sep">/</span><span class="here">Suggestions</span>{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">For {{ me.name }}</div>
+    <h1>Suggestions</h1>
+    <div class="muted small">Artists you don't have that your artists are similar to, influenced, or were influenced by.
+      Artists you have more songs and favorites of count for more.</div>
+  </div>
+  {% if all_playlist %}<a class="btn" href="/playlists/{{ all_playlist }}">Open the Suggestions playlist</a>{% endif %}
+</section>
+{% if saved == 'rules' %}<p class="notice ok" role="status">Saved. The songs each suggestion would add use the new rules.</p>{% endif %}
+{% if error %}<p class="notice bad" role="alert">{{ error }}</p>{% endif %}
+
+<details class="hits-opts">
+  <summary class="btn small">Hits rules: up to {{ rules.max }} songs an album, cutoff {{ rules.cutoff }}</summary>
+  <form method="post" action="/suggestions/rules" class="stack">
+    <p class="small">Get their hits picks the same songs a hits playlist would from each of the artist's albums, EPs, and singles:
+      songs that charted on the Hot 100, came out as a single near their album, or have at least the cutoff times the album's
+      median listeners or Genius page views. There's no minimum, so an album with no standout songs adds none.</p>
+    <label class="field"><span class="label">Most songs from one album</span>
+      <input type="number" name="max_songs" value="{{ rules.max }}" min="1" max="20"></label>
+    <label class="field"><span class="label">Cutoff</span>
+      <input type="number" name="cutoff" value="{{ rules.cutoff }}" min="1" max="5" step="0.05">
+      <span class="muted small">1.25 picks songs with a quarter more listeners than the album's median song. Higher picks fewer.</span></label>
+    <div class="actions"><button class="btn small primary">Save</button></div>
+  </form>
+</details>
+
+<div data-live="/suggestions/list?n={{ n }}">
+{% include "_suggestions.html" %}
+</div>
+
+{% if dismissed %}
+<details class="dismissed" id="dismissed">
+  <summary class="small">Not interested ({{ dismissed|length }})</summary>
+  <ul class="people">
+    {% for d in dismissed %}
+    <li>{{ d.name or d.mbid }} <span class="muted small">{{ d.at|ago }}</span>
+      <form method="post" action="/suggestions/{{ d.mbid }}/undismiss" class="inline"><button class="btn tiny">Suggest again</button></form></li>
+    {% endfor %}
+  </ul>
+</details>
+{% endif %}
+{% endblock %}

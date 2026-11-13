@@ -1,0 +1,182 @@
+{
+ "similarartists": {
+  "artist": [
+   {
+    "name": "Full of Hell",
+    "mbid": "af2373bf-4b18-4e06-954c-ab83946992c9",
+    "match": "1",
+    "url": "https://www.last.fm/music/Full+of+Hell",
+    "streamable": "0"
+   },
+   {
+    "name": "Pig Destroyer",
+    "mbid": "5c0d3974-33d5-4f7a-bebc-8f50c057927e",
+    "match": "0.881691",
+    "url": "https://www.last.fm/music/Pig+Destroyer",
+    "streamable": "0"
+   },
+   {
+    "name": "Converge",
+    "mbid": "fa31e7d4-a03a-4110-98fc-f8826e95ec25",
+    "match": "0.758591",
+    "url": "https://www.last.fm/music/Converge",
+    "streamable": "0"
+   },
+   {
+    "name": "Magrudergrind",
+    "mbid": "86547248-6f52-421f-a1bf-a58afde87399",
+    "match": "0.685704",
+    "url": "https://www.last.fm/music/Magrudergrind",
+    "streamable": "0"
+   },
+   {
+    "name": "Wormrot",
+    "mbid": "143fd9a0-28a4-42fb-911e-e5c00baf06f9",
+    "match": "0.674568",
+    "url": "https://www.last.fm/music/Wormrot",
+    "streamable": "0"
+   },
+   {
+    "name": "Trap Them",
+    "mbid": "b24b6ae8-333e-4351-b3b7-6be843195a16",
+    "match": "0.645585",
+    "url": "https://www.last.fm/music/Trap+Them",
+    "streamable": "0"
+   },
+   {
+    "name": "Harm's Way",
+    "match": "0.643235",
+    "url": "https://www.last.fm/music/Harm%27s+Way",
+    "streamable": "0"
+   },
+   {
+    "name": "Insect Warfare",
+    "mbid": "f0f7a1cf-2980-4cfe-bea0-5d6dba84fa89",
+    "match": "0.565409",
+    "url": "https://www.last.fm/music/Insect+Warfare",
+    "streamable": "0"
+   },
+   {
+    "name": "Gulch",
+    "mbid": "9a70b38e-5524-47ea-9c7c-3ebf2f5e2756",
+    "match": "0.534427",
+    "url": "https://www.last.fm/music/Gulch",
+    "streamable": "0"
+   },
+   {
+    "name": "Terror",
+    "mbid": "697eba1a-bf52-46b1-a19f-4d7190b63e5c",
+    "match": "0.531486",
+    "url": "https://www.last.fm/music/Terror",
+    "streamable": "0"
+   },
+   {
+    "name": "Scalp",
+    "mbid": "36959e77-3c25-4b5d-9c23-ae54e54a7d11",
+    "match": "0.531037",
+    "url": "https://www.last.fm/music/Scalp",
+    "streamable": "0"
+   },
+   {
+    "name": "Dead In The Dirt",
+    "match": "0.529754",
+    "url": "https://www.last.fm/music/Dead+In+The+Dirt",
+    "streamable": "0"
+   },
+   {
+    "name": "Weekend Nachos",
+    "mbid": "f2ddd6e8-ef48-4d65-8940-a755491a5fde",
+    "match": "0.517757",
+    "url": "https://www.last.fm/music/Weekend+Nachos",
+    "streamable": "0"
+   },
+   {
+    "name": "All Pigs Must Die",
+    "mbid": "7f6bd658-482c-4b5f-be6e-316cedd33148",
+    "match": "0.483921",
+    "url": "https://www.last.fm/music/All+Pigs+Must+Die",
+    "streamable": "0"
+   },
+   {
+    "name": "Sex Prisoner",
+    "mbid": "340fed05-4f81-425a-88b8-d06bb44418df",
+    "match": "0.482249",
+    "url": "https://www.last.fm/music/Sex+Prisoner",
+    "streamable": "0"
+   },
+   {
+    "name": "Gaza",
+    "mbid": "c6b3050d-28dc-4d85-a1de-1c59e942c1ba",
+    "match": "0.481710",
+    "url": "https://www.last.fm/music/Gaza",
+    "streamable": "0"
+   },
+   {
+    "name": "Black Breath",
+    "mbid": "e9df4e93-6f7a-448a-a5ac-d30c27a6d22c",
+    "match": "0.478519",
+    "url": "https://www.last.fm/music/Black+Breath",
+    "streamable": "0"
+   },
+   {
+    "name": "Rotten Sound",
+    "mbid": "4d2949b4-eb5f-4296-b71a-04603c6a9802",
+    "match": "0.472283",
+    "url": "https://www.last.fm/music/Rotten+Sound",
+    "streamable": "0"
+   },
+   {
+    "name": "Discordance Axis",
+    "mbid": "d5ae79c1-6206-41a1-b28e-166e7056cdd8",
+    "match": "0.460280",
+    "url": "https://www.last.fm/music/Discordance+Axis",
+    "streamable": "0"
+   },
+   {
+    "name": "Nasum",
+    "mbid": "4b52ef0a-78c3-4b52-b4ee-658ac47ff889",
+    "match": "0.454104",
+    "url": "https://www.last.fm/music/Nasum",
+    "streamable": "0"
+   },
+   {
+    "name": "Napalm Death",
+    "mbid": "ce7bba8b-026b-4aa6-bddb-f98ed6d595e4",
+    "match": "0.448332",
+    "url": "https://www.last.fm/music/Napalm+Death",
+    "streamable": "0"
+   },
+   {
+    "name": "Dropdead",
+    "mbid": "db38d04d-d13f-49b5-995f-566541cc6b9a",
+    "match": "0.446239",
+    "url": "https://www.last.fm/music/Dropdead",
+    "streamable": "0"
+   },
+   {
+    "name": "Jesus Piece",
+    "mbid": "5272ad9e-a205-4d58-a088-2de06d6b0fbc",
+    "match": "0.441399",
+    "url": "https://www.last.fm/music/Jesus+Piece",
+    "streamable": "0"
+   },
+   {
+    "name": "No Cure",
+    "mbid": "4b04d061-191e-4f6a-9692-ce6b523d8750",
+    "match": "0.437689",
+    "url": "https://www.last.fm/music/No+Cure",
+    "streamable": "0"
+   },
+   {
+    "name": "Gatecreeper",
+    "mbid": "69a16532-cdc2-459b-8f7a-7793583d7290",
+    "match": "0.432586",
+    "url": "https://www.last.fm/music/Gatecreeper",
+    "streamable": "0"
+   }
+  ],
+  "@attr": {
+   "artist": "Nails"
+  }
+ }
+}

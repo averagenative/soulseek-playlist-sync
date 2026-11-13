@@ -29,26 +29,21 @@ from collections import defaultdict
 
 import httpx
 
-from . import apple, db, library, spotify
+from . import apple, db, library, lookups, spotify
 from .config import Config
+from .lookups import MAX_ERRORS, GeniusRefused, StepStopped
 from .match import artist_matches, credited_names, norm, norm_title, primary_artist, title_matches
 
 log = logging.getLogger(__name__)
 
 DEFAULTS = {"min": 2, "max": 5, "cutoff": 1.25}
 STATUS_KEY = "hits_status"
-UA = "soulseek-playlist-sync/1.0 ( https://github.com/averagenative/soulseek-playlist-sync )"
 CHARTS_URL = "https://raw.githubusercontent.com/utdata/rwd-billboard-data/main/data-out/hot-100-current.csv"
-LB = "https://api.listenbrainz.org/1"
-MB = "https://musicbrainz.org/ws/2"
-GENIUS = "https://api.genius.com"
 
 CHARTS_EVERY = 7 * 86400          # a new Hot 100 every week
 STATS_EVERY = 90 * 86400          # listener counts, page views
 SINGLES_EVERY = 180 * 86400
 RETRY_IDS = 30 * 86400            # a song no lookup could identify is tried again after this
-MB_PACE = 1.1                     # MusicBrainz allows one request a second
-GENIUS_PACE = 0.25
 GENIUS_PAGES = 4                  # 50 songs a page, most viewed first
 GENIUS_RESERVE = 50               # requests left in Genius's daily allowance that research leaves alone
 LB_BATCH = 500
@@ -72,17 +67,8 @@ BASE_KINDS = {"album", "ep", "soundtrack"}        # kinds that always get min so
 KIND_ORDER = {"album": 0, "ep": 1, "soundtrack": 2, "other": 3, "single": 4, "compilation": 5, "live": 6}
 
 _lock = threading.Lock()
-
-
-class GeniusRefused(Exception):
-    pass
-
-
-class StepStopped(Exception):
-    """One research step can't go on (a service refused, or kept failing). The other steps still run."""
-
-
-MAX_ERRORS = 10         # errors in a row before a step gives up for this run
+_status = lookups.Status(STATUS_KEY)
+_Http = lookups.Http        # one client per run; tests swap in a fake
 
 
 # ------------------------------------------------------------------ options and status
@@ -114,13 +100,11 @@ def album_of(song_key: str) -> str | None:
 
 
 def status() -> dict:
-    return json.loads(db.get_kv(STATUS_KEY) or "{}")
+    return _status.get()
 
 
 def _set_status(**kw) -> None:
-    s = status()
-    s.update(kw)
-    db.set_kv(STATUS_KEY, json.dumps(s))
+    _status.set(**kw)
 
 
 def running() -> bool:
@@ -174,20 +158,8 @@ def research(cfg: Config) -> None:
     _set_status(state="running", started=time.time(), finished=None, error=None, notes=[], step="Starting",
                 done=0, total=0)
     http = _Http(cfg)
-    notes: list[str] = []
-
-    def step(fn, *args):
-        """Run one step. If it stops, say why and go on with the rest."""
-        try:
-            return fn(*args)
-        except StepStopped as e:
-            log.warning("hits: %s", e)
-            notes.append(str(e))
-        except Exception as e:
-            log.exception("hits: %s failed", fn.__name__)
-            notes.append(f"A step stopped: {str(e)[:200]}")
-        _set_status(notes=notes)
-        return None
+    step = lookups.Steps(_status, "hits")
+    notes = step.notes
 
     try:
         step(_charts, http)
@@ -218,88 +190,6 @@ def _rebuild(cfg: Config) -> None:
     from . import sync          # sync imports this module
     for p in playlists():
         sync.run_job(p["id"], "Picking songs", sync.refresh_local, cfg, p["id"], False)
-
-
-class _Http:
-    """One client per research run, keeping each service's pace and rate limits."""
-
-    def __init__(self, cfg: Config):
-        self.c = httpx.Client(timeout=30, headers={"User-Agent": UA}, follow_redirects=True)
-        self.genius_token = cfg.genius_token
-        self.lb_token = cfg.listenbrainz_token
-        self.genius_left: int | None = None
-        self._next_mb = 0.0
-        self._next_genius = 0.0
-
-    def close(self):
-        self.c.close()
-
-    def send(self, method: str, url: str, **kw) -> httpx.Response:
-        r = None
-        for attempt in range(5):
-            try:
-                r = self.c.request(method, url, **kw)
-            except httpx.TransportError:
-                if attempt == 4:
-                    raise
-                time.sleep(5 * (attempt + 1))
-                continue
-            if r.status_code in (429, 502, 503, 504):
-                wait = r.headers.get("Retry-After") or r.headers.get("X-RateLimit-Reset-In")
-                try:
-                    wait = float(wait)
-                except (TypeError, ValueError):
-                    wait = 5.0 * (attempt + 1)
-                time.sleep(min(max(wait, 1.0), 120.0))
-                continue
-            return r
-        return r
-
-    def lb(self, method: str, path: str, **kw):
-        if self.lb_token:
-            kw["headers"] = {**kw.get("headers", {}), "Authorization": f"Token {self.lb_token}"}
-        r = self.send(method, LB + path, **kw)
-        if r.status_code in (401, 403):
-            raise StepStopped(
-                "ListenBrainz refused the token in LISTENBRAINZ_TOKEN." if self.lb_token else
-                "ListenBrainz asks for a user token for this. Set LISTENBRAINZ_TOKEN to add it "
-                "(it's on https://listenbrainz.org/settings/).")
-        try:
-            if int(r.headers.get("X-RateLimit-Remaining", "9")) <= 1:
-                time.sleep(float(r.headers.get("X-RateLimit-Reset-In", "1")) + 0.5)
-        except ValueError:
-            pass
-        if r.status_code in (400, 404):
-            return None
-        r.raise_for_status()
-        return r.json()
-
-    def mb(self, path: str, params: dict):
-        wait = self._next_mb - time.monotonic()
-        if wait > 0:
-            time.sleep(wait)
-        self._next_mb = time.monotonic() + MB_PACE
-        r = self.send("GET", MB + path, params={**params, "fmt": "json"})
-        if r.status_code in (400, 404):
-            return None
-        r.raise_for_status()
-        return r.json()
-
-    def genius(self, path: str, params: dict):
-        wait = self._next_genius - time.monotonic()
-        if wait > 0:
-            time.sleep(wait)
-        self._next_genius = time.monotonic() + GENIUS_PACE
-        r = self.send("GET", GENIUS + path, params=params, headers={"Authorization": f"Bearer {self.genius_token}"})
-        left = r.headers.get("x-ratelimit-remaining")
-        if left and left.isdigit():
-            self.genius_left = int(left)
-        if r.status_code in (401, 403):
-            raise GeniusRefused(f"Genius refused the token ({r.status_code})")
-        if r.status_code == 404:
-            return None
-        r.raise_for_status()
-        return r.json().get("response") or {}
 
 
 def _parts(title: str) -> list[str]:
@@ -489,25 +379,32 @@ def _lb_artist(http: _Http, mbid: str) -> dict[str, int]:
 def _mb_singles(http: _Http, mbid: str) -> dict[str, int | None]:
     """Title -> the year it first came out as a single. Live, remix and DJ-mix singles don't count, and
     of a single with more than two songs only the first does."""
-    out: dict[str, int | None] = {}
+    groups: list[dict] = []
     offset = 0
     while True:
         d = http.mb("/release-group", {"artist": mbid, "type": "single", "limit": 100, "offset": offset})
         if not d:
             break
-        for g in d.get("release-groups") or []:
-            if set(g.get("secondary-types") or []) - {"Soundtrack"}:
-                continue
-            date = (g.get("first-release-date") or "")[:4]
-            year = int(date) if date.isdigit() else None
-            parts = _parts(g.get("title") or "")
-            for part in parts[:1] if len(parts) > 2 else parts:
-                t = norm_title(part)
-                if t and (t not in out or (year and (out[t] is None or year < out[t]))):
-                    out[t] = year
+        groups += d.get("release-groups") or []
         offset += 100
         if offset >= (d.get("release-group-count") or 0) or offset >= 500:
             break
+    return singles_from_groups(groups)
+
+
+def singles_from_groups(groups: list[dict]) -> dict[str, int | None]:
+    """Title -> first single year, from MusicBrainz release groups (other types are passed over)."""
+    out: dict[str, int | None] = {}
+    for g in groups:
+        if g.get("primary-type", "Single") != "Single" or set(g.get("secondary-types") or []) - {"Soundtrack"}:
+            continue
+        date = (g.get("first-release-date") or "")[:4]
+        year = int(date) if date.isdigit() else None
+        parts = _parts(g.get("title") or "")
+        for part in parts[:1] if len(parts) > 2 else parts:
+            t = norm_title(part)
+            if t and (t not in out or (year and (out[t] is None or year < out[t]))):
+                out[t] = year
     return out
 
 
@@ -661,20 +558,31 @@ def _kind(release_type: str | None, album: str | None, album_artist: str | None)
     return "album"
 
 
-def _excluded(title: str, duration: float | None) -> str | None:
+def _excluded(title: str, duration: float | None, single: bool = False) -> str | None:
+    """Why a song isn't a candidate. A short song that came out as a single isn't a skit, so length alone
+    doesn't rule it out."""
     if _JUNK.search(title or ""):
         return "Skit or interlude"
     if _VERSION.search(title or ""):
         return "Live, demo or remix"
-    if duration and duration < SHORT:
+    if duration and duration < SHORT and not single:
         return "Under 90 seconds"
     return None
 
 
-def _lift(values: dict[str, int | None], floor: int) -> dict[str, float]:
-    """Each song's count over the album's median, when enough of the album has counts."""
+def _lift(values: dict[str, int | None], floor: int, base: float | None = None) -> dict[str, float]:
+    """Each song's count over the album's median, when enough of the album has counts.
+
+    base: a level the median can't go below (a suggested artist's typical album song), so a song on an
+    obscure EP or single has to beat the artist's usual, not just the release's other songs."""
     have = [v for v in values.values() if v]
-    if len(have) < 2 or len(have) * 2 < len(values):
+    enough = len(have) >= 2 and len(have) * 2 >= len(values)
+    if base:
+        if not have:
+            return {}
+        med = max(statistics.median(have), base) if enough else base
+        return {k: v / med for k, v in values.items() if v}
+    if not enough:
         return {}
     med = statistics.median(have)
     if med < floor:
@@ -753,79 +661,103 @@ def plan(cfg: Config, rule: dict, skip: set[str] | frozenset = frozenset()) -> l
         songs = list(g["songs"].values())
         for s in songs:
             r = s["row"]
-            tn = r["norm_title"] or norm_title(s["title"])
+            s["norm_title"] = r["norm_title"] or norm_title(s["title"])
             hid = st["ids"].get(s["key"])
             if hid:
                 s["recordings"].add(hid[0])
                 if hid[1]:
                     s["artists"].add(hid[1])
-            lb = max([st["recs"].get(m) or 0 for m in s["recordings"]] +
-                     [st["lists"]["listenbrainz"].get((a, tn)) or 0 for a in s["artists"]] + [0]) or None
-            views = st["lists"]["genius"].get((norm(primary_artist(r["artist"])), tn))
-            year = None
-            single = False
-            for a in s["artists"]:
-                key = (a, tn)
-                if key in st["lists"]["single"]:
-                    year = st["lists"]["single"][key]
-                    single = True
-            if single and year and g["year"] and str(g["year"]).isdigit() and abs(year - int(g["year"])) > SINGLE_YEARS:
-                single = False
-            s.update(lb=lb, views=views, single=single, single_year=year,
-                     chart=_chart(st["charts"], tn, r["artist"]), favorite=s["key"] in st["favorites"],
-                     skipped=s["key"] in skip, elsewhere=None, out=None)
+            signals(s, st, r["artist"], g["year"])
+            s.update(skipped=s["key"] in skip, elsewhere=None, out=None)
             if home[s["key"]][1] != gk:
                 other = groups[home[s["key"]][1]]
                 s["elsewhere"] = other["album"] or "your loose songs"
                 s["out"] = f"On {s['elsewhere']}"
-            elif not (s["favorite"] or s["chart"]):
-                s["out"] = _excluded(s["title"], s["duration"])
-        live = [s for s in songs if not s["out"]]
-        lb_lift = _lift({s["key"]: s["lb"] for s in live}, MIN_LISTENERS)
-        gv_lift = _lift({s["key"]: s["views"] for s in live}, MIN_VIEWS)
-        has_data = bool(lb_lift or gv_lift)
-        for s in live:
-            lifts = [x for x in (lb_lift.get(s["key"]), gv_lift.get(s["key"])) if x is not None]
-            s["lift_lb"], s["lift_views"] = lb_lift.get(s["key"]), gv_lift.get(s["key"])
-            lift = max(lifts) if lifts else None
-            s["lift"] = lift
-            score = lift if lift is not None else (0.9 if has_data else 1.0)
-            if s["chart"]:
-                peak = s["chart"][0]
-                score += 0.5 + (0.25 if peak <= 40 else 0) + (0.25 if peak <= 10 else 0)
-            if s["single"]:
-                score += 0.15
-            s["score"] = score
-            s["standout"] = bool(s["favorite"] or s["chart"] or (lift is not None and lift >= opts["cutoff"])
-                                 or (s["single"] and (lift is None or lift >= 0.9)))
-        # Ties keep album order, which puts the opener first on an album with no numbers at all.
-        ranked = sorted((s for s in live if not s["skipped"]),
-                        key=lambda s: (-s["score"], s["disc"] or 0, s["track"] or 0))
-        picked: list[dict] = [s for s in ranked if s["favorite"]]
-        if kind in BASE_KINDS:
-            for s in ranked:
-                if len(picked) >= opts["min"]:
-                    break
-                if s not in picked:
-                    picked.append(s)
-        for s in ranked:
-            if len(picked) >= opts["max"]:
-                break
-            if s["standout"] and s not in picked:
-                picked.append(s)
-        chosen = {s["key"] for s in picked}
         whole = gk in opts["whole"]
-        if whole:
-            # You asked for all of it: every song, skits and interludes too, so it plays through.
-            chosen = {s["key"] for s in songs if not s["skipped"]}
-        for s in songs:
-            s["picked"] = s["key"] in chosen
-            s["reasons"] = _reasons(s) if s["picked"] or not s["out"] else []
-            if whole and s["picked"]:
-                s["reasons"].insert(0, "Whole album")
+        chosen, has_data = pick_album(songs, kind, opts, whole)
         g.update(kind=kind, has_data=has_data, songs=songs, picked=len(chosen), whole=whole)
         out.append(g)
     return out
+
+
+def signals(s: dict, st: dict, credit: str | None, album_year) -> None:
+    """A song's numbers, from the cache (see _load_stats): listeners, Genius views, whether it came out as a
+    single near its album, its Hot 100 peak, and whether it's a favorite. The song has its key, norm_title,
+    recordings and artists (MusicBrainz IDs); credit is the artist as the song credits it."""
+    tn = s["norm_title"]
+    lb = max([st["recs"].get(m) or 0 for m in s["recordings"]] +
+             [st["lists"]["listenbrainz"].get((a, tn)) or 0 for a in s["artists"]] + [0]) or None
+    views = st["lists"]["genius"].get((norm(primary_artist(credit)), tn))
+    year = None
+    single = False
+    for a in s["artists"]:
+        key = (a, tn)
+        if key in st["lists"]["single"]:
+            year = st["lists"]["single"][key]
+            single = True
+    if single and year and album_year and str(album_year).isdigit() and abs(year - int(album_year)) > SINGLE_YEARS:
+        single = False
+    s.update(lb=lb, views=views, single=single, single_year=year, chart=_chart(st["charts"], tn, credit),
+             favorite=s["key"] in st["favorites"])
+
+
+def pick_album(songs: list[dict], kind: str, opts: dict, whole: bool = False,
+               base: dict | None = None) -> tuple[set[str], bool]:
+    """Pick one album's songs, the same way for a hits playlist and for a suggested artist's albums.
+
+    Each song has its numbers (see signals()), title, duration, disc, track, skipped, and out: why it can't be
+    picked on this album (it counts on another), or None. Favorites and charted songs go in first. An album,
+    EP or soundtrack is filled to opts["min"] with its best songs, then songs that stand out are added up to
+    opts["max"]. Sets each song's lift, score, standout, picked and reasons, and returns the picked keys and
+    whether the album had numbers to compare. base: lowest medians for listeners and views ({"lb", "views"}),
+    for a suggested artist's releases (see _lift)."""
+    base = base or {}
+    for s in songs:
+        if s["out"] is None and not (s["favorite"] or s["chart"]):
+            s["out"] = _excluded(s["title"], s["duration"], s["single"])
+    live = [s for s in songs if not s["out"]]
+    lb_lift = _lift({s["key"]: s["lb"] for s in live}, MIN_LISTENERS, base.get("lb"))
+    gv_lift = _lift({s["key"]: s["views"] for s in live}, MIN_VIEWS, base.get("views"))
+    has_data = bool(lb_lift or gv_lift)
+    for s in live:
+        lifts = [x for x in (lb_lift.get(s["key"]), gv_lift.get(s["key"])) if x is not None]
+        s["lift_lb"], s["lift_views"] = lb_lift.get(s["key"]), gv_lift.get(s["key"])
+        lift = max(lifts) if lifts else None
+        s["lift"] = lift
+        score = lift if lift is not None else (0.9 if has_data else 1.0)
+        if s["chart"]:
+            peak = s["chart"][0]
+            score += 0.5 + (0.25 if peak <= 40 else 0) + (0.25 if peak <= 10 else 0)
+        if s["single"]:
+            score += 0.15
+        s["score"] = score
+        s["standout"] = bool(s["favorite"] or s["chart"] or (lift is not None and lift >= opts["cutoff"])
+                             or (s["single"] and (lift is None or lift >= 0.9)))
+    # Ties keep album order, which puts the opener first on an album with no numbers at all.
+    ranked = sorted((s for s in live if not s["skipped"]),
+                    key=lambda s: (-s["score"], s["disc"] or 0, s["track"] or 0))
+    picked: list[dict] = [s for s in ranked if s["favorite"]]
+    if kind in BASE_KINDS:
+        for s in ranked:
+            if len(picked) >= opts["min"]:
+                break
+            if s not in picked:
+                picked.append(s)
+    for s in ranked:
+        if len(picked) >= opts["max"]:
+            break
+        if s["standout"] and s not in picked:
+            picked.append(s)
+    chosen = {s["key"] for s in picked}
+    if whole:
+        # You asked for all of it: every song, skits and interludes too, so it plays through.
+        chosen = {s["key"] for s in songs if not s["skipped"]}
+    for s in songs:
+        s["picked"] = s["key"] in chosen
+        s["reasons"] = _reasons(s) if s["picked"] or not s["out"] else []
+        if whole and s["picked"]:
+            s["reasons"].insert(0, "Whole album")
+    return chosen, has_data
 
 
 def _reasons(s: dict) -> list[str]:

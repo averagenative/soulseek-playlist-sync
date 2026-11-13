@@ -1,0 +1,1438 @@
+{
+ "entities": {
+  "Q11649": {
+   "type": "item",
+   "id": "Q11649",
+   "labels": {
+    "en": {
+     "language": "en",
+     "value": "Nirvana"
+    }
+   },
+   "claims": {
+    "P434": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P434",
+       "hash": "1a01af6eabca4d4b0bb6c800637a24b934b73f6f",
+       "datavalue": {
+        "value": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+        "type": "string"
+       },
+       "datatype": "external-id"
+      },
+      "type": "statement",
+      "id": "q11649$0E3EA6B8-709B-402C-899C-3148A1CF3479",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "706208b3024200fd0a39ad499808dd0d98d74065",
+        "snaks": {
+         "P248": [
+          {
+           "snaktype": "value",
+           "property": "P248",
+           "hash": "623cc8f0e2f65afe4d66b91962d354a2f3aa9a27",
+           "datavalue": {
+            "value": {
+             "entity-type": "item",
+             "numeric-id": 14005,
+             "id": "Q14005"
+            },
+            "type": "wikibase-entityid"
+           },
+           "datatype": "wikibase-item"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P248"
+        ]
+       }
+      ]
+     }
+    ],
+    "P18": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P18",
+       "hash": "1b6dab369e306c4d8051fc60b19e3826331bf059",
+       "datavalue": {
+        "value": "Nirvana around 1992.jpg",
+        "type": "string"
+       },
+       "datatype": "commonsMedia"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P2096": [
+        {
+         "snaktype": "value",
+         "property": "P2096",
+         "hash": "4cdf1c14180325eeab2489a28b8523638c8ebea1",
+         "datavalue": {
+          "value": {
+           "text": "Kurt Cobain, Déu del grunge.",
+           "language": "ca"
+          },
+          "type": "monolingualtext"
+         },
+         "datatype": "monolingualtext"
+        },
+        {
+         "snaktype": "value",
+         "property": "P2096",
+         "hash": "199d3200554ea61d4c500ab1500e4b8164c64ec9",
+         "datavalue": {
+          "value": {
+           "text": "Крыст Наваселіч (злева) і Курт Кабейн (справа) на MTV Video Music Awards у 1992 годзе.",
+           "language": "be"
+          },
+          "type": "monolingualtext"
+         },
+         "datatype": "monolingualtext"
+        }
+       ],
+       "P585": [
+        {
+         "snaktype": "value",
+         "property": "P585",
+         "hash": "4552704ecdc9a6e9719c3d80f8b8c3dbfa5c063e",
+         "datavalue": {
+          "value": {
+           "time": "+1992-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P2096",
+       "P585"
+      ],
+      "id": "q11649$1C5753D3-98BC-485A-9A14-103057343397",
+      "rank": "normal"
+     }
+    ],
+    "P740": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P740",
+       "hash": "9dc5e766f6a86efdf8e95302a786379b8b1dfe31",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 233808,
+         "id": "Q233808"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$a4f9d270-41ce-3907-5f31-b42f250efadd",
+      "rank": "normal"
+     }
+    ],
+    "P136": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P136",
+       "hash": "0912929cc39449c6cf153f29b01566291f171b7b",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 11366,
+         "id": "Q11366"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$FDFCA448-E553-4158-A0BA-C1466482D0A9",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "a704ebe414f4b85d9cbf3d44ed0b2efed277e287",
+        "snaks": {
+         "P248": [
+          {
+           "snaktype": "value",
+           "property": "P248",
+           "hash": "d1d1b10a05a8f3fc5d26bb4aeb6849617ad81fc7",
+           "datavalue": {
+            "value": {
+             "entity-type": "item",
+             "numeric-id": 5375741,
+             "id": "Q5375741"
+            },
+            "type": "wikibase-entityid"
+           },
+           "datatype": "wikibase-item"
+          }
+         ],
+         "P1417": [
+          {
+           "snaktype": "value",
+           "property": "P1417",
+           "hash": "a97abed5191d4598b154754a3fae8551a7089b8b",
+           "datavalue": {
+            "value": "topic/Nirvana-band",
+            "type": "string"
+           },
+           "datatype": "external-id"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P248",
+         "P1417"
+        ]
+       }
+      ]
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P136",
+       "hash": "37eb89e48de9f5380a56757c540027cacc5b0227",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 11365,
+         "id": "Q11365"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$7707A145-498F-4132-9FF8-06573D836D40",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "f83bc90d45006ac6ac6cc404ad221aa82efa4fe7",
+        "snaks": {
+         "P854": [
+          {
+           "snaktype": "value",
+           "property": "P854",
+           "hash": "e33e23bd7ef50a283450c248505eb1f20ca0d264",
+           "datavalue": {
+            "value": "http://www.popmatters.com/pm/feature/115413-nirvana-bleach/",
+            "type": "string"
+           },
+           "datatype": "url"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P854"
+        ]
+       }
+      ]
+     }
+    ],
+    "P1728": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P1728",
+       "hash": "b758ff8540632f21d8111661a08beb7425e14c1c",
+       "datavalue": {
+        "value": "mn0000357406",
+        "type": "string"
+       },
+       "datatype": "external-id"
+      },
+      "type": "statement",
+      "id": "Q11649$DBE29FA9-B63F-4C55-BB78-42F794520EBD",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "d770a038a4ab6024956c3929bb0a220e1a7c08f0",
+        "snaks": {
+         "P248": [
+          {
+           "snaktype": "value",
+           "property": "P248",
+           "hash": "623cc8f0e2f65afe4d66b91962d354a2f3aa9a27",
+           "datavalue": {
+            "value": {
+             "entity-type": "item",
+             "numeric-id": 14005,
+             "id": "Q14005"
+            },
+            "type": "wikibase-entityid"
+           },
+           "datatype": "wikibase-item"
+          }
+         ],
+         "P813": [
+          {
+           "snaktype": "value",
+           "property": "P813",
+           "hash": "03661795920fb5d3f9cd1f27db5305ccf2426a68",
+           "datavalue": {
+            "value": {
+             "time": "+2015-07-25T00:00:00Z",
+             "timezone": 0,
+             "before": 0,
+             "after": 0,
+             "precision": 11,
+             "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+            },
+            "type": "time"
+           },
+           "datatype": "time"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P248",
+         "P813"
+        ]
+       }
+      ]
+     }
+    ],
+    "P571": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P571",
+       "hash": "e3cd4ea8d876a780579ec411f75ebbd76cc818c6",
+       "datavalue": {
+        "value": {
+         "time": "+1987-00-00T00:00:00Z",
+         "timezone": 0,
+         "before": 0,
+         "after": 0,
+         "precision": 9,
+         "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+        },
+        "type": "time"
+       },
+       "datatype": "time"
+      },
+      "type": "statement",
+      "id": "Q11649$C1EB8E06-32A3-4797-903A-EDBC7FFFAACC",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "fa278ebfc458360e5aed63d5058cca83c46134f1",
+        "snaks": {
+         "P143": [
+          {
+           "snaktype": "value",
+           "property": "P143",
+           "hash": "e4f6d9441d0600513c4533c672b5ab472dc73694",
+           "datavalue": {
+            "value": {
+             "entity-type": "item",
+             "numeric-id": 328,
+             "id": "Q328"
+            },
+            "type": "wikibase-entityid"
+           },
+           "datatype": "wikibase-item"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P143"
+        ]
+       }
+      ]
+     }
+    ],
+    "P737": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P737",
+       "hash": "341b0c4494b2eadf4fb7e0d6db92fae544579c6d",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 188464,
+         "id": "Q188464"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$694C1BE0-985A-4152-9231-6CC75692E673",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P737",
+       "hash": "3e12e3dba7f1f4fa8822559b72511d129ae77b3b",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 188626,
+         "id": "Q188626"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$18143cf9-492c-5180-2be3-d283b6245abf",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P737",
+       "hash": "b19d73df892355559ba844d17dfc829c4e148c65",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 208767,
+         "id": "Q208767"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$2234c3fe-487f-fa28-eae1-7111974c2e64",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P737",
+       "hash": "32354504515a977e190693f140eca6a53bfb8449",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 2331,
+         "id": "Q2331"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$9d34e25e-4996-17bd-6b34-15297cf2f5a3",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P737",
+       "hash": "0193a8fb6066602bf0c881cd8c35e8e89a05952d",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 47670,
+         "id": "Q47670"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$dfdb0862-4c18-59c2-f19b-3e84333c87f1",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P737",
+       "hash": "feef2aaaf734c9a043650908189034c31f838b14",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1889932,
+         "id": "Q1889932"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$626f9523-4360-ed73-dc0f-5747f5218c4b",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P737",
+       "hash": "f928e8893065fe45513dc7964c0109f0d5e72a35",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1542725,
+         "id": "Q1542725"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$e63e68c8-424c-2619-52c0-30b1cb2b6de8",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P737",
+       "hash": "8e29ceea9ad75791416fde180ec04faafcfc287a",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 385618,
+         "id": "Q385618"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q11649$5d4dd42e-485b-c51a-8ddb-73603b6de73a",
+      "rank": "normal"
+     }
+    ],
+    "P527": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P527",
+       "hash": "b2a23890357dc045368588112aba31a1dd5d0738",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 8446,
+         "id": "Q8446"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P3831": [
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "72a01f26f26af82a727941c3f2acd577739cd717",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 1045845,
+           "id": "Q1045845"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        },
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "80c4921fdb4167ba452dec6ecccf442359806b42",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 855091,
+           "id": "Q855091"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P3831"
+      ],
+      "id": "Q11649$217385f2-4327-74cc-9189-23e39914ab86",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P527",
+       "hash": "7233cb82496d936e80cc223c624d4a8beacbd8cf",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 428798,
+         "id": "Q428798"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P3831": [
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "a55673316fec6f43c0661ed751e7095c26283eb4",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 584301,
+           "id": "Q584301"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        },
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "3ffb2ac596b5e93bf95a4144248f034655a8aeab",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 177220,
+           "id": "Q177220"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        },
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "a9b11965899a5534dd8827630f8a728c9a124c69",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 1863064,
+           "id": "Q1863064"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P3831"
+      ],
+      "id": "Q11649$63a2f622-4d72-c412-0084-75ed181c1f85",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P527",
+       "hash": "991838373a3b3f54fef14b0a58c52a95498cb0d4",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 12006,
+         "id": "Q12006"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P3831": [
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "93d95d603ddf94b51f98a92bd4c101c2a634b1d5",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 386854,
+           "id": "Q386854"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        },
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "dd94fecc0bef9953b25debc164169f8d229f4429",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 798487,
+           "id": "Q798487"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P3831"
+      ],
+      "id": "Q11649$04fc4184-4e90-478c-2cbb-9c6dd73daf32",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P527",
+       "hash": "7e22376b7296e420a0cd301b78dab50609fb3843",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 451088,
+         "id": "Q451088"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P580": [
+        {
+         "snaktype": "value",
+         "property": "P580",
+         "hash": "cb8638f8586a74f9f8254deab9fdde682330a924",
+         "datavalue": {
+          "value": {
+           "time": "+1987-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ],
+       "P582": [
+        {
+         "snaktype": "value",
+         "property": "P582",
+         "hash": "a0670faa646351dd55a0779488043c73b75963f4",
+         "datavalue": {
+          "value": {
+           "time": "+1990-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ],
+       "P3831": [
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "93d95d603ddf94b51f98a92bd4c101c2a634b1d5",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 386854,
+           "id": "Q386854"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        },
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "dd94fecc0bef9953b25debc164169f8d229f4429",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 798487,
+           "id": "Q798487"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P580",
+       "P582",
+       "P3831"
+      ],
+      "id": "Q11649$3b0e228e-478a-e14a-991c-8aea4b0a3b8c",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P527",
+       "hash": "dc6a6da2f88bb2ad3d85eba41fe298bcdad44be0",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1990978,
+         "id": "Q1990978"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P585": [
+        {
+         "snaktype": "value",
+         "property": "P585",
+         "hash": "06b481dc59b4e55d0f90a9b81d4f1c42e338c90d",
+         "datavalue": {
+          "value": {
+           "time": "+1987-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ],
+       "P3831": [
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "93d95d603ddf94b51f98a92bd4c101c2a634b1d5",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 386854,
+           "id": "Q386854"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P585",
+       "P3831"
+      ],
+      "id": "Q11649$a68a65d4-435f-062d-1b41-3615219325c5",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P527",
+       "hash": "89736db979eb0dc2551b18884b77bd9111e0ebcf",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 356938,
+         "id": "Q356938"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P580": [
+        {
+         "snaktype": "value",
+         "property": "P580",
+         "hash": "3975d8bff9a27f2ccb7aeaea1348b4bc6c3de8b2",
+         "datavalue": {
+          "value": {
+           "time": "+1988-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ],
+       "P582": [
+        {
+         "snaktype": "value",
+         "property": "P582",
+         "hash": "a0670faa646351dd55a0779488043c73b75963f4",
+         "datavalue": {
+          "value": {
+           "time": "+1990-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ],
+       "P3831": [
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "93d95d603ddf94b51f98a92bd4c101c2a634b1d5",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 386854,
+           "id": "Q386854"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P580",
+       "P582",
+       "P3831"
+      ],
+      "id": "Q11649$c0200450-45db-6b21-2e70-f80822a62556",
+      "rank": "normal"
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P527",
+       "hash": "a969a73cd3ba22dd13c6f37a5a3574c579cbd410",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 443395,
+         "id": "Q443395"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P585": [
+        {
+         "snaktype": "value",
+         "property": "P585",
+         "hash": "bf75cabfd52bf42741e5e375fe2cd2ba6a18693a",
+         "datavalue": {
+          "value": {
+           "time": "+1989-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ],
+       "P3831": [
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "b0a53817cf2c444c46c73f017e44ca59a1059af9",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 61045547,
+           "id": "Q61045547"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        },
+        {
+         "snaktype": "value",
+         "property": "P3831",
+         "hash": "dd94fecc0bef9953b25debc164169f8d229f4429",
+         "datavalue": {
+          "value": {
+           "entity-type": "item",
+           "numeric-id": 798487,
+           "id": "Q798487"
+          },
+          "type": "wikibase-entityid"
+         },
+         "datatype": "wikibase-item"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P585",
+       "P3831"
+      ],
+      "id": "Q11649$46f78c87-4368-aa89-7fa3-ead481187294",
+      "rank": "normal"
+     }
+    ]
+   },
+   "sitelinks": {
+    "enwiki": {
+     "site": "enwiki",
+     "title": "Nirvana (band)",
+     "badges": [
+      "Q17437796"
+     ]
+    }
+   }
+  },
+  "Q17325289": {
+   "type": "item",
+   "id": "Q17325289",
+   "labels": {
+    "en": {
+     "language": "en",
+     "value": "Nails"
+    }
+   },
+   "claims": {
+    "P136": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P136",
+       "hash": "1dc54252c03dbf231424919e43cf5ddde7fc2b14",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 10922,
+         "id": "Q10922"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q17325289$86E9EC56-5B4D-48F0-A261-A9F6D32B4541",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "9424852ca7d9d48269148c57acbefacca1899882",
+        "snaks": {
+         "P143": [
+          {
+           "snaktype": "value",
+           "property": "P143",
+           "hash": "b7f8bea3bb10c237323eb448dc4798948923bd5c",
+           "datavalue": {
+            "value": {
+             "entity-type": "item",
+             "numeric-id": 11921,
+             "id": "Q11921"
+            },
+            "type": "wikibase-entityid"
+           },
+           "datatype": "wikibase-item"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P143"
+        ]
+       }
+      ]
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P136",
+       "hash": "9f14c157c0dfd1e6cfb2551561b99714d173e41e",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 1784106,
+         "id": "Q1784106"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q17325289$bf3da4ce-4fb5-3fb6-3928-634973de5143",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "d3dbc12bdaa54e85a432c5c9c2dafbe840480da1",
+        "snaks": {
+         "P854": [
+          {
+           "snaktype": "value",
+           "property": "P854",
+           "hash": "c31945ab5c9b748ad231a49dd17a1c41399879af",
+           "datavalue": {
+            "value": "http://pitchfork.com/reviews/albums/17784-nails-abandon-all-life/",
+            "type": "string"
+           },
+           "datatype": "url"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P854"
+        ]
+       }
+      ]
+     },
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P136",
+       "hash": "f6be88efb144ed37fe31196fc0d885667349f3cf",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 188534,
+         "id": "Q188534"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q17325289$793c82bd-4d04-f677-5e0c-401cd8208d77",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "d3dbc12bdaa54e85a432c5c9c2dafbe840480da1",
+        "snaks": {
+         "P854": [
+          {
+           "snaktype": "value",
+           "property": "P854",
+           "hash": "c31945ab5c9b748ad231a49dd17a1c41399879af",
+           "datavalue": {
+            "value": "http://pitchfork.com/reviews/albums/17784-nails-abandon-all-life/",
+            "type": "string"
+           },
+           "datatype": "url"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P854"
+        ]
+       }
+      ]
+     }
+    ],
+    "P571": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P571",
+       "hash": "66b65f38b1c6b2f1253e7fce3b36165d31351533",
+       "datavalue": {
+        "value": {
+         "time": "+2007-00-00T00:00:00Z",
+         "timezone": 0,
+         "before": 0,
+         "after": 0,
+         "precision": 9,
+         "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+        },
+        "type": "time"
+       },
+       "datatype": "time"
+      },
+      "type": "statement",
+      "id": "Q17325289$B2DE8DA5-6706-4DA6-95B4-7E79E83B351A",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "fa278ebfc458360e5aed63d5058cca83c46134f1",
+        "snaks": {
+         "P143": [
+          {
+           "snaktype": "value",
+           "property": "P143",
+           "hash": "e4f6d9441d0600513c4533c672b5ab472dc73694",
+           "datavalue": {
+            "value": {
+             "entity-type": "item",
+             "numeric-id": 328,
+             "id": "Q328"
+            },
+            "type": "wikibase-entityid"
+           },
+           "datatype": "wikibase-item"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P143"
+        ]
+       }
+      ]
+     }
+    ],
+    "P740": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P740",
+       "hash": "7c56526fd8ade4cb55c287ed61568cb375bd5d3b",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 209338,
+         "id": "Q209338"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "id": "Q17325289$A5A3FF72-6A6C-403A-8E57-9EDC824CEC0B",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "fa278ebfc458360e5aed63d5058cca83c46134f1",
+        "snaks": {
+         "P143": [
+          {
+           "snaktype": "value",
+           "property": "P143",
+           "hash": "e4f6d9441d0600513c4533c672b5ab472dc73694",
+           "datavalue": {
+            "value": {
+             "entity-type": "item",
+             "numeric-id": 328,
+             "id": "Q328"
+            },
+            "type": "wikibase-entityid"
+           },
+           "datatype": "wikibase-item"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P143"
+        ]
+       }
+      ]
+     }
+    ],
+    "P434": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P434",
+       "hash": "e7fdae11695e2694fa6f28060416bf0c66ead45e",
+       "datavalue": {
+        "value": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1",
+        "type": "string"
+       },
+       "datatype": "external-id"
+      },
+      "type": "statement",
+      "id": "Q17325289$39f25ddc-4671-f89c-503d-413c1c287285",
+      "rank": "normal"
+     }
+    ],
+    "P18": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P18",
+       "hash": "bdd9b03181d0500922d9885a20e07aaa420c1b7d",
+       "datavalue": {
+        "value": "Nails Band.JPG",
+        "type": "string"
+       },
+       "datatype": "commonsMedia"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P585": [
+        {
+         "snaktype": "value",
+         "property": "P585",
+         "hash": "deb85426a0a8af72a152475d1e466a4b6d1a6460",
+         "datavalue": {
+          "value": {
+           "time": "+2014-06-30T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 11,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P585"
+      ],
+      "id": "Q17325289$278BBA30-97C3-48D2-958C-E115A5F92CFB",
+      "rank": "normal",
+      "references": [
+       {
+        "hash": "5446925b552a4efc1addc9fbc25dd5fb265e8bff",
+        "snaks": {
+         "P143": [
+          {
+           "snaktype": "value",
+           "property": "P143",
+           "hash": "e4f6d9441d0600513c4533c672b5ab472dc73694",
+           "datavalue": {
+            "value": {
+             "entity-type": "item",
+             "numeric-id": 328,
+             "id": "Q328"
+            },
+            "type": "wikibase-entityid"
+           },
+           "datatype": "wikibase-item"
+          }
+         ],
+         "P4656": [
+          {
+           "snaktype": "value",
+           "property": "P4656",
+           "hash": "20df35f5d792f9a91a3fe9ca3d2fcb3f3c39a44c",
+           "datavalue": {
+            "value": "https://en.wikipedia.org/w/index.php?title=Nails_(band)&oldid=857544883",
+            "type": "string"
+           },
+           "datatype": "url"
+          }
+         ]
+        },
+        "snaks-order": [
+         "P143",
+         "P4656"
+        ]
+       }
+      ]
+     }
+    ],
+    "P1728": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P1728",
+       "hash": "eeeddbd1b3e956d1f0b0331fa67fe342ab20e2b4",
+       "datavalue": {
+        "value": "mn0002532333",
+        "type": "string"
+       },
+       "datatype": "external-id"
+      },
+      "type": "statement",
+      "id": "Q17325289$667b4261-4018-e932-27ae-45c6c90805d3",
+      "rank": "normal"
+     }
+    ],
+    "P527": [
+     {
+      "mainsnak": {
+       "snaktype": "value",
+       "property": "P527",
+       "hash": "67e4c421871eec6cbfd680938ed929fadf8768fc",
+       "datavalue": {
+        "value": {
+         "entity-type": "item",
+         "numeric-id": 23409706,
+         "id": "Q23409706"
+        },
+        "type": "wikibase-entityid"
+       },
+       "datatype": "wikibase-item"
+      },
+      "type": "statement",
+      "qualifiers": {
+       "P580": [
+        {
+         "snaktype": "value",
+         "property": "P580",
+         "hash": "154b581c43d72b52e77b5c1e92455e4eafe99a97",
+         "datavalue": {
+          "value": {
+           "time": "+2017-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ],
+       "P582": [
+        {
+         "snaktype": "value",
+         "property": "P582",
+         "hash": "c9582fcdd0adc330e4c921177cb7e523de50720e",
+         "datavalue": {
+          "value": {
+           "time": "+2019-00-00T00:00:00Z",
+           "timezone": 0,
+           "before": 0,
+           "after": 0,
+           "precision": 9,
+           "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+          },
+          "type": "time"
+         },
+         "datatype": "time"
+        }
+       ]
+      },
+      "qualifiers-order": [
+       "P580",
+       "P582"
+      ],
+      "id": "Q17325289$f3f2637d-411b-e7e4-b702-03419c7645a1",
+      "rank": "normal"
+     }
+    ]
+   },
+   "sitelinks": {
+    "enwiki": {
+     "site": "enwiki",
+     "title": "Nails (band)",
+     "badges": []
+    }
+   }
+  }
+ },
+ "success": 1
+}

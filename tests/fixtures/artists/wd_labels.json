@@ -1,0 +1,360 @@
+{
+ "head": {
+  "vars": [
+   "item",
+   "itemLabel",
+   "mbid"
+  ]
+ },
+ "results": {
+  "bindings": [
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q2331"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "678d88b2-87b0-403b-b63d-5da7465aecc3"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Led Zeppelin"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q8446"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "3c9b356d-d1db-4f4e-a7a3-2d00c1d70255"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Kurt Cobain"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q10922"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "hardcore punk"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11365"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "grunge"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11366"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "alternative rock"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q12006"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "4d5f891d-9bce-45ae-ad86-912dd27252fa"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Dave Grohl"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q12006"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "2486bb60-2ccd-4792-bdd4-4c760d610616"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Dave Grohl"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q47670"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "5182c1d9-c7d2-4dad-afa0-ccfeada921a8"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Black Sabbath"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q188464"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "b6b2bb8d-54a9-491f-9607-7b546023b433"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Pixies"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q188534"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "grindcore"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q188626"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "5cbef01b-cc35-4f52-af7b-d0df0c4f61b9"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Sonic Youth"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q208767"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "794c6bf2-3241-416f-9b8f-24e2d84a1c4b"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "The Stooges"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q208767"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "1253e5e9-eaa7-4ce6-81b8-09725e8cee43"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "The Stooges"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q209338"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Oxnard"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q233808"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Aberdeen"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q356938"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "e2f28104-72bb-4c8f-b0f9-78d4eaf492fd"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Chad Channing"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q385618"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "9ccfbc94-a4f4-42f7-b6f5-d903ab77cccb"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Melvins"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q428798"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "ac05e29f-0561-4445-bb26-5562d2389531"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Krist Novoselic"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q443395"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "797dc323-fc39-4597-98cc-d10493f67326"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Jason Everman"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q451088"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "9b93a71b-1484-4bea-b096-f660c1161f8a"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Dale Crover"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1542725"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "a70b63fd-cae7-4a5f-b338-b18343f3ee2f"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "The Vaselines"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1784106"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "powerviolence"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1889932"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "65aac2dc-216c-4b1a-8501-45567c901c0e"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Wipers"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1990978"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "86d3f2c7-2a19-4249-ad7c-6feec74118d7"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Aaron Burckhard"
+    }
+   },
+   {
+    "item": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q23409706"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "23300659-c8a4-48b7-b3e5-680443a9fb47"
+    },
+    "itemLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Leon del Muerte"
+    }
+   }
+  ]
+ }
+}

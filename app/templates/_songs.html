@@ -1,4 +1,4 @@
-{% from "_macros.html" import segbar, thumb %}
+{% from "_macros.html" import artist_link, segbar, thumb %}
 {% macro why(detail) %}{% set short = detail|why %}
 <details class="why small"><summary title="{{ detail }}">{{ short or detail }}</summary>
   <div class="muted">{{ detail }}</div></details>{% endmacro %}
@@ -61,7 +61,7 @@
           {% else %}{{ thumb(s) }}{% endif %}
           <div>
             <div class="title" title="{{ s.title }}">{{ s.title }}{% if s.content_rating == 'explicit' %} <span class="tag" title="Explicit">E</span>{% endif %}{% if r.download and r.download.source == 'youtube' and r.status == 'synced' %} <span class="tag yt" title="Downloaded from YouTube">YouTube</span>{% endif %}</div>
-            <div class="muted small" title="{{ s.artist or '' }}">{{ s.artist or "Unknown artist" }}</div>
+            <div class="muted small" title="{{ s.artist or '' }}">{{ artist_link(s.artist) }}</div>
             <div class="show-sm"><span class="badge {{ r.status }}">{{ STATUS_LABELS[r.status] }}</span>
               {% if r.status == 'downloading' and r.download %}<span class="muted small speed">{{ (r.download.percent or 0)|round|int }}%</span>{% endif %}
               {% if r.status in ('failed', 'not_found') and r.detail %}{{ why(r.detail) }}{% endif %}</div>

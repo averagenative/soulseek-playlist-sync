@@ -18,6 +18,7 @@
       <span class="pill"><span class="dot"></span>Soulseek</span>
     {% endif %}
     <a class="pill" href="/library" title="Browse your music and make playlists from it">My music</a>
+    <a class="pill" href="/artists" title="Your artists: who they are, who shaped them, and who to listen to next">Artists</a>
     <a class="pill {{ 'active' if downloads_active else '' }}" href="/downloads"><span class="dot"></span>Downloads{% if downloads_active %} &middot; {{ downloads_active }}{% endif %}</a>
     {% if is_admin %}<a class="pill" href="/settings" title="Settings">Settings</a>{% endif %}
     {% if me %}<a class="pill profile-pill" href="/profiles" title="Your profile, connections{{ ', and everyone else' if is_admin else '' }}"><span class="avatar tiny" aria-hidden="true">{{ me.name[:1]|upper }}</span>{{ me.name }}</a>{% endif %}

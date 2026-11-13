@@ -1,0 +1,107 @@
+{
+ "name": "Nirvana",
+ "id": 125246,
+ "resource_url": "https://api.discogs.com/artists/125246",
+ "uri": "https://www.discogs.com/artist/125246-Nirvana",
+ "releases_url": "https://api.discogs.com/artists/125246/releases",
+ "profile": "Rock/grunge band from Aberdeen, Washington, USA, formed in 1987. Emerging from the Seattle grunge scene of the late 1980s/early 1990s, Nirvana was a power trio of musicians who brought a new aesthetic to the rock scene of the time. They had already released their debut LP \"[m=13773]\" with Sub Pop, but their 1991 major-label debut for [l=DGC]/[l=Geffen Records], \"[m=13814]\" broke the band and grunge into the mainstream of America. Singer/guitarist [a=Kurt Cobain]'s death by suicide in April 1994 brought the band to an end.\n\nThe band's names in a chronological order:\n[b][a=Skid Row (6)][/b] (start (March 1987) - June 26, 1987)\n[b][a=Pen Cap Chew (2)][/b] (June 27, 1987 - August 8, 1987)\n[b][a=Bliss (108)][/b] (August 9, 1987 - January 1988)\n[b][a=Ted Ed Fred][/b] (January 1988 - March 18, 1988)\n[b][a=Nirvana][/b] (March 19, 1988 - end (April 5, 1994))\n\nIt was rumoured that there were two other short-used band names before Nirvana: [b]Throat Oyster[/b] and [b]Windowpane[/b] ([i]no official proofs for it though[/i])\n\nFinal line-up:\n[a=Kurt Cobain] – lead guitar, lead vocals (March 1987 (start)–April 5, 1994 (end); died April 5, 1994)\n[a=Krist Novoselic] – bass (March 1987 (start)–April 5, 1994 (end)), accordion (1993–1994)\n[a=Dave Grohl] – drums, backing vocals (September 25, 1990–April 5, 1994 (end))\n[a=Pat Smear] – rhythm guitar, backing vocals (September 23, 1993–April 5, 1994 (end))\n\nFormer members:\nBob McFadden - drums, briefly rehearsed with Cobain and Novoselic (August 1986–September 1986)\n[a=Aaron Burckhard] – drums (March 1987 (start)–October 1987)\n[a=Dale Crover] – drums (December 1987–February 15, 1988, August 10, 1990–August 25, 1990), backing vocals (1988)\n[a=Dave Foster (14)] – drums (February 16, 1988–May 24, 1988)\n[a=Chad Channing] – drums (May 25, 1988–June 1990)\n[a=Jason Everman] – rhythm guitar, backing vocals (February 5, 1989–July 19, 1989)\n[a=Dan Peters] – drums (June 1990–August 1990, September 1990–September 24, 1990)\n\nTouring musicians:\n[a=Robert Roth] – guitar (August 1989) (*rehearsals only)\n[a=Ben Shepherd] – guitar (September 26, 1989-September 28, 1989) (*soundcheck only)\n[url=https://www.discogs.com/artist/517885-Big-John-Duncan]John Duncan[/url] – guitar (July 15, 1993–July 31, 1993)\n[a=Lori Goldston] – cello (July 15, 1993–January 8, 1994)\n[a=Melora Creager] – cello (February 5, 1994–April 5, 1994 (end))\n\nSession musicians:\n[a=Mark Pickerel] – drums (1989)\n[a=Kirk Canning] – cello (1991)\n[a=Kera Schaley] – cello (1993)\n\nLive guest musicians:\n[a=Tony Poukkula] – guitar (1987)\nRyan Aigner – guitar (1987) (also was the band's first manager)\n[a=Antony Hodgkinson] (aka Dancing Tony) – dancing (1990, 1991, 1992)",
+ "urls": [
+  "https://www.nirvana.com",
+  "https://www.facebook.com/Nirvana",
+  "https://x.com/Nirvana",
+  "https://en.wikipedia.org/wiki/Nirvana_(band)",
+  "https://www.youtube.com/user/nirvana",
+  "http://www.nirvana-discography.com",
+  "https://www.livenirvana.com"
+ ],
+ "namevariations": [
+  "Nervana",
+  "Nirvahna",
+  "Nirvanna"
+ ],
+ "aliases": [
+  {
+   "id": 11962655,
+   "name": "Skid Row (6)",
+   "resource_url": "https://api.discogs.com/artists/11962655"
+  },
+  {
+   "id": 11962658,
+   "name": "Bliss (108)",
+   "resource_url": "https://api.discogs.com/artists/11962658"
+  },
+  {
+   "id": 11962661,
+   "name": "Ted Ed Fred",
+   "resource_url": "https://api.discogs.com/artists/11962661"
+  },
+  {
+   "id": 13052085,
+   "name": "Pen Cap Chew (2)",
+   "resource_url": "https://api.discogs.com/artists/13052085"
+  }
+ ],
+ "members": [
+  {
+   "id": 203017,
+   "name": "Dave Grohl",
+   "resource_url": "https://api.discogs.com/artists/203017",
+   "active": true
+  },
+  {
+   "id": 251654,
+   "name": "Chad Channing",
+   "resource_url": "https://api.discogs.com/artists/251654",
+   "active": false
+  },
+  {
+   "id": 252301,
+   "name": "Dan Peters",
+   "resource_url": "https://api.discogs.com/artists/252301",
+   "active": false
+  },
+  {
+   "id": 261337,
+   "name": "Dale Crover",
+   "resource_url": "https://api.discogs.com/artists/261337",
+   "active": false
+  },
+  {
+   "id": 275118,
+   "name": "Kurt Cobain",
+   "resource_url": "https://api.discogs.com/artists/275118",
+   "active": true
+  },
+  {
+   "id": 281754,
+   "name": "Krist Novoselic",
+   "resource_url": "https://api.discogs.com/artists/281754",
+   "active": true
+  },
+  {
+   "id": 441072,
+   "name": "Jason Everman",
+   "resource_url": "https://api.discogs.com/artists/441072",
+   "active": false
+  },
+  {
+   "id": 455772,
+   "name": "Aaron Burckhard",
+   "resource_url": "https://api.discogs.com/artists/455772",
+   "active": false
+  },
+  {
+   "id": 975603,
+   "name": "Georg Ruthenberg",
+   "resource_url": "https://api.discogs.com/artists/975603",
+   "active": true
+  },
+  {
+   "id": 5525291,
+   "name": "Dave Foster (14)",
+   "resource_url": "https://api.discogs.com/artists/5525291",
+   "active": false
+  }
+ ],
+ "data_quality": "Needs Vote"
+}

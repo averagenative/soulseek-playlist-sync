@@ -1,0 +1,25 @@
+<fieldset data-active="{{ 1 if ast_running else 0 }}">
+  <legend>Artist lookups</legend>
+  {% if ast_running %}
+    <p><span class="badge busy">Looking up</span> {{ ast.step or 'Starting' }}{% if ast.total %}: {{ ast.done|n }} of {{ ast.total|n }}{% endif %}</p>
+    {% if ast.full %}<p class="muted small">The first run takes about an hour: MusicBrainz answers one request a second and Discogs 25 a minute.
+      Pages fill in as it goes. Later runs only look up new artists and what's more than 60 or 180 days old.</p>{% endif %}
+  {% elif ast.state == 'failed' %}
+    <p class="notice bad">The last lookup stopped: {{ ast.error }}. Run it again: what it already found is kept.</p>
+  {% elif ast.full_finished %}
+    <p class="muted small">Last full lookup finished {{ ast.full_finished|ago }}. New artists are looked up every 6 hours, after the song lookups.</p>
+  {% else %}
+    <p>No full lookup yet. It runs every 6 hours after the song lookups, or now with the button.</p>
+  {% endif %}
+  {% for n in ast.notes or [] %}<p class="notice warn small">{{ n }}</p>{% endfor %}
+  <p class="small">Known so far: {{ ast_counts.identified|n }} of {{ ast_counts.artists|n }} artists identified on MusicBrainz,
+    {{ ast_counts.with_data|n }} with facts, {{ ast_counts.bios|n }} with a bio, {{ ast_counts.images|n }} with a picture,
+    {{ ast_counts.influences|n }} with influences, and {{ ast_counts.similar|n }} with similar artists.
+    {% if ast_counts.unmatched %}{{ ast_counts.unmatched|n }} names matched nothing on MusicBrainz; their pages take a pasted link.{% endif %}</p>
+  {% if not ast_lastfm %}<p class="muted small">Set <code>LASTFM_API_KEY</code> to add Last.fm bios and similar artists.
+    Make a key at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener">last.fm/api/account/create</a>.</p>{% endif %}
+  <form method="post" action="/artists/lookup" class="inline">
+    <input type="hidden" name="back" value="{{ back or '/artists' }}">
+    <button class="btn small" {% if ast_running %}disabled{% endif %}>Look up artists now</button>
+  </form>
+</fieldset>

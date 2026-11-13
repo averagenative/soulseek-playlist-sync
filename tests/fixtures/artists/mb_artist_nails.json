@@ -1,0 +1,415 @@
+{
+ "area": {
+  "name": "United States",
+  "type-id": null,
+  "id": "489ce91b-6658-3307-9877-795b68554c98",
+  "sort-name": "United States",
+  "disambiguation": "",
+  "iso-3166-1-codes": [
+   "US"
+  ],
+  "type": null
+ },
+ "gender": null,
+ "aliases": [],
+ "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+ "isnis": [],
+ "sort-name": "Nails",
+ "id": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1",
+ "gender-id": null,
+ "type": "Group",
+ "life-span": {
+  "end": null,
+  "ended": false,
+  "begin": "2007-12"
+ },
+ "genres": [
+  {
+   "name": "crust punk",
+   "count": 3,
+   "disambiguation": "",
+   "id": "f66d7266-eb3d-4ef3-b4d8-b7cd992f918b"
+  },
+  {
+   "id": "093149ea-d1bc-4f93-bd5a-8fdcd055ea2f",
+   "disambiguation": "",
+   "count": 4,
+   "name": "grindcore"
+  },
+  {
+   "name": "hardcore punk",
+   "count": 3,
+   "id": "055a6e4d-d929-42ac-ba7a-9d063b254ea5",
+   "disambiguation": ""
+  },
+  {
+   "name": "metalcore",
+   "count": 1,
+   "id": "62f88295-0605-4ce8-958b-2e0063ece47e",
+   "disambiguation": ""
+  },
+  {
+   "name": "powerviolence",
+   "disambiguation": "",
+   "id": "4e6e388c-a9d2-45cb-80ad-bf64db4a0759",
+   "count": 5
+  }
+ ],
+ "relations": [
+  {
+   "type": "member of band",
+   "target-type": "artist",
+   "begin": "2007",
+   "source-credit": "",
+   "ended": true,
+   "attribute-credits": {},
+   "target-credit": "",
+   "attributes": [
+    "drums (drum set)",
+    "original"
+   ],
+   "direction": "backward",
+   "attribute-ids": {
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c",
+    "drums (drum set)": "12092505-6ee1-46af-a15a-b5b468b6b155"
+   },
+   "artist": {
+    "type": "Person",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "disambiguation": "drummer from United States",
+    "sort-name": "Hogan, Tom",
+    "country": "US",
+    "id": "3a2170f4-0344-444b-a63e-18eb70cb1e18",
+    "name": "Tom Hogan"
+   },
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-values": {},
+   "end": "2009"
+  },
+  {
+   "target-credit": "",
+   "source-credit": "",
+   "begin": "2007",
+   "attribute-credits": {},
+   "ended": true,
+   "type": "member of band",
+   "target-type": "artist",
+   "end": "2020",
+   "artist": {
+    "sort-name": "Gianelli, John",
+    "id": "885060fa-3872-420a-9a6b-7ad2dcf78d63",
+    "country": "US",
+    "disambiguation": "musician from Ojai, CA",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "name": "John Gianelli",
+    "type": "Person"
+   },
+   "attribute-values": {},
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-ids": {
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c",
+    "electric bass guitar": "0b9d87fa-93fa-4956-8b6a-a419566cc915"
+   },
+   "direction": "backward",
+   "attributes": [
+    "electric bass guitar",
+    "original"
+   ]
+  },
+  {
+   "attribute-ids": {
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c",
+    "lead vocals": "8e2a3255-87c2-4809-a174-98cb3704f1a5"
+   },
+   "direction": "backward",
+   "attributes": [
+    "lead vocals",
+    "original"
+   ],
+   "end": null,
+   "artist": {
+    "type": "Person",
+    "id": "3674e6ca-e504-4ffc-b08a-def263d5b59f",
+    "disambiguation": "former Terror guitarist",
+    "sort-name": "Jones, Todd",
+    "country": "US",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "name": "Todd Jones"
+   },
+   "attribute-values": {},
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "source-credit": "",
+   "begin": "2007",
+   "ended": false,
+   "attribute-credits": {},
+   "type": "member of band",
+   "target-type": "artist",
+   "target-credit": ""
+  },
+  {
+   "direction": "backward",
+   "attribute-ids": {
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c",
+    "electric guitar": "7ee8ebf5-3aed-4fc8-8004-49f4a8c45a87"
+   },
+   "attributes": [
+    "electric guitar",
+    "original"
+   ],
+   "end": null,
+   "artist": {
+    "type": "Person",
+    "sort-name": "Jones, Todd",
+    "disambiguation": "former Terror guitarist",
+    "id": "3674e6ca-e504-4ffc-b08a-def263d5b59f",
+    "country": "US",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "name": "Todd Jones"
+   },
+   "attribute-values": {},
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "begin": "2007",
+   "source-credit": "",
+   "attribute-credits": {},
+   "ended": false,
+   "type": "member of band",
+   "target-type": "artist",
+   "target-credit": ""
+  },
+  {
+   "target-type": "artist",
+   "type": "member of band",
+   "attribute-credits": {},
+   "ended": true,
+   "source-credit": "",
+   "begin": "2009",
+   "target-credit": "",
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "attribute-ids": {
+    "drums (drum set)": "12092505-6ee1-46af-a15a-b5b468b6b155"
+   },
+   "direction": "backward",
+   "attribute-values": {},
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "artist": {
+    "type": "Person",
+    "name": "Taylor Young",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "country": "US",
+    "disambiguation": "metal/hardcore producer, engineer, and musician",
+    "id": "b819904a-345d-4cc9-95b9-ee0bf9b3c3d2",
+    "sort-name": "Young, Taylor"
+   },
+   "end": "2020"
+  },
+  {
+   "artist": {
+    "type": "Person",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "id": "1ceb04c3-1466-4eda-89a6-239351bc807e",
+    "sort-name": "Solis, Andrew",
+    "disambiguation": "producer/engineer from Los Angeles",
+    "country": "US",
+    "name": "Andrew Solis"
+   },
+   "attribute-values": {},
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "end": null,
+   "attributes": [
+    "electric bass guitar"
+   ],
+   "attribute-ids": {
+    "electric bass guitar": "0b9d87fa-93fa-4956-8b6a-a419566cc915"
+   },
+   "direction": "backward",
+   "target-credit": "",
+   "type": "member of band",
+   "target-type": "artist",
+   "source-credit": "",
+   "begin": "2024",
+   "ended": false,
+   "attribute-credits": {}
+  },
+  {
+   "end": null,
+   "attribute-values": {},
+   "type-id": "6b3e3c85-0002-4f34-aca6-80ace0d7e846",
+   "direction": "forward",
+   "attribute-ids": {},
+   "attributes": [],
+   "target-credit": "",
+   "url": {
+    "resource": "https://www.allmusic.com/artist/mn0002532333",
+    "id": "0bd5a77f-5fa8-496c-a10e-94f483b76f32"
+   },
+   "ended": false,
+   "begin": null,
+   "source-credit": "",
+   "target-type": "url",
+   "type": "allmusic"
+  },
+  {
+   "end": null,
+   "attribute-values": {},
+   "type-id": "c550166e-0548-4a18-b1d4-e2ae423a3e88",
+   "direction": "forward",
+   "attribute-ids": {},
+   "attributes": [],
+   "url": {
+    "resource": "https://nailssl.bandcamp.com/",
+    "id": "2670eb12-f77e-428e-8198-754fb451aa97"
+   },
+   "target-credit": "",
+   "ended": false,
+   "begin": null,
+   "source-credit": "",
+   "target-type": "url",
+   "type": "bandcamp"
+  },
+  {
+   "attribute-ids": {},
+   "direction": "forward",
+   "attributes": [],
+   "end": null,
+   "attribute-values": {},
+   "type-id": "c550166e-0548-4a18-b1d4-e2ae423a3e88",
+   "ended": false,
+   "source-credit": "",
+   "begin": null,
+   "target-type": "url",
+   "type": "bandcamp",
+   "target-credit": "",
+   "url": {
+    "id": "a6a8d78c-e9a4-40bf-8cb9-42fabc7436b7",
+    "resource": "https://nailstyranny.bandcamp.com/"
+   }
+  },
+  {
+   "attribute-ids": {},
+   "direction": "forward",
+   "attributes": [],
+   "end": null,
+   "attribute-values": {},
+   "type-id": "04a5b104-a4c2-4bac-99a1-7b837c37d9e4",
+   "ended": false,
+   "source-credit": "",
+   "begin": null,
+   "target-type": "url",
+   "type": "discogs",
+   "target-credit": "",
+   "url": {
+    "resource": "https://www.discogs.com/artist/1769424",
+    "id": "a7d5024c-fe9e-4326-965f-8a249b5db518"
+   }
+  },
+  {
+   "attribute-ids": {},
+   "direction": "forward",
+   "attributes": [],
+   "end": null,
+   "attribute-values": {},
+   "type-id": "e4d73442-3762-45a8-905c-401da65544ed",
+   "source-credit": "",
+   "begin": null,
+   "ended": false,
+   "type": "lyrics",
+   "target-type": "url",
+   "target-credit": "",
+   "url": {
+    "id": "67320f0f-cc23-4d78-b3f4-7d6f45b152ae",
+    "resource": "https://genius.com/artists/Nails-metal"
+   }
+  },
+  {
+   "end": null,
+   "type-id": "fe33d22f-c3b0-4d68-bd53-a856badf2b15",
+   "attribute-values": {},
+   "direction": "forward",
+   "attribute-ids": {},
+   "attributes": [],
+   "url": {
+    "resource": "http://abandonalllife.com/",
+    "id": "9e500a93-14d7-4cdc-876f-a1029dbacb70"
+   },
+   "target-credit": "",
+   "ended": true,
+   "begin": null,
+   "source-credit": "",
+   "target-type": "url",
+   "type": "official homepage"
+  },
+  {
+   "end": null,
+   "attribute-values": {},
+   "type-id": "689870a4-a1e4-4912-b17f-7b2664215698",
+   "direction": "forward",
+   "attribute-ids": {},
+   "attributes": [],
+   "url": {
+    "id": "5f8b3dda-8b1e-4c2d-99a2-5899dec45b59",
+    "resource": "https://www.wikidata.org/wiki/Q17325289"
+   },
+   "target-credit": "",
+   "begin": null,
+   "source-credit": "",
+   "ended": false,
+   "type": "wikidata",
+   "target-type": "url"
+  },
+  {
+   "type": "wikipedia",
+   "target-type": "url",
+   "source-credit": "",
+   "begin": null,
+   "ended": false,
+   "target-credit": "",
+   "url": {
+    "id": "df7569ad-933b-4429-8cc1-f19ee235c5c5",
+    "resource": "https://en.wikipedia.org/wiki/Nails_(band)"
+   },
+   "attributes": [],
+   "attribute-ids": {},
+   "direction": "forward",
+   "attribute-values": {},
+   "type-id": "29651736-fa6d-48e4-aadc-a557c6add1cb",
+   "end": null
+  }
+ ],
+ "begin-area": {
+  "type-id": null,
+  "type": null,
+  "sort-name": "Oxnard",
+  "id": "57dcc070-ab3b-4391-8f8d-e4445041efcf",
+  "disambiguation": "",
+  "name": "Oxnard"
+ },
+ "end-area": null,
+ "tags": [
+  {
+   "name": "crust punk",
+   "count": 3
+  },
+  {
+   "count": 4,
+   "name": "grindcore"
+  },
+  {
+   "count": 1,
+   "name": "hardcore"
+  },
+  {
+   "name": "hardcore punk",
+   "count": 3
+  },
+  {
+   "name": "metalcore",
+   "count": 1
+  }
+ ],
+ "disambiguation": "US grindcore/powerviolence band",
+ "country": "US",
+ "ipis": [],
+ "name": "Nails"
+}

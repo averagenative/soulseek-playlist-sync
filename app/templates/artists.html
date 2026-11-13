@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Artists · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><span class="here">Artists</span>{% endblock %}
+{% block content %}
+<section class="bar">
+  <div>
+    <div class="eyebrow">Your library</div>
+    <h1>Artists</h1>
+    <div class="muted small">{{ ast_counts.artists|n }} artists &middot; {{ ast_counts.with_data|n }} with pages filled in</div>
+  </div>
+  <a class="btn primary" href="/suggestions" title="Artists you don't have that your artists point to">Suggestions</a>
+</section>
+
+<form method="get" action="/artists" class="lib-filter" role="search">
+  <div class="lib-search">
+    <input type="search" name="q" value="{{ q }}" placeholder="Find an artist" aria-label="Find an artist">
+    <select name="sort" aria-label="Sort by" onchange="this.form.submit()">
+      <option value="name" {% if sort == 'name' %}selected{% endif %}>Sort by name</option>
+      <option value="songs" {% if sort == 'songs' %}selected{% endif %}>Most songs first</option>
+    </select>
+    {% if letter %}<input type="hidden" name="letter" value="{{ letter }}">{% endif %}
+    <button class="btn">Find</button>
+  </div>
+  <nav class="chips letters" aria-label="First letter">
+    <a class="chip {{ 'on' if not letter else '' }}" href="/artists?{{ base_qs }}">All</a>
+    {% for l in letters %}
+      <a class="chip {{ 'on' if letter == l else '' }}" href="/artists?{{ base_qs }}{{ '&' if base_qs else '' }}letter={{ l|urlencode }}">{{ l }}</a>
+    {% endfor %}
+  </nav>
+</form>
+
+{% if rows %}
+<div class="table-wrap">
+<table class="artists">
+  <thead><tr><th>Artist</th><th class="right">Albums</th><th class="right">Songs</th><th class="hide-sm">Page</th></tr></thead>
+  <tbody>
+  {% for a in rows %}
+    <tr>
+      <td><a href="{{ '/artists/' ~ a.mbid if a.mbid else '/artists/by-name?' ~ {'n': a.name}|urlencode }}"><b>{{ a.name }}</b></a></td>
+      <td class="right">{{ a.albums|n }}</td>
+      <td class="right">{{ a.songs|n }}</td>
+      <td class="hide-sm small">{% if a.has_data %}<span class="badge synced">Filled in</span>{% elif a.mbid %}<span class="muted">Not looked up yet</span>{% else %}<span class="muted">Not identified</span>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if page > 1 %}<a class="btn small" href="/artists?{{ view_qs }}{{ '&' if view_qs else '' }}page={{ page - 1 }}">Previous</a>{% endif %}
+  <span class="muted small">Page {{ page }} of {{ pages }} &middot; {{ total|n }} artists</span>
+  {% if page < pages %}<a class="btn small" href="/artists?{{ view_qs }}{{ '&' if view_qs else '' }}page={{ page + 1 }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<div class="empty">
+  {% if q or letter %}<p>No artist matches{% if q %} "{{ q }}"{% endif %}{% if letter %} under {{ letter }}{% endif %}.</p>
+  <div class="actions"><a class="btn" href="/artists">Show every artist</a></div>
+  {% else %}<p>No artists yet. Scan your library on <a href="/library">My music</a> first.</p>{% endif %}
+</div>
+{% endif %}
+
+<div class="settings-form artist-status" data-live="/partials/artists?back=/artists">
+{% include "_artists_status.html" %}
+</div>
+{% endblock %}

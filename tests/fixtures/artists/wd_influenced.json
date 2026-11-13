@@ -1,0 +1,670 @@
+{
+ "head": {
+  "vars": [
+   "target",
+   "source",
+   "sourceLabel",
+   "mbid"
+  ]
+ },
+ "results": {
+  "bindings": [
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11904"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "14387b0f-765c-4852-852f-135335790466"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Eels"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q40585"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "d8354b38-e942-4c89-ba93-29323432abc3"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "30 Seconds to Mars"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q47871"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "084308bd-1654-436f-ba03-df6697104e19"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Green Day"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q157041"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "23a03e33-a603-404e-bcbf-2c00159d7067"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "The Offspring"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q175097"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "2386cd66-e923-4e8e-bf14-2eebe2e9b973"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "3 Doors Down"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q209956"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "6fe07aa5-fec0-4eca-a456-f29bff451b04"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Weezer"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q214237"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "09885b8e-f235-4b80-a02a-055539493173"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "The All-American Rejects"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q240767"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "8f9d6bb2-dba4-4cca-9967-cc02b9f4820c"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Limp Bizkit"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q273903"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "a0f7a7d5-33fa-43ae-98b2-6aea41aa9f64"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Scout Niblett"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q482477"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "0743b15a-3c32-48c8-ad58-cb325350befa"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Blink-182"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q483558"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "f2eef649-a6d5-4114-afba-e50ab26254d2"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Sum 41"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q483802"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "bc710bcf-8815-42cf-bad2-3f1d12246aeb"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Nickelback"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q485825"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "b345af35-205e-4eca-8006-029e5c20127e"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Simple Plan"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q669033"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "1c370378-c599-4639-9492-e221895c8c42"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Fiction Plane"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q741801"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "52b9e109-44a0-45eb-a197-226c4abab232"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Sevendust"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q845790"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "04591295-6d94-45cb-b6c7-1ae17c6f380e"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Lifehouse"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q845790"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "c2718892-2f73-41f4-9147-e6ea48b1d1e1"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Lifehouse"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1045827"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "0189c612-39a5-485d-8fc2-eca025b73861"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Cartel"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1155385"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "92a42e82-b36f-4308-82c1-68bad2e03c89"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Third Eye Blind"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1381972"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "3604c99d-c146-4276-aa0c-9376d333aeb8"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Everclear"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q1521915"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "f2a8c2ae-ed65-42a5-b3d6-335a0d349b9e"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Ghost of the Robot"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q3305140"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "90e76f10-70b6-44e0-a3fd-3f062195be76"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Melissmell"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q20687383"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "f8ba33be-c51b-4507-9de4-ea1e9f154e6c"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Thou"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q25172022"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "f12c0b95-ce69-46bb-87d1-b2cc376115e9"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Medusa"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q31283512"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "dbc9f9a7-07ef-4618-ae1e-e58f56259b7b"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Bala"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q17325289"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q47500365"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "de777508-262a-4534-bf73-3ed756be9e3f"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Faceplant"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q55815169"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Mt. Eddy"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q74445376"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Saïm"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q97206561"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "706b68af-31ab-4f0c-9538-c155a8403038"
+    },
+    "sourceLabel": {
+     "type": "literal",
+     "value": "Q97206561"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q109538607"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "49d47930-aaba-4caf-8a80-31be20d0e8f6"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Pinkshift"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q116058170"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "248d8dc4-2939-4cc7-8ad3-86a1ee5c9fd2"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "NOAHFINNCE"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q120719784"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "28c4b85c-113b-4871-95ad-52ebc9704bd0"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Oscar Jerome"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q123698386"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "132d5406-ad6a-42bf-9e2c-a78cb4a70e07"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Khamari"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q133176560"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "67936aa2-d2a9-415a-a98a-a612da68e3f1"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Too Snoozed"
+    }
+   },
+   {
+    "target": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q11649"
+    },
+    "source": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q136822842"
+    },
+    "mbid": {
+     "type": "literal",
+     "value": "81cefa59-d9cd-410f-ac11-7b66519a9514"
+    },
+    "sourceLabel": {
+     "xml:lang": "en",
+     "type": "literal",
+     "value": "Die Spitz"
+    }
+   }
+  ]
+ }
+}

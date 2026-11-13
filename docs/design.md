@@ -1,12 +1,14 @@
 # Design
 
-soulseek-playlist-sync is one Python process: a FastAPI web app plus a background worker, with its state in SQLite. It talks to Apple Music, Spotify, slskd, and optionally YouTube, and writes only inside its playlist folders. Playlists come from Apple Music, Spotify, YouTube, or your own music (the `local` source), and any of them can be copied to a streaming service.
+soulseek-playlist-sync is one Python process: a FastAPI web app plus a background worker, with its state in SQLite. It talks to Apple Music, Spotify, slskd, and optionally YouTube, looks up songs and artists in open music databases, and writes only inside its playlist folders. Playlists come from Apple Music, Spotify, YouTube, your own music (the `local` source), or suggested artists (the `suggested` source), and any of them can be copied to a streaming service.
 
 ```
 browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
                 |                                      --> Spotify Web API
                 |-- worker thread --> slskd REST API --> Soulseek
                 |                 --> yt-dlp --> YouTube (optional)
+                |-- lookup threads --> MusicBrainz, ListenBrainz, Wikidata, Wikipedia, Wikimedia Commons,
+                |                      Discogs, Genius, Last.fm, TheAudioDB (hits playlists, artist pages)
                 '-- MUSIC_ROOT: playlist folders, plus your library for matching
 ```
 
@@ -25,8 +27,11 @@ browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
 | `app/favorites.py` | Favorites sync: reads Spotify Liked Songs and Apple Music Favorite Songs, matches each new song on the other service, and adds it there. Only adds, and remembers each pair. |
 | `app/export.py` | Streams a playlist as a ZIP without building it on disk. Checks the size first (asks above 2 GB, refuses above 20 GB) and records progress for the page. |
 | `app/hits.py` | Hits playlists. `research()` runs in the background and fills the `hit_*` tables from ListenBrainz, MusicBrainz, Genius, the Billboard Hot 100 history, and your favorites, fetching only what's missing or stale. `plan()` picks each album's songs from those tables without any requests, so a rebuild is quick. |
+| `app/artists.py` | Artist pages and suggestions. `research()` runs in the background and fills the `artist*` tables from the sources, fetching only what's missing or stale and serving any artist someone is waiting for first. `page()`, `suggestions()`, and `suggested_hits()` read only those tables. |
+| `app/lookups.py` | What the background lookups share: an HTTP client that retries 429 and 5xx answers after `Retry-After`, one process-wide `Pacer` per host, the job status in `kv`, and a step runner where a refusing service stops only its own step. |
+| `app/sources/` | One small client per source (`musicbrainz`, `wikidata`, `wikipedia`, `commons`, `lb_labs`, `discogs`, `lastfm`, `audiodb`). Each returns plain dicts and has `parse_*` functions that tests feed recorded answers. |
 | `app/match.py` | Text normalization and Soulseek candidate ranking. Pure functions. |
-| `app/library.py` | Index of the music already on disk (incremental, by size and modification time), plus the queries behind **My music** and auto-updating playlists. |
+| `app/library.py` | Index of the music already on disk (incremental, by size and modification time), plus the queries behind **My music**, auto-updating playlists, and the Artists index (`artist_index()`: one entry per artist, merging names that share a MusicBrainz ID). |
 | `app/art.py` | Cover thumbnails for library files, from embedded art or a `cover.jpg` next to the file, cached under `DATA_DIR/artwork/local`. A playlist's mosaic cover takes one album each from its first artists with art (`sync.covers`), checking at most 40 local albums per call. |
 | `app/folders.py` | Safe file names, hardlink or copy, two-pass renames, `.m3u` writing. |
 | `app/tagger.py` | ID3v2.3 tags and cover art. |
@@ -37,7 +42,7 @@ browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
 
 - `profiles`: one row per person: name, optional password hash, whether they're an admin, the folder their new playlists go in, and a session version that's raised to sign every browser out.
 - `playlists`: one row per tracked playlist, with its owner, folder, and options. A `local` playlist with a `rule` (a JSON filter of words, folders, artist, and album) is rebuilt from the library on every refresh; one without a rule is a fixed list.
-- `songs`: one row per song, keyed by source and ID (`apple:<catalog id>`, `spotify:<track id>`, `youtube:<video id>`, `local:<hash>`). A local song's key is a hash of its normalized artist and title, so the same song in two albums or folders is one song.
+- `songs`: one row per song, keyed by source and ID (`apple:<catalog id>`, `spotify:<track id>`, `youtube:<video id>`, `mb:<MusicBrainz recording id>` for suggested artists' songs, `local:<hash>`). A local song's key is a hash of its normalized artist and title, so the same song in two albums or folders is one song.
 - `entries`: the playlist's order, one row per position. A song can appear more than once.
 - `items`: what exists locally for each song in each playlist (file name, origin, skipped, wanted). In a My music playlist that keeps itself up to date, a skipped song is one you took out: it stays out of the `.m3u`, the ZIP, copies, and refreshes.
 - `downloads`: one row per song, shared by every playlist that has it: the Soulseek or YouTube search, candidates, transfer progress, and the finished file.
@@ -46,6 +51,12 @@ browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
 - `song_links`: each song's match on the other service, so later updates don't search again. Songs that weren't found are looked for again after a week.
 - `favorite_pairs`: each Spotify track and Apple Music song a profile's favorites sync has seen as the same song. A paired song is never added again, so a favorite you remove stays removed.
 - `hit_ids`, `hit_recordings`, `hit_artist_songs`, `hit_artists`, `hit_charts`, `hit_favorites`: what hits playlists know about your songs. These hold MusicBrainz IDs looked up for files without them, ListenBrainz listeners per recording, per-artist lists (listeners per title, singles with their year, Genius page views), when each artist was last fetched, the Hot 100 history reduced to each song's peak and weeks, and the song keys of each profile's favorites. A hits playlist's `rule` is a filter plus a `hits` object with `min`, `max`, and `cutoff`.
+- `artist_names`: which MusicBrainz artist a library name is, when the files don't say: found by an album search, or pasted (`manual`, never replaced). A name that matched nothing is searched again after 30 days.
+- `artists`: one row per artist looked up: MusicBrainz facts, the Wikidata ID and English Wikipedia title, links to other sites, Wikidata's extra facts, the cached picture and its credit, and `fetched`, the time each source was last fetched.
+- `artist_bios`: one bio per artist and source, with its link and license.
+- `artist_links`: related artists, by kind (`member`, `member_of`, `influenced_by`, `influenced`, `similar`) and source, keyed by the other artist's MusicBrainz ID, else its Wikidata ID, else its normalized name. Similar artists carry a 0 to 1 score within their source's list.
+- `suggestion_dismissed`: the suggestions each profile clicked **Not interested** on.
+- `artist_releases` and `artist_tracks`: a suggested artist's albums, EPs, and singles, each with one tracklist, for **Get their hits**. Their listener counts, singles, and Genius views go in the `hit_*` tables, which are keyed by MusicBrainz IDs and so fit any artist.
 
 A song's status on the playlist page comes from its item and its download row: synced, in library, waiting, searching, found, queued, downloading, not found, failed, removed upstream, or skipped.
 
@@ -69,19 +80,34 @@ Every request goes through one middleware, `gate`. It checks `APP_PASSWORD` when
 
 ## Hits playlists
 
-`hits.plan()` groups the filter's files by album (album artist plus album), and gives each song one home album: an album before an EP, soundtrack, single, compilation, or live album, then the earliest. Skits, interludes, songs under 90 seconds, and live, demo, and remix versions are out unless they charted or are favorites. A live album counts as an album only when it's all the artist has in the selection.
+`hits.plan()` groups the filter's files by album (album artist plus album), and gives each song one home album: an album before an EP, soundtrack, single, compilation, or live album, then the earliest. Skits, interludes, and live, demo, and remix versions are out unless they charted or are favorites, and so are songs under 90 seconds unless they also came out as singles. A live album counts as an album only when it's all the artist has in the selection.
 
 For each album, listeners and page views are divided by the album's median among the songs that are in. An album needs counts for at least half its songs and a median of at least 30 listeners (300 page views) to be compared. A song's ListenBrainz count is the highest of its recordings' counts and the artist's count for that title, because listens collect on one version of a recording and a file can be tagged with another. A song's score is its higher ratio, plus 0.5 to 1.0 for a Hot 100 entry (more for the top 40 and top 10), and 0.15 for a single. A single counts when it came out within two years of the album. Live, remix, and DJ-mix singles don't count, and of a single with more than two songs only the first does.
 
 Favorites go in first. Albums, EPs, and soundtracks then fill up to `min` by score. Every kind then adds songs that stand out (charted, a single, a favorite, or a ratio of at least `cutoff`) until `max`. A song you leave out is skipped when picking, so the next best takes its place, and it stays listed as left out. Requests go out at one a second to MusicBrainz, within ListenBrainz's rate-limit headers, and at four a second to Genius, stopping 50 short of its daily allowance.
 
+## Artist pages and suggestions
+
+The artist lookup runs after the hits lookup in the scheduled refresh, and both use the same `Pacer` for MusicBrainz, so together they stay at one request a second. Its steps, in order: find IDs for names without one, MusicBrainz facts and members, Wikidata (50 items a request, then one SPARQL query for the labels and MusicBrainz IDs of every related item), who each artist influenced (a reverse P737 SPARQL query per 50 artists, split in half when it runs out of time), Wikipedia introductions (20 a request), pictures (Commons, 50 a request, then TheAudioDB for artists still without one), ListenBrainz Labs similar artists, Discogs profiles, and with a key Last.fm bios and similar artists. Facts, influences, and bios refresh after 180 days and similar artists after 60. A picture is fetched again only when Wikidata names a different file. Opening an artist with no data puts it in an in-memory queue that every step checks between requests, so that artist is looked up first.
+
+ListenBrainz Labs takes no token. If it answers 401, the client asks once more with `LISTENBRAINZ_TOKEN` and keeps sending it for the run if it works. If it still refuses, similar artists come from Last.fm alone, and without `LASTFM_API_KEY` suggestions use influences only.
+
+An artist page's **Influenced** list is the reverse P737 results plus every looked-up artist whose own **Influenced by** names this one, so an influence between two library artists shows on both pages.
+
+`suggestions(profile)` scores each artist that isn't in the library and isn't dismissed: the sum, over the library artists linked to it, of `weight(A) * strength(A, X)`, where `weight(A) = 1 + ln(1 + A's songs) + 2 ln(1 + A's songs among the profile's favorites)` and `strength` is the best similarity score between them, or 0.5 for an influence either way. The top 100 are kept per profile, cached until the links, dismissals, favorites, or library change. The top 25 of each profile have their albums fetched ahead of time.
+
+`suggested_hits()` runs `hits.pick_album()` (the same code a hits playlist uses) on each of the artist's albums, EPs, and singles, with no minimum, `max` and `cutoff` from `suggestions_rules:<profile>` in `kv`, and each song on its earliest album. The median a song is compared with is never lower than the median of the artist's album songs, so the one known song on an EP of remixes and B-sides isn't a standout, and titles marking another version (mix, edit, version, take, and the like) are left out. A discography is the artist's release groups without secondary types other than Soundtrack, the earliest official release of each album and EP (one browse request each, so deluxe bonus tracks don't count), and the title songs of each single. Songs already in the library are skipped.
+
+**Get their hits** adds the picks to `suggested:<artist mbid>` ("<Artist> Hits") and `suggested:suggestions` ("Suggestions"), with the `@<profile id>` suffix after the first profile. `sync.fetch()` makes no request for this source: an artist's playlist keeps the songs it was given, and Suggestions is rebuilt from the owner's artist playlists in the order they were made, so removing one takes its songs out. From there they're ordinary playlists: matched to the library, searched on Soulseek by artist, title, and length, downloaded once, and hardlinked into both folders.
+
 ## Files on disk
 
-- Playlist folders live at `MUSIC_ROOT/<AppleMusic, SpotifyMusic, YouTube, or Playlists>/<profile folder>/<playlist name>/`, named for FAT32 and exFAT compatibility. The first profile's folder is empty, so its playlists sit straight in the service folder.
+- Playlist folders live at `MUSIC_ROOT/<AppleMusic, SpotifyMusic, YouTube, Playlists, or Suggestions>/<profile folder>/<playlist name>/`, named for FAT32 and exFAT compatibility. The first profile's folder is empty, so its playlists sit straight in the service folder.
 - If a library folder is missing or empty during a scan (for example, a disk that didn't mount), the index keeps what it had there instead of treating every song as deleted. A copy is never replaced with an empty playlist.
 - Files are numbered by their first position in the playlist. Renumbering uses a two-pass rename, so swaps don't collide.
 - A song used by several playlists is hardlinked into each folder when they're on the same filesystem.
 - Finished downloads are moved out of slskd's download folder right away.
+- Artist pictures are JPEGs at most 500 pixels wide in `DATA_DIR/artwork/artists/<mbid>.jpg`, about 50 KB each.
 - **Prune removed** deletes only files the app created, for songs that left the playlist.
 
 ## Releases

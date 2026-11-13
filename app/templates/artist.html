@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ a.name }} · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><a href="/artists">Artists</a><span class="sep">/</span><span class="here">{{ a.name }}</span>{% endblock %}
+{% block content %}
+<div{% if live_url %} data-live="{{ live_url }}"{% endif %}>
+{% include "_artist_body.html" %}
+</div>
+{% endblock %}

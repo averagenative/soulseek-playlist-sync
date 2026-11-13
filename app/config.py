@@ -57,6 +57,10 @@ class Config:
     genius_token: str | None = None   # optional: Genius page views for hits playlists
     listenbrainz_token: str | None = None   # optional: ListenBrainz per-artist counts for hits playlists
     youtube_cookies: Path | None = None   # optional: cookies.txt for age-restricted YouTube videos
+    lastfm_api_key: str | None = None     # optional: Last.fm bios, tags and similar artists for artist pages
+    discogs_token: str | None = None      # optional: a higher Discogs rate limit
+    theaudiodb_api_key: str | None = None   # optional: TheAudioDB bios (the free key gives images only)
+    suggestions_dir: str = "Suggestions"  # under MUSIC_ROOT: the Suggestions playlists
     profile: int = 1                      # whose Apple Music and Spotify connections to use
 
     def for_profile(self, profile: int) -> "Config":
@@ -78,7 +82,7 @@ class Config:
 
     def source_dir(self, source: str) -> str:
         return {"apple": self.apple_dir, "spotify": self.spotify_dir, "local": self.local_dir,
-                "youtube": self.youtube_dir}[source]
+                "youtube": self.youtube_dir, "suggested": self.suggestions_dir}[source]
 
     @property
     def spotify_token_file(self) -> Path:
@@ -133,4 +137,8 @@ def load() -> Config:
         genius_token=_secret("GENIUS_API_TOKEN"),
         listenbrainz_token=_secret("LISTENBRAINZ_TOKEN"),
         youtube_cookies=Path(_env("YOUTUBE_COOKIES_FILE")) if _env("YOUTUBE_COOKIES_FILE") else None,
+        lastfm_api_key=_secret("LASTFM_API_KEY"),
+        discogs_token=_secret("DISCOGS_TOKEN"),
+        theaudiodb_api_key=_secret("THEAUDIODB_API_KEY"),
+        suggestions_dir=_env("SUGGESTIONS_DIR", "Suggestions"),
     )

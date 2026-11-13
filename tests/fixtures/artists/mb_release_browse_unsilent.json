@@ -1,0 +1,1410 @@
+{
+ "release-count": 6,
+ "releases": [
+  {
+   "country": "GB",
+   "disambiguation": "",
+   "cover-art-archive": {
+    "artwork": true,
+    "back": false,
+    "front": true,
+    "count": 1,
+    "darkened": false
+   },
+   "status": "Official",
+   "barcode": "808720012729",
+   "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+   },
+   "asin": "B003Z3WKZ2",
+   "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+   "release-events": [
+    {
+     "area": {
+      "sort-name": "United Kingdom",
+      "name": "United Kingdom",
+      "disambiguation": "",
+      "iso-3166-1-codes": [
+       "GB"
+      ],
+      "type": null,
+      "type-id": null,
+      "id": "8a754a16-0027-3a29-b6d7-2b40ea0481ed"
+     },
+     "date": "2010-10-28"
+    }
+   ],
+   "packaging": "Jewel Case",
+   "media": [
+    {
+     "title": "",
+     "track-count": 10,
+     "position": 1,
+     "track-offset": 0,
+     "tracks": [
+      {
+       "position": 1,
+       "title": "Conform",
+       "recording": {
+        "title": "Conform",
+        "length": 31653,
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "0cb17820-c4ce-4d3f-ae5b-121767c4c7a6"
+       },
+       "id": "81d440b1-190c-3d36-bd94-2a99e8fba2af",
+       "length": 31000,
+       "number": "1"
+      },
+      {
+       "id": "1e97d6ef-fabf-3a55-ad29-708e5dde84a7",
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "308e5b2d-3fc4-4b5f-a941-5d2b0d1ec507",
+        "video": false,
+        "disambiguation": "",
+        "length": 63584,
+        "title": "Scum Will Rise"
+       },
+       "title": "Scum Will Rise",
+       "position": 2,
+       "number": "2",
+       "length": 63000
+      },
+      {
+       "recording": {
+        "id": "0295c2bc-5314-4d7e-bcb4-f3532c9f902e",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false,
+        "length": 32613,
+        "title": "Your God"
+       },
+       "id": "0b388a68-1abd-3601-826d-7a085558ecdf",
+       "title": "Your God",
+       "position": 3,
+       "number": "3",
+       "length": 32000
+      },
+      {
+       "title": "Suffering Soul",
+       "position": 4,
+       "id": "c29f32bf-83b8-3dee-9c71-fbae1d3fb3bb",
+       "recording": {
+        "id": "7f3d012a-2307-439a-8fa0-8c092ffcad12",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false,
+        "length": 90453,
+        "title": "Suffering Soul"
+       },
+       "length": 90000,
+       "number": "4"
+      },
+      {
+       "number": "5",
+       "length": 161000,
+       "id": "f28d8039-7e88-381e-a746-9e0c6cd20c9b",
+       "recording": {
+        "length": 161080,
+        "title": "Unsilent Death",
+        "first-release-date": "2010-10-28",
+        "id": "af9aad82-b377-4f45-8439-d370e4a593c9",
+        "video": false,
+        "disambiguation": ""
+       },
+       "position": 5,
+       "title": "Unsilent Death"
+      },
+      {
+       "position": 6,
+       "title": "Traitor",
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "3be54ac8-2476-4d61-ad70-d3e6e7c85aa4",
+        "video": false,
+        "disambiguation": "",
+        "length": 28466,
+        "title": "Traitor"
+       },
+       "id": "d42941c1-a27a-3041-be3f-063e253c1497",
+       "length": 28000,
+       "number": "6"
+      },
+      {
+       "length": 86000,
+       "number": "7",
+       "position": 7,
+       "title": "I Will Not Follow",
+       "recording": {
+        "length": 86160,
+        "title": "I Will Not Follow",
+        "id": "a013059d-23e5-4e7b-9121-49dfa85a56a1",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false
+       },
+       "id": "357b5370-50e0-3c8c-90e4-197e6a56ac88"
+      },
+      {
+       "number": "8",
+       "length": 59000,
+       "id": "cedda2b4-29cc-35f9-8dfe-b36fc28d9310",
+       "recording": {
+        "id": "d8f5795e-2843-497d-ad5d-7d1324f9921f",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false,
+        "length": 59066,
+        "title": "No Servant"
+       },
+       "position": 8,
+       "title": "No Servant"
+      },
+      {
+       "number": "9",
+       "length": 54000,
+       "recording": {
+        "length": 55080,
+        "title": "Scapegoat",
+        "id": "64a337ad-489d-46ab-b7ed-1caf61e07e04",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false
+       },
+       "id": "68facb59-9ec3-39a4-a76d-37ca3384e35c",
+       "position": 9,
+       "title": "Scapegoat"
+      },
+      {
+       "title": "Depths",
+       "position": 10,
+       "id": "ada046e3-ec0e-3ca5-b590-96513fa6303a",
+       "recording": {
+        "disambiguation": "",
+        "video": false,
+        "id": "53940b3f-661b-4362-af2a-f96fe6a3f419",
+        "first-release-date": "2010-10-28",
+        "title": "Depths",
+        "length": 227853
+       },
+       "length": 227000,
+       "number": "10"
+      }
+     ],
+     "id": "a41b346a-e8b0-3e7e-995d-1d2c0aa4ebe0",
+     "format": "CD",
+     "format-id": "9712d52a-4509-3d4b-a1a2-67c88c643e31"
+    }
+   ],
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "date": "2010-10-28",
+   "id": "1f57f1bb-e0d3-435a-9297-1a28ef49e599",
+   "title": "Unsilent Death",
+   "quality": "normal"
+  },
+  {
+   "status": "Official",
+   "cover-art-archive": {
+    "darkened": false,
+    "back": false,
+    "artwork": false,
+    "count": 0,
+    "front": false
+   },
+   "country": "US",
+   "disambiguation": "2016 vinyl repress on Southern Lord",
+   "barcode": "808720012712",
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "packaging": "Gatefold Cover",
+   "media": [
+    {
+     "format-id": "3e9080b0-5e6c-34ab-bd15-f526b6306a64",
+     "format": "12\" Vinyl",
+     "position": 1,
+     "track-count": 10,
+     "title": "",
+     "id": "3bbe3992-334b-3a51-b954-f05f92c41294",
+     "tracks": [
+      {
+       "id": "60b3e9a3-0066-457c-8d49-23b3ef06c9d4",
+       "recording": {
+        "length": 31653,
+        "title": "Conform",
+        "first-release-date": "2010-10-28",
+        "id": "0cb17820-c4ce-4d3f-ae5b-121767c4c7a6",
+        "video": false,
+        "disambiguation": ""
+       },
+       "title": "Conform",
+       "position": 1,
+       "number": "A1",
+       "length": 31000
+      },
+      {
+       "title": "Scum Will Rise",
+       "position": 2,
+       "recording": {
+        "title": "Scum Will Rise",
+        "length": 63584,
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "308e5b2d-3fc4-4b5f-a941-5d2b0d1ec507"
+       },
+       "id": "faf3f38a-9aff-47f3-8951-eafb4112dd10",
+       "length": 63000,
+       "number": "A2"
+      },
+      {
+       "position": 3,
+       "title": "Your God",
+       "recording": {
+        "id": "0295c2bc-5314-4d7e-bcb4-f3532c9f902e",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false,
+        "length": 32613,
+        "title": "Your God"
+       },
+       "id": "ef2775e2-5f6e-48fa-b292-bf47f8b2691f",
+       "length": 32000,
+       "number": "A3"
+      },
+      {
+       "number": "A4",
+       "length": 90000,
+       "recording": {
+        "title": "Suffering Soul",
+        "length": 90453,
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "7f3d012a-2307-439a-8fa0-8c092ffcad12"
+       },
+       "id": "8fe94844-93d5-4b65-a3f9-beb488e4d73f",
+       "position": 4,
+       "title": "Suffering Soul"
+      },
+      {
+       "position": 5,
+       "title": "Unsilent Death",
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "af9aad82-b377-4f45-8439-d370e4a593c9",
+        "title": "Unsilent Death",
+        "length": 161080
+       },
+       "id": "c32f265e-a34d-41f3-b53b-0b2df2a603a1",
+       "length": 161000,
+       "number": "A5"
+      },
+      {
+       "length": 28000,
+       "number": "B1",
+       "position": 6,
+       "title": "Traitor",
+       "id": "763528e9-6cf5-4594-b522-13cffcd5143d",
+       "recording": {
+        "id": "3be54ac8-2476-4d61-ad70-d3e6e7c85aa4",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false,
+        "length": 28466,
+        "title": "Traitor"
+       }
+      },
+      {
+       "id": "2a756434-3f46-47a0-a1cd-d37df6314a90",
+       "recording": {
+        "disambiguation": "",
+        "video": false,
+        "id": "a013059d-23e5-4e7b-9121-49dfa85a56a1",
+        "first-release-date": "2010-10-28",
+        "title": "I Will Not Follow",
+        "length": 86160
+       },
+       "position": 7,
+       "title": "I Will Not Follow",
+       "number": "B2",
+       "length": 86000
+      },
+      {
+       "length": 59000,
+       "number": "B3",
+       "position": 8,
+       "title": "No Servant",
+       "id": "5052e55b-c983-4df1-bc5c-89682e933333",
+       "recording": {
+        "id": "d8f5795e-2843-497d-ad5d-7d1324f9921f",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false,
+        "length": 59066,
+        "title": "No Servant"
+       }
+      },
+      {
+       "length": 54000,
+       "number": "B4",
+       "title": "Scapegoat",
+       "position": 9,
+       "id": "cf624dce-865f-427e-9c0f-41fbbb1a201b",
+       "recording": {
+        "length": 55080,
+        "title": "Scapegoat",
+        "id": "64a337ad-489d-46ab-b7ed-1caf61e07e04",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false
+       }
+      },
+      {
+       "recording": {
+        "id": "53940b3f-661b-4362-af2a-f96fe6a3f419",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false,
+        "length": 227853,
+        "title": "Depths"
+       },
+       "id": "e0aeaf92-6784-4b15-bb0c-05f2e3aa0312",
+       "title": "Depths",
+       "position": 10,
+       "number": "B5",
+       "length": 227000
+      }
+     ],
+     "track-offset": 0
+    }
+   ],
+   "release-events": [
+    {
+     "area": {
+      "id": "489ce91b-6658-3307-9877-795b68554c98",
+      "type-id": null,
+      "iso-3166-1-codes": [
+       "US"
+      ],
+      "type": null,
+      "disambiguation": "",
+      "name": "United States",
+      "sort-name": "United States"
+     },
+     "date": "2016-04"
+    }
+   ],
+   "packaging-id": "e724a489-a7e8-30a1-a17c-30dfd6831202",
+   "asin": null,
+   "text-representation": {
+    "script": "Latn",
+    "language": "eng"
+   },
+   "quality": "normal",
+   "title": "Unsilent Death",
+   "id": "207c3181-7ba3-4bc8-b87a-334dcfb5236c",
+   "date": "2016-04"
+  },
+  {
+   "date": "2020-11-27",
+   "id": "24f8d2f1-1e96-40a2-afee-86fd2ecb336e",
+   "title": "Unsilent Death",
+   "quality": "normal",
+   "text-representation": {
+    "script": "Latn",
+    "language": "eng"
+   },
+   "asin": null,
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "release-events": [
+    {
+     "area": {
+      "disambiguation": "",
+      "name": "[Worldwide]",
+      "sort-name": "[Worldwide]",
+      "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+      "type-id": null,
+      "iso-3166-1-codes": [
+       "XW"
+      ],
+      "type": null
+     },
+     "date": "2020-11-27"
+    }
+   ],
+   "media": [
+    {
+     "id": "419378ab-e18a-3619-a860-20887546e9f6",
+     "tracks": [
+      {
+       "id": "a2111727-78a9-42a0-bc0e-aa105c80d9f8",
+       "recording": {
+        "length": 31653,
+        "title": "Conform",
+        "first-release-date": "2010-10-28",
+        "id": "0cb17820-c4ce-4d3f-ae5b-121767c4c7a6",
+        "video": false,
+        "disambiguation": ""
+       },
+       "title": "Conform",
+       "position": 1,
+       "number": "1",
+       "length": 31653
+      },
+      {
+       "id": "229b87c4-27c6-4876-a483-e2dded7fc8db",
+       "recording": {
+        "title": "Scum Will Rise",
+        "length": 63584,
+        "disambiguation": "",
+        "video": false,
+        "id": "308e5b2d-3fc4-4b5f-a941-5d2b0d1ec507",
+        "first-release-date": "2010-10-28"
+       },
+       "title": "Scum Will Rise",
+       "position": 2,
+       "number": "2",
+       "length": 63584
+      },
+      {
+       "position": 3,
+       "title": "Your God",
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "0295c2bc-5314-4d7e-bcb4-f3532c9f902e",
+        "video": false,
+        "disambiguation": "",
+        "length": 32613,
+        "title": "Your God"
+       },
+       "id": "224c625c-a5af-4ac2-a01e-ebbe0a557832",
+       "length": 32616,
+       "number": "3"
+      },
+      {
+       "recording": {
+        "length": 90453,
+        "title": "Suffering Soul",
+        "id": "7f3d012a-2307-439a-8fa0-8c092ffcad12",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false
+       },
+       "id": "0ff58328-e4de-43fe-8cde-39f7354737cf",
+       "position": 4,
+       "title": "Suffering Soul",
+       "number": "4",
+       "length": 90453
+      },
+      {
+       "id": "a7cca1e0-e8f7-4fe6-a2d0-6b1d693efc3f",
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "af9aad82-b377-4f45-8439-d370e4a593c9",
+        "title": "Unsilent Death",
+        "length": 161080
+       },
+       "title": "Unsilent Death",
+       "position": 5,
+       "number": "5",
+       "length": 161080
+      },
+      {
+       "number": "6",
+       "length": 28467,
+       "id": "ac87bb1f-40a2-4662-882e-3655f7a31a2c",
+       "recording": {
+        "length": 28466,
+        "title": "Traitor",
+        "first-release-date": "2010-10-28",
+        "id": "3be54ac8-2476-4d61-ad70-d3e6e7c85aa4",
+        "video": false,
+        "disambiguation": ""
+       },
+       "position": 6,
+       "title": "Traitor"
+      },
+      {
+       "id": "057f259a-bb82-4337-b1ef-013ff5821104",
+       "recording": {
+        "title": "I Will Not Follow",
+        "length": 86160,
+        "disambiguation": "",
+        "video": false,
+        "id": "a013059d-23e5-4e7b-9121-49dfa85a56a1",
+        "first-release-date": "2010-10-28"
+       },
+       "position": 7,
+       "title": "I Will Not Follow",
+       "number": "7",
+       "length": 86160
+      },
+      {
+       "number": "8",
+       "length": 59067,
+       "id": "c92f94a7-89b5-4909-912d-4514769e055c",
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "d8f5795e-2843-497d-ad5d-7d1324f9921f",
+        "video": false,
+        "disambiguation": "",
+        "length": 59066,
+        "title": "No Servant"
+       },
+       "position": 8,
+       "title": "No Servant"
+      },
+      {
+       "title": "Scapegoat",
+       "position": 9,
+       "id": "38bab953-eac4-4da1-ab72-5f86e5a3a5f7",
+       "recording": {
+        "title": "Scapegoat",
+        "length": 55080,
+        "disambiguation": "",
+        "video": false,
+        "id": "64a337ad-489d-46ab-b7ed-1caf61e07e04",
+        "first-release-date": "2010-10-28"
+       },
+       "length": 55080,
+       "number": "9"
+      },
+      {
+       "title": "Depths",
+       "position": 10,
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "53940b3f-661b-4362-af2a-f96fe6a3f419",
+        "video": false,
+        "disambiguation": "",
+        "length": 227853,
+        "title": "Depths"
+       },
+       "id": "76a3790a-4de1-4dcc-ad43-164c853f7208",
+       "length": 227853,
+       "number": "10"
+      },
+      {
+       "id": "3e6babbe-0164-408e-9161-8a3dcf35d6f5",
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2020-11-27",
+        "id": "99f960fa-23a4-4281-947f-478b9daad254",
+        "title": "Leech",
+        "length": 60656
+       },
+       "position": 11,
+       "title": "Leech",
+       "number": "11",
+       "length": 60656
+      },
+      {
+       "id": "73310c82-22ac-45a9-aa8e-5bf8484c23d8",
+       "recording": {
+        "length": 80515,
+        "title": "Enemy",
+        "first-release-date": "2020-11-27",
+        "id": "8d8e7eee-2790-4bdd-9171-53863b82020e",
+        "video": false,
+        "disambiguation": ""
+       },
+       "title": "Enemy",
+       "position": 12,
+       "number": "12",
+       "length": 80515
+      },
+      {
+       "number": "13",
+       "length": 82475,
+       "recording": {
+        "id": "37e1b230-8b93-4ad1-82c2-3121ce2b2689",
+        "first-release-date": "2009",
+        "disambiguation": "",
+        "video": false,
+        "length": 81000,
+        "title": "Confront Them"
+       },
+       "id": "a41e775b-47f3-41c0-a174-14e2b0c276ef",
+       "position": 13,
+       "title": "Confront Them"
+      },
+      {
+       "recording": {
+        "length": 102000,
+        "title": "Obscene Humanity",
+        "id": "ba975c66-edc0-474e-a9a9-2a8577fbab81",
+        "first-release-date": "2009",
+        "disambiguation": "",
+        "video": false
+       },
+       "id": "0769e312-d4cd-455f-90fc-a308cf5203e5",
+       "position": 14,
+       "title": "Obscene Humanity",
+       "number": "14",
+       "length": 104756
+      },
+      {
+       "title": "Lies",
+       "position": 15,
+       "id": "97685b79-b2d8-459c-afa2-f5b533d9c48c",
+       "recording": {
+        "id": "ea916e7c-8ac3-40e0-993f-56f8f1d896dc",
+        "first-release-date": "2009",
+        "disambiguation": "",
+        "video": false,
+        "length": 217000,
+        "title": "Lies"
+       },
+       "length": 212062,
+       "number": "15"
+      }
+     ],
+     "track-offset": 0,
+     "position": 1,
+     "track-count": 15,
+     "title": "",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "format": "Digital Media"
+    }
+   ],
+   "packaging": "None",
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "barcode": null,
+   "country": "XW",
+   "disambiguation": "10th anniversary edition",
+   "cover-art-archive": {
+    "count": 1,
+    "front": true,
+    "back": false,
+    "artwork": true,
+    "darkened": false
+   },
+   "status": "Official"
+  },
+  {
+   "release-events": [
+    {
+     "date": "2010",
+     "area": {
+      "name": "United States",
+      "disambiguation": "",
+      "sort-name": "United States",
+      "iso-3166-1-codes": [
+       "US"
+      ],
+      "type": null,
+      "id": "489ce91b-6658-3307-9877-795b68554c98",
+      "type-id": null
+     }
+    }
+   ],
+   "asin": null,
+   "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+   "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+   },
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "packaging": "Jewel Case",
+   "media": [
+    {
+     "format-id": "9712d52a-4509-3d4b-a1a2-67c88c643e31",
+     "format": "CD",
+     "id": "89c26f87-e89a-3371-adff-452272271bee",
+     "track-offset": 0,
+     "tracks": [
+      {
+       "number": "1",
+       "length": 31653,
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "0cb17820-c4ce-4d3f-ae5b-121767c4c7a6",
+        "title": "Conform",
+        "length": 31653
+       },
+       "id": "6642c121-bd96-42aa-a70f-2aa7c5345bfc",
+       "position": 1,
+       "title": "Conform"
+      },
+      {
+       "length": 63586,
+       "number": "2",
+       "position": 2,
+       "title": "Scum Will Rise",
+       "id": "8a203caf-5b38-4c6d-8611-1a721ffa04ef",
+       "recording": {
+        "title": "Scum Will Rise",
+        "length": 63584,
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "308e5b2d-3fc4-4b5f-a941-5d2b0d1ec507"
+       }
+      },
+      {
+       "title": "Your God",
+       "position": 3,
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "0295c2bc-5314-4d7e-bcb4-f3532c9f902e",
+        "title": "Your God",
+        "length": 32613
+       },
+       "id": "bced0484-84c5-4d5c-8299-fc541171dbc2",
+       "length": 32613,
+       "number": "3"
+      },
+      {
+       "position": 4,
+       "title": "Suffering Soul",
+       "id": "7c9f0c02-1baa-4046-8a09-2216ac52ce6b",
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "7f3d012a-2307-439a-8fa0-8c092ffcad12",
+        "video": false,
+        "disambiguation": "",
+        "length": 90453,
+        "title": "Suffering Soul"
+       },
+       "length": 90453,
+       "number": "4"
+      },
+      {
+       "length": 161080,
+       "number": "5",
+       "title": "Unsilent Death",
+       "position": 5,
+       "id": "ec9a6606-d1a0-412c-b2eb-14a5254f025e",
+       "recording": {
+        "title": "Unsilent Death",
+        "length": 161080,
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "af9aad82-b377-4f45-8439-d370e4a593c9"
+       }
+      },
+      {
+       "number": "6",
+       "length": 28466,
+       "recording": {
+        "title": "Traitor",
+        "length": 28466,
+        "disambiguation": "",
+        "video": false,
+        "id": "3be54ac8-2476-4d61-ad70-d3e6e7c85aa4",
+        "first-release-date": "2010-10-28"
+       },
+       "id": "a1c7e69c-d384-4d0b-b7e0-521499bdbfc5",
+       "title": "Traitor",
+       "position": 6
+      },
+      {
+       "length": 86160,
+       "number": "7",
+       "title": "I Will Not Follow",
+       "position": 7,
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "a013059d-23e5-4e7b-9121-49dfa85a56a1",
+        "video": false,
+        "disambiguation": "",
+        "length": 86160,
+        "title": "I Will Not Follow"
+       },
+       "id": "67e70497-f8e0-42c0-b913-bd9ca5acc76f"
+      },
+      {
+       "recording": {
+        "title": "No Servant",
+        "length": 59066,
+        "disambiguation": "",
+        "video": false,
+        "id": "d8f5795e-2843-497d-ad5d-7d1324f9921f",
+        "first-release-date": "2010-10-28"
+       },
+       "id": "6b4c8341-da97-4dbd-828c-98243a38d724",
+       "title": "No Servant",
+       "position": 8,
+       "number": "8",
+       "length": 59066
+      },
+      {
+       "number": "9",
+       "length": 55080,
+       "id": "9912aeee-5048-42b8-babf-17a595aaf6c4",
+       "recording": {
+        "disambiguation": "",
+        "video": false,
+        "id": "64a337ad-489d-46ab-b7ed-1caf61e07e04",
+        "first-release-date": "2010-10-28",
+        "title": "Scapegoat",
+        "length": 55080
+       },
+       "position": 9,
+       "title": "Scapegoat"
+      },
+      {
+       "id": "1fba96a9-2f26-4ed8-a787-8dfa5424deca",
+       "recording": {
+        "title": "Depths",
+        "length": 227853,
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "53940b3f-661b-4362-af2a-f96fe6a3f419"
+       },
+       "title": "Depths",
+       "position": 10,
+       "number": "10",
+       "length": 227853
+      }
+     ],
+     "position": 1,
+     "title": "",
+     "track-count": 10
+    }
+   ],
+   "id": "3328fdf1-3354-4e01-93a2-17590a7e7a1c",
+   "date": "2010",
+   "quality": "normal",
+   "title": "Unsilent Death",
+   "disambiguation": "",
+   "country": "US",
+   "status": "Official",
+   "cover-art-archive": {
+    "darkened": false,
+    "front": false,
+    "count": 0,
+    "back": false,
+    "artwork": false
+   },
+   "barcode": "808720012729"
+  },
+  {
+   "title": "Unsilent Death",
+   "quality": "normal",
+   "date": "2012-04-04",
+   "id": "7e3e8e8a-8519-4d2b-9209-661b81ec704a",
+   "media": [
+    {
+     "title": "",
+     "track-count": 17,
+     "position": 1,
+     "tracks": [
+      {
+       "length": 31666,
+       "number": "1",
+       "title": "Conform",
+       "position": 1,
+       "recording": {
+        "title": "Conform",
+        "length": 31653,
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "0cb17820-c4ce-4d3f-ae5b-121767c4c7a6"
+       },
+       "id": "aa61ea7f-2e45-4003-a87f-f682274866ca"
+      },
+      {
+       "number": "2",
+       "length": 63586,
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "308e5b2d-3fc4-4b5f-a941-5d2b0d1ec507",
+        "video": false,
+        "disambiguation": "",
+        "length": 63584,
+        "title": "Scum Will Rise"
+       },
+       "id": "da6fd66e-ade4-4056-85fc-57ffde0b384c",
+       "title": "Scum Will Rise",
+       "position": 2
+      },
+      {
+       "title": "Your God",
+       "position": 3,
+       "recording": {
+        "length": 32613,
+        "title": "Your God",
+        "id": "0295c2bc-5314-4d7e-bcb4-f3532c9f902e",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false
+       },
+       "id": "1fda1e61-2154-4adc-bb2a-a12f58c268d8",
+       "length": 32613,
+       "number": "3"
+      },
+      {
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "7f3d012a-2307-439a-8fa0-8c092ffcad12",
+        "title": "Suffering Soul",
+        "length": 90453
+       },
+       "id": "6ff89c32-7965-4730-acb9-0c2b77e21e84",
+       "position": 4,
+       "title": "Suffering Soul",
+       "number": "4",
+       "length": 90453
+      },
+      {
+       "number": "5",
+       "length": 161080,
+       "recording": {
+        "length": 161080,
+        "title": "Unsilent Death",
+        "id": "af9aad82-b377-4f45-8439-d370e4a593c9",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false
+       },
+       "id": "4130625f-3a17-4656-b659-b6a14b861b6b",
+       "position": 5,
+       "title": "Unsilent Death"
+      },
+      {
+       "length": 28466,
+       "number": "6",
+       "title": "Traitor",
+       "position": 6,
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "3be54ac8-2476-4d61-ad70-d3e6e7c85aa4",
+        "title": "Traitor",
+        "length": 28466
+       },
+       "id": "1c0492a3-d4c2-4f69-9c92-902eb2116d96"
+      },
+      {
+       "length": 86160,
+       "number": "7",
+       "position": 7,
+       "title": "I Will Not Follow",
+       "id": "229d0358-69ab-48c4-bc26-1f0f3e595b5a",
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "a013059d-23e5-4e7b-9121-49dfa85a56a1",
+        "title": "I Will Not Follow",
+        "length": 86160
+       }
+      },
+      {
+       "length": 59066,
+       "number": "8",
+       "title": "No Servant",
+       "position": 8,
+       "id": "98fbf811-1dda-48a1-8835-d7ba2e1ad35d",
+       "recording": {
+        "disambiguation": "",
+        "video": false,
+        "id": "d8f5795e-2843-497d-ad5d-7d1324f9921f",
+        "first-release-date": "2010-10-28",
+        "title": "No Servant",
+        "length": 59066
+       }
+      },
+      {
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "64a337ad-489d-46ab-b7ed-1caf61e07e04",
+        "title": "Scapegoat",
+        "length": 55080
+       },
+       "id": "020fc748-801e-449e-af41-5bad563ce4b4",
+       "position": 9,
+       "title": "Scapegoat",
+       "number": "9",
+       "length": 55080
+      },
+      {
+       "number": "10",
+       "length": 227853,
+       "id": "53180b77-d872-4403-957d-eb1e86de4cc3",
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "53940b3f-661b-4362-af2a-f96fe6a3f419",
+        "title": "Depths",
+        "length": 227853
+       },
+       "position": 10,
+       "title": "Depths"
+      },
+      {
+       "number": "11",
+       "length": 69413,
+       "id": "d09fb603-786d-4452-81c8-2f3cea54fa83",
+       "recording": {
+        "length": 69000,
+        "title": "Disorder",
+        "first-release-date": "2009",
+        "id": "c37e3c24-3430-4ba6-be6e-83132982c1d4",
+        "video": false,
+        "disambiguation": ""
+       },
+       "position": 11,
+       "title": "Disorder"
+      },
+      {
+       "number": "12",
+       "length": 41786,
+       "id": "a585d448-7d4c-4bed-b8eb-d9aeefc059c5",
+       "recording": {
+        "length": 42000,
+        "title": "Alienate You II",
+        "id": "e964b2d1-c8c9-412c-b2ea-11da724a3c17",
+        "first-release-date": "2009",
+        "disambiguation": "",
+        "video": false
+       },
+       "title": "Alienate You II",
+       "position": 12
+      },
+      {
+       "id": "e4c861a5-e822-4f6a-b61d-b51888966787",
+       "recording": {
+        "length": 102000,
+        "title": "Obscene Humanity",
+        "id": "ba975c66-edc0-474e-a9a9-2a8577fbab81",
+        "first-release-date": "2009",
+        "disambiguation": "",
+        "video": false
+       },
+       "title": "Obscene Humanity",
+       "position": 13,
+       "number": "13",
+       "length": 101773
+      },
+      {
+       "title": "White Walls",
+       "position": 14,
+       "id": "fd65dbba-65b4-4bb8-ba64-0b7c9cd2d55e",
+       "recording": {
+        "title": "White Walls",
+        "length": 69000,
+        "disambiguation": "",
+        "video": false,
+        "id": "98be2973-0193-49f4-afb4-bf211e44beca",
+        "first-release-date": "2009"
+       },
+       "length": 68920,
+       "number": "14"
+      },
+      {
+       "position": 15,
+       "title": "Confront Them",
+       "id": "7c192aa9-368e-433d-8909-dd5439053654",
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2009",
+        "id": "37e1b230-8b93-4ad1-82c2-3121ce2b2689",
+        "title": "Confront Them",
+        "length": 81000
+       },
+       "length": 80613,
+       "number": "15"
+      },
+      {
+       "recording": {
+        "length": 217000,
+        "title": "Lies",
+        "first-release-date": "2009",
+        "id": "ea916e7c-8ac3-40e0-993f-56f8f1d896dc",
+        "video": false,
+        "disambiguation": ""
+       },
+       "id": "5f8a8674-6eeb-406c-a04e-60aef5f230db",
+       "position": 16,
+       "title": "Lies",
+       "number": "16",
+       "length": 217133
+      },
+      {
+       "title": "Alienate You I",
+       "position": 17,
+       "recording": {
+        "id": "b95e65f4-8a8e-40b0-851a-8f805a2554a1",
+        "first-release-date": "2009",
+        "disambiguation": "",
+        "video": false,
+        "length": 73000,
+        "title": "Alienate You I"
+       },
+       "id": "6ec1774c-6a6b-4599-ad38-f6ada2ec48e7",
+       "length": 72706,
+       "number": "17"
+      }
+     ],
+     "track-offset": 0,
+     "id": "d1a11c68-c2d5-3b2f-8ff1-3993472afa39",
+     "format": "CD",
+     "format-id": "9712d52a-4509-3d4b-a1a2-67c88c643e31"
+    }
+   ],
+   "packaging": "Gatefold Cover",
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+   },
+   "asin": null,
+   "packaging-id": "e724a489-a7e8-30a1-a17c-30dfd6831202",
+   "release-events": [
+    {
+     "area": {
+      "disambiguation": "",
+      "name": "Japan",
+      "sort-name": "Japan",
+      "type-id": null,
+      "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+      "type": null,
+      "iso-3166-1-codes": [
+       "JP"
+      ]
+     },
+     "date": "2012-04-04"
+    }
+   ],
+   "barcode": "",
+   "cover-art-archive": {
+    "darkened": false,
+    "back": false,
+    "artwork": false,
+    "front": false,
+    "count": 0
+   },
+   "status": "Official",
+   "disambiguation": "",
+   "country": "JP"
+  },
+  {
+   "barcode": "",
+   "cover-art-archive": {
+    "darkened": false,
+    "count": 1,
+    "front": true,
+    "back": false,
+    "artwork": true
+   },
+   "status": "Official",
+   "country": "XW",
+   "disambiguation": "",
+   "title": "Unsilent Death",
+   "quality": "normal",
+   "date": "2014-01-09",
+   "id": "daaa5b30-f641-4b0d-89bb-f95f9d257b5f",
+   "media": [
+    {
+     "format": "Digital Media",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "track-offset": 0,
+     "tracks": [
+      {
+       "position": 1,
+       "title": "Conform",
+       "id": "4a278d94-b6b3-4b18-ac61-dec4ca3612e2",
+       "recording": {
+        "length": 31653,
+        "title": "Conform",
+        "id": "0cb17820-c4ce-4d3f-ae5b-121767c4c7a6",
+        "first-release-date": "2010-10-28",
+        "disambiguation": "",
+        "video": false
+       },
+       "length": 31654,
+       "number": "1"
+      },
+      {
+       "id": "58c534d3-46d6-4e7d-afcd-02a7e06ea9b7",
+       "recording": {
+        "length": 63584,
+        "title": "Scum Will Rise",
+        "first-release-date": "2010-10-28",
+        "id": "308e5b2d-3fc4-4b5f-a941-5d2b0d1ec507",
+        "video": false,
+        "disambiguation": ""
+       },
+       "title": "Scum Will Rise",
+       "position": 2,
+       "number": "2",
+       "length": 63587
+      },
+      {
+       "id": "8d37461b-aa4e-4529-a5a8-b82c6f0db548",
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "0295c2bc-5314-4d7e-bcb4-f3532c9f902e",
+        "video": false,
+        "disambiguation": "",
+        "length": 32613,
+        "title": "Your God"
+       },
+       "title": "Your God",
+       "position": 3,
+       "number": "3",
+       "length": 32614
+      },
+      {
+       "id": "3a0022fc-ce87-4d2d-8da3-637f546bb26c",
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "7f3d012a-2307-439a-8fa0-8c092ffcad12",
+        "title": "Suffering Soul",
+        "length": 90453
+       },
+       "position": 4,
+       "title": "Suffering Soul",
+       "number": "4",
+       "length": 90454
+      },
+      {
+       "id": "17aa1e36-db64-45af-9d9f-df530a394ad4",
+       "recording": {
+        "first-release-date": "2010-10-28",
+        "id": "af9aad82-b377-4f45-8439-d370e4a593c9",
+        "video": false,
+        "disambiguation": "",
+        "length": 161080,
+        "title": "Unsilent Death"
+       },
+       "title": "Unsilent Death",
+       "position": 5,
+       "number": "5",
+       "length": 161080
+      },
+      {
+       "position": 6,
+       "title": "Traitor",
+       "recording": {
+        "title": "Traitor",
+        "length": 28466,
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "3be54ac8-2476-4d61-ad70-d3e6e7c85aa4"
+       },
+       "id": "0d60cf95-1026-4f32-880b-1bfebe09e410",
+       "length": 28467,
+       "number": "6"
+      },
+      {
+       "id": "f133cad7-588c-4c3d-b617-6fe16c2c2755",
+       "recording": {
+        "video": false,
+        "disambiguation": "",
+        "first-release-date": "2010-10-28",
+        "id": "a013059d-23e5-4e7b-9121-49dfa85a56a1",
+        "title": "I Will Not Follow",
+        "length": 86160
+       },
+       "position": 7,
+       "title": "I Will Not Follow",
+       "number": "7",
+       "length": 86160
+      },
+      {
+       "length": 59067,
+       "number": "8",
+       "position": 8,
+       "title": "No Servant",
+       "id": "dd774a28-68b5-421f-88ab-36ca0892ca26",
+       "recording": {
+        "disambiguation": "",
+        "video": false,
+        "id": "d8f5795e-2843-497d-ad5d-7d1324f9921f",
+        "first-release-date": "2010-10-28",
+        "title": "No Servant",
+        "length": 59066
+       }
+      },
+      {
+       "recording": {
+        "title": "Scapegoat",
+        "length": 55080,
+        "disambiguation": "",
+        "video": false,
+        "id": "64a337ad-489d-46ab-b7ed-1caf61e07e04",
+        "first-release-date": "2010-10-28"
+       },
+       "id": "15cec0ae-7ee0-4256-8f1a-f9cf9bb132d9",
+       "title": "Scapegoat",
+       "position": 9,
+       "number": "9",
+       "length": 55080
+      },
+      {
+       "length": 227854,
+       "number": "10",
+       "title": "Depths",
+       "position": 10,
+       "id": "db8a7e6d-f5a9-4161-bed6-45895c872679",
+       "recording": {
+        "length": 227853,
+        "title": "Depths",
+        "first-release-date": "2010-10-28",
+        "id": "53940b3f-661b-4362-af2a-f96fe6a3f419",
+        "video": false,
+        "disambiguation": ""
+       }
+      }
+     ],
+     "id": "a0295250-1688-30eb-9df5-d6cc6d0fe216",
+     "title": "",
+     "track-count": 10,
+     "position": 1
+    }
+   ],
+   "packaging": "None",
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+   },
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "asin": null,
+   "release-events": [
+    {
+     "date": "2014-01-09",
+     "area": {
+      "sort-name": "[Worldwide]",
+      "disambiguation": "",
+      "name": "[Worldwide]",
+      "type-id": null,
+      "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+      "type": null,
+      "iso-3166-1-codes": [
+       "XW"
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "release-offset": 0
+}

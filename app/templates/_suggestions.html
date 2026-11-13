@@ -1,0 +1,52 @@
+<div data-active="{{ 1 if busy else 0 }}">
+{% if suggestions %}
+<ol class="suggestions">
+  {% for s in suggestions %}
+  <li class="sug-card" id="s-{{ s.mbid }}">
+    <div class="sug-pic">{% if s.image %}<img src="{{ s.image }}" alt="" loading="lazy">{% else %}<span class="avatar" aria-hidden="true">{{ s.name[:1]|upper }}</span>{% endif %}</div>
+    <div class="sug-body">
+      <h2>{% if s.has_data %}<a href="/artists/{{ s.mbid }}">{{ s.name }}</a>{% else %}<a href="https://musicbrainz.org/artist/{{ s.mbid }}" target="_blank" rel="noopener">{{ s.name }}</a>{% endif %}</h2>
+      {% set facts = [s.years, ('from ' ~ s.origin) if s.origin else None]|select|list %}
+      {% if facts or s.genres %}<div class="muted small">{{ (facts + [s.genres|join(', ')] if s.genres else facts)|select|join(' · ') }}</div>{% endif %}
+      <p class="reasons">{{ s.reasons }}.</p>
+      {% if s.bio %}<p class="excerpt small">{{ s.bio.text }} <span class="muted">From {% if s.bio.url %}<a href="{{ s.bio.url }}" target="_blank" rel="noopener">{{ s.bio.label }}</a>{% else %}{{ s.bio.label }}{% endif %}{% if s.bio.license %}, {{ s.bio.license }}{% endif %}</span></p>{% endif %}
+      {% if s.hits.known %}
+        {% if s.hits.songs %}
+          {% set best = s.hits.songs|sort(attribute='score', reverse=True) %}
+          <ul class="picks small">
+            {% for song in best[:5] %}<li><a href="{{ song.url }}" target="_blank" rel="noopener">{{ song.title }}</a>
+              <span class="muted">{{ song.album }}{% if song.release_date %}, {{ song.release_date }}{% endif %}{% if song.reasons %} &middot; {{ song.reasons|join(', ') }}{% endif %}</span></li>{% endfor %}
+          </ul>
+          {% if best|length > 5 %}<p class="muted small">And {{ best|length - 5 }} more.</p>{% endif %}
+        {% else %}
+          <p class="muted small">None of their songs pass the hits rules{% if s.hits.owned %}, apart from {{ s.hits.owned }} you already have{% endif %}.</p>
+        {% endif %}
+      {% elif s.pending %}
+        <p class="small"><span class="badge busy">Looking up</span> Finding their albums and how much each song is played. The songs are added when it's done.</p>
+      {% endif %}
+      <div class="actions">
+        {% if s.hits.known and s.hits.songs %}
+          <form method="post" action="/suggestions/{{ s.mbid }}/get" class="inline">
+            <button class="btn small primary" title="Add these songs to {{ s.name }} Hits and to Suggestions, and download them through Soulseek">Get their hits ({{ s.hits.songs|length }} song{{ '' if s.hits.songs|length == 1 else 's' }})</button></form>
+        {% elif not s.hits.known and not s.pending %}
+          <form method="post" action="/suggestions/{{ s.mbid }}/get" class="inline">
+            <button class="btn small primary" title="Look up their albums first (about half a minute), then add and download the songs that pass the hits rules">Get their hits</button></form>
+        {% endif %}
+        {% if s.playlist %}<a class="btn small" href="/playlists/{{ s.playlist.id }}">Open {{ s.playlist.name }}</a>{% endif %}
+        <form method="post" action="/suggestions/{{ s.mbid }}/dismiss" class="inline">
+          <input type="hidden" name="name" value="{{ s.name }}">
+          <button class="btn small">Not interested</button></form>
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ol>
+{% if total > n %}<div class="center"><a class="btn" href="/suggestions?n={{ n + 30 }}">Show more</a></div>{% endif %}
+{% else %}
+<div class="empty">
+  <p>No suggestions yet. They come from the artist lookups: similar artists and influences of the artists in your library.</p>
+  {% if ast_running %}<p class="small"><span class="badge busy">Looking up</span> {{ ast.step or 'Starting' }}{% if ast.total %}: {{ ast.done|n }} of {{ ast.total|n }}{% endif %}</p>{% endif %}
+  <div class="actions"><a class="btn" href="/artists">See the artist lookups</a></div>
+</div>
+{% endif %}
+</div>

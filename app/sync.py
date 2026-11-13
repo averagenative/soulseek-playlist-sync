@@ -12,7 +12,9 @@ from . import apple, db, hits, library, profiles, spotify, youtube
 from .config import Config
 from .folders import place, rename_all, safe_name, song_file_name, write_m3u
 
-SOURCES = {"apple": "Apple Music", "spotify": "Spotify", "youtube": "YouTube", "local": "My music"}
+SOURCES = {"apple": "Apple Music", "spotify": "Spotify", "youtube": "YouTube", "local": "My music",
+           "suggested": "Suggestions"}
+ALL_SUGGESTIONS = "suggestions"      # remote ID of the playlist with every suggested artist's songs
 
 log = logging.getLogger(__name__)
 SONG_FIELDS = ("isrc", "title", "artist", "album", "album_artist", "track_number", "disc_number",
@@ -146,6 +148,9 @@ def fetch(cfg: Config, pid: str) -> None:
     if p["source"] == "local":
         _fetch_local(cfg, p)
         return
+    if p["source"] == "suggested":
+        _fetch_suggested(p)
+        return
     try:
         with _client(cfg, p["source"]) as api:
             name = api.playlist_name(p["remote_id"])
@@ -193,6 +198,77 @@ def _fetch_local(cfg: Config, p) -> None:
     with db.connect() as c:
         _save_songs(c, library.songs_for_keys(keys))
         c.execute("UPDATE playlists SET fetched_at = ? WHERE id = ?", (db.now(), p["id"]))
+
+
+# ------------------------------------------------------------------ Suggestions playlists
+
+def _suggested_id(remote: str, owner: int) -> str:
+    return f"suggested:{remote}" + (f"@{owner}" if owner != 1 else "")
+
+
+def add_suggested(cfg: Config, mbid: str, artist: str) -> tuple[str, str]:
+    """The "<Artist> Hits" playlist for a suggested artist and the Suggestions playlist with every one of them,
+    made on first use for the signed-in profile. Returns (artist playlist, Suggestions)."""
+    out = []
+    for remote, name in ((mbid, f"{artist} Hits"), (ALL_SUGGESTIONS, "Suggestions")):
+        pid = _suggested_id(remote, cfg.profile)
+        with db.connect() as c:
+            if not c.execute("SELECT 1 FROM playlists WHERE id = ?", (pid,)).fetchone():
+                c.execute("INSERT INTO playlists (id, source, remote_id, name, folder, numbering, library_mode, owner) "
+                          "VALUES (?, 'suggested', ?, ?, ?, ?, ?, ?)",
+                          (pid, remote, name, _unique_folder(cfg, "suggested", name), 1 if cfg.default_numbering else 0,
+                           cfg.default_library_mode, cfg.profile))
+        out.append(pid)
+    return out[0], out[1]
+
+
+def add_suggested_songs(pid: str, songs: list[dict]) -> int:
+    """Append songs (from artists.suggested_hits) to a suggested artist's playlist, skipping ones it has."""
+    t = db.now()
+    with db.connect() as c:
+        have = {r[0] for r in c.execute("SELECT song_key FROM entries WHERE playlist_id = ?", (pid,))}
+        new = [s for s in songs if s["key"] not in have]
+        pos = c.execute("SELECT COALESCE(MAX(position), 0) FROM entries WHERE playlist_id = ?", (pid,)).fetchone()[0]
+        _save_songs(c, new)
+        c.executemany("INSERT INTO entries (playlist_id, position, song_key) VALUES (?, ?, ?)",
+                      [(pid, pos + i, s["key"]) for i, s in enumerate(new, 1)])
+        c.executemany("INSERT OR IGNORE INTO items (playlist_id, song_key, updated_at) VALUES (?, ?, ?)",
+                      [(pid, s["key"], t) for s in new])
+        c.execute("UPDATE playlists SET fetched_at = ? WHERE id = ?", (t, pid))
+    return len(new)
+
+
+def _fetch_suggested(p) -> None:
+    """A suggested artist's playlist keeps the songs Get their hits added. Suggestions lists the songs of
+    every one of its owner's artist playlists, in the order they were added, so removing an artist's
+    playlist takes its songs out here too."""
+    if p["remote_id"] != ALL_SUGGESTIONS:
+        with db.connect() as c:
+            c.execute("UPDATE playlists SET fetched_at = ? WHERE id = ?", (db.now(), p["id"]))
+        return
+    with db.connect() as c:
+        rows = c.execute(
+            "SELECT s.* FROM playlists p JOIN entries e ON e.playlist_id = p.id JOIN songs s ON s.key = e.song_key "
+            "WHERE p.source = 'suggested' AND p.owner = ? AND p.remote_id != ? ORDER BY p.rowid, e.position",
+            (p["owner"], ALL_SUGGESTIONS)).fetchall()
+    seen, tracks = set(), []
+    for r in rows:
+        if r["key"] not in seen:
+            seen.add(r["key"])
+            tracks.append(dict(r))
+    _replace_entries(p["id"], tracks)
+
+
+def refresh_suggested(cfg: Config, pid: str) -> None:
+    """Bring Suggestions up to date after an artist's playlist changed or went: its songs, files, and .m3u."""
+    fetch(cfg, pid)
+    prune(cfg, pid)
+    reconcile(cfg, pid, apply=True)
+
+
+def suggestions_playlist(owner: int) -> str | None:
+    pid = _suggested_id(ALL_SUGGESTIONS, owner)
+    return pid if playlist(pid) else None
 
 
 def add_songs(cfg: Config, pid: str, keys: list[str]) -> int:

@@ -1,0 +1,101 @@
+{
+ "created": "2026-11-13T19:00:26.040Z",
+ "count": 1,
+ "offset": 0,
+ "release-groups": [
+  {
+   "id": "6d2da807-879c-4ce4-b9dc-797162c56456",
+   "type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+   "score": 100,
+   "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc",
+   "artist-credit-id": "259973d4-7efb-3bd7-9f7f-b6c286cc5f0d",
+   "count": 6,
+   "title": "Unsilent Death",
+   "first-release-date": "2010-10-28",
+   "primary-type": "Album",
+   "artist-credit": [
+    {
+     "name": "Nails",
+     "artist": {
+      "id": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1",
+      "name": "Nails",
+      "sort-name": "Nails",
+      "disambiguation": "US grindcore/powerviolence band"
+     }
+    }
+   ],
+   "releases": [
+    {
+     "id": "207c3181-7ba3-4bc8-b87a-334dcfb5236c",
+     "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+     "title": "Unsilent Death",
+     "status": "Official"
+    },
+    {
+     "id": "7e3e8e8a-8519-4d2b-9209-661b81ec704a",
+     "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+     "title": "Unsilent Death",
+     "status": "Official"
+    },
+    {
+     "id": "3328fdf1-3354-4e01-93a2-17590a7e7a1c",
+     "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+     "title": "Unsilent Death",
+     "status": "Official"
+    },
+    {
+     "id": "24f8d2f1-1e96-40a2-afee-86fd2ecb336e",
+     "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+     "title": "Unsilent Death",
+     "status": "Official"
+    },
+    {
+     "id": "daaa5b30-f641-4b0d-89bb-f95f9d257b5f",
+     "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+     "title": "Unsilent Death",
+     "status": "Official"
+    },
+    {
+     "id": "1f57f1bb-e0d3-435a-9297-1a28ef49e599",
+     "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+     "title": "Unsilent Death",
+     "status": "Official"
+    }
+   ],
+   "tags": [
+    {
+     "count": 0,
+     "name": "rock"
+    },
+    {
+     "count": 0,
+     "name": "heavy metal"
+    },
+    {
+     "count": 0,
+     "name": "punk"
+    },
+    {
+     "count": 2,
+     "name": "metalcore"
+    },
+    {
+     "count": 2,
+     "name": "hardcore punk"
+    },
+    {
+     "count": 1,
+     "name": "crust punk"
+    },
+    {
+     "count": 5,
+     "name": "grindcore"
+    },
+    {
+     "count": 4,
+     "name": "powerviolence"
+    }
+   ]
+  }
+ ]
+}

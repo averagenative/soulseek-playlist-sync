@@ -6,7 +6,7 @@ import threading
 import time
 from pathlib import Path
 
-from . import db, favorites, hits, library, settings, sync, youtube
+from . import artists, db, favorites, hits, library, settings, sync, youtube
 from .config import Config
 from .match import rank_candidates, search_queries
 from .slskd import Slskd, SlskdError
@@ -35,15 +35,18 @@ class Worker:
 
     @staticmethod
     def refresh(cfg: Config) -> None:
-        """Every few hours: update auto-updating playlists, sync favorites if that's switched on, and look up
-        new songs for hits playlists (which rebuilds them when it's done)."""
+        """Every few hours: update auto-updating playlists, sync favorites if that's switched on, look up
+        new songs for hits playlists (which rebuilds them when it's done), and then look up artists."""
         try:
             sync.refresh_auto_playlists(cfg)
         finally:
             try:
                 favorites.scheduled(cfg)
             finally:
-                hits.start_if_needed(cfg)
+                try:
+                    hits.start_if_needed(cfg)
+                finally:
+                    artists.start_after_hits(cfg)
 
     def run(self):
         client = Slskd(self.cfg)

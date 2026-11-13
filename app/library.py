@@ -3,6 +3,7 @@ and make playlists from it."""
 import hashlib
 import logging
 import os
+import re
 import threading
 from collections import Counter
 from pathlib import Path
@@ -249,7 +250,7 @@ def folder_label(cfg: Config, path: str) -> str | None:
     parts = path[len(prefix):].split(os.sep)
     if len(parts) < 2:
         return None
-    if parts[0] in (cfg.apple_dir, cfg.spotify_dir, cfg.local_dir) and len(parts) >= 3:
+    if parts[0] in (cfg.apple_dir, cfg.spotify_dir, cfg.local_dir, cfg.suggestions_dir) and len(parts) >= 3:
         return f"{parts[0]}/{parts[1]}"
     return parts[0]
 
@@ -261,7 +262,7 @@ def folder_path(cfg: Config, label: str) -> Path:
 def folders(cfg: Config) -> list[tuple[str, int]]:
     """(folder, number of files) for the folder filter."""
     stamp = (db.get_kv("library_scanned_at"), stats()["files"], cfg.music_root, cfg.apple_dir, cfg.spotify_dir,
-             cfg.local_dir)
+             cfg.local_dir, cfg.suggestions_dir)
     if _folder_cache.get("stamp") != stamp:
         with db.connect() as c:
             counts = Counter(folder_label(cfg, r[0]) for r in c.execute("SELECT path FROM library"))
@@ -374,3 +375,105 @@ def file_for_art(key: str) -> dict | None:
     with db.connect() as c:
         r = c.execute("SELECT path, album FROM library WHERE art_key = ? ORDER BY path LIMIT 1", (key,)).fetchone()
     return dict(r) if r else None
+
+
+# ------------------------------------------------------------------ artists
+
+VARIOUS = {"various artists", "various", "va", "unknown artist", "unknown"}
+VARIOUS_MBID = "89ad4ac3-39f7-470e-963a-56509c546377"     # MusicBrainz's "Various Artists"
+_UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+_artist_cache: dict = {}
+
+
+def sort_key(name: str | None) -> str:
+    n = norm(name)
+    return n[4:] if n.startswith("the ") else n
+
+
+def artist_index() -> dict:
+    """Every artist in the library once: {"artists": [...], "by_key": {name key: artist}, "by_mbid": {...}}.
+
+    Songs count for their first credited artist ("Nirvana feat. X" is Nirvana). Names that turn out to be one
+    MusicBrainz artist are one entry: files of "JAY-Z & Kanye West" tagged with JAY-Z's ID count for JAY-Z.
+    Each artist has its name, keys (every normalized name it goes by), mbid (or None), how the ID was found,
+    song_keys, songs, albums, and album_titles (its three biggest albums, for finding its ID). Cached until the library or the name lookups change."""
+    with db.connect() as c:
+        stamp = (str(db._path), db.get_kv("library_scanned_at"),
+                 tuple(c.execute("SELECT COUNT(*), MAX(rowid) FROM library").fetchone()),
+                 tuple(c.execute("SELECT COUNT(*), MAX(checked_at) FROM artist_names").fetchone()))
+        if _artist_cache.get("stamp") == stamp:
+            return _artist_cache["index"]
+        rows = c.execute("SELECT artist, album_artist, album, song_key, mb_artist FROM library "
+                         "WHERE song_key IS NOT NULL").fetchall()
+        resolved = {r["name"]: (r["mbid"], r["how"]) for r in c.execute("SELECT name, mbid, how FROM artist_names")}
+    by_name: dict[str, dict] = {}
+    for r in rows:
+        who = primary_artist(r["artist"] or r["album_artist"])
+        k = norm(who)
+        if not k or k in VARIOUS:
+            continue
+        e = by_name.get(k)
+        if e is None:
+            e = by_name[k] = {"key": k, "names": Counter(), "song_keys": set(), "albums": set(), "tags": Counter(),
+                              "titles": Counter()}
+        e["names"][who] += 1
+        e["song_keys"].add(r["song_key"])
+        if r["album"]:
+            e["albums"].add(norm(r["album"]))
+            e["titles"][r["album"]] += 1
+        tag = (r["mb_artist"] or "").strip().lower()
+        if _UUID.match(tag) and tag != VARIOUS_MBID:
+            e["tags"][tag] += 1
+    merged: dict[str, dict] = {}
+    alone = []
+    for k, e in by_name.items():
+        found, how = resolved.get(k, ("", None))
+        if how == "manual" and found:
+            mbid = found
+        elif e["tags"]:
+            mbid, how = e["tags"].most_common(1)[0][0], "tag"
+        else:
+            mbid = found or None
+            how = how if found else None
+        e.update(mbid=mbid, how=how)
+        if mbid:
+            merged.setdefault(mbid, []).append(e)
+        else:
+            alone.append([e])
+    artists = []
+    for group in list(merged.values()) + alone:
+        group.sort(key=lambda e: -len(e["song_keys"]))
+        top = group[0]
+        song_keys = set().union(*(e["song_keys"] for e in group))
+        artists.append({"key": top["key"], "name": top["names"].most_common(1)[0][0], "mbid": top["mbid"],
+                        "how": top["how"], "keys": [e["key"] for e in group], "song_keys": song_keys,
+                        "songs": len(song_keys), "albums": len(set().union(*(e["albums"] for e in group))),
+                        "album_titles": [t for t, _ in sum((e["titles"] for e in group), Counter()).most_common(3)]})
+    index = {"artists": artists, "by_key": {k: a for a in artists for k in a["keys"]},
+             "by_mbid": {a["mbid"]: a for a in artists if a["mbid"]}}
+    _artist_cache.update(stamp=stamp, index=index)
+    return index
+
+
+def artist_for(name: str | None) -> dict | None:
+    """The index entry for a name as songs credit it."""
+    return artist_index()["by_key"].get(norm(primary_artist(name)))
+
+
+def artists(cfg: Config, q: str = "", letter: str = "", sort: str = "name") -> list[dict]:
+    """The Artists page: one row per artist, with album and song counts and whether its page has data."""
+    with db.connect() as c:
+        have = {r[0] for r in c.execute("SELECT mbid FROM artists WHERE fetched LIKE '%\"musicbrainz\"%'")}
+    words = norm(q).split()
+    out = []
+    for a in artist_index()["artists"]:
+        sk = sort_key(a["name"])
+        first = sk[:1].upper()
+        first = first if first.isalpha() else "#"
+        if words and not all(w in " ".join(a["keys"]) for w in words):
+            continue
+        if letter and first != letter:
+            continue
+        out.append({**a, "letter": first, "sort": sk, "has_data": a["mbid"] in have})
+    out.sort(key=(lambda a: (-a["songs"], a["sort"])) if sort == "songs" else (lambda a: a["sort"]))
+    return out

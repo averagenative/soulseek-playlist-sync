@@ -1,0 +1,227 @@
+[
+ {
+  "artist_mbid": "8bfac288-ccc5-448d-9573-c33ea2aa5c30",
+  "name": "Red Hot Chili Peppers",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 11684,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711",
+  "name": "Radiohead",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 11156,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "67f66c07-6e61-4026-ade5-7e782fad3a5d",
+  "name": "Foo Fighters",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 10329,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "084308bd-1654-436f-ba03-df6697104e19",
+  "name": "Green Day",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 9714,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "83b9cbe7-9857-49e2-ab8e-b57b01038103",
+  "name": "Pearl Jam",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 9335,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "ba0d6274-db14-4ef5-b28d-657ebde1a396",
+  "name": "The Smashing Pumpkins",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 9271,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab",
+  "name": "Metallica",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 8788,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "b10bbbfc-cf9e-42e0-be17-e2c3e1d2600d",
+  "name": "The Beatles",
+  "comment": "UK rock band, “The Fab Four”",
+  "type": "Group",
+  "gender": null,
+  "score": 8283,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "9c9f1380-2516-4fc9-a3e6-f9f61941d090",
+  "name": "Muse",
+  "comment": "UK rock band",
+  "type": "Group",
+  "gender": null,
+  "score": 8118,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "3798b104-01cb-484c-a3b0-56adc6399b80",
+  "name": "Rage Against the Machine",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 8096,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "23a03e33-a603-404e-bcbf-2c00159d7067",
+  "name": "The Offspring",
+  "comment": "American punk",
+  "type": "Group",
+  "gender": null,
+  "score": 7978,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "cc0b7089-c08d-4c10-b6b0-873582c17fd6",
+  "name": "System of a Down",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 7961,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "153c9281-268f-4cf3-8938-f5a4593e5df4",
+  "name": "Soundgarden",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 7922,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "11ae9fbb-f3d7-4a47-936f-4c0a04d3b3b5",
+  "name": "The White Stripes",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 7893,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "83d91898-7763-47d7-b03b-b92132375c47",
+  "name": "Pink Floyd",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 7837,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "678d88b2-87b0-403b-b63d-5da7465aecc3",
+  "name": "Led Zeppelin",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 7791,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+  "name": "Queen",
+  "comment": "UK rock group",
+  "type": "Group",
+  "gender": null,
+  "score": 7725,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "6fe07aa5-fec0-4eca-a456-f29bff451b04",
+  "name": "Weezer",
+  "comment": "American rock band",
+  "type": "Group",
+  "gender": null,
+  "score": 7520,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "ea4dfa26-f633-4da6-a52a-f49ea4897b58",
+  "name": "R.E.M.",
+  "comment": "American rock band",
+  "type": "Group",
+  "gender": null,
+  "score": 7493,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "f59c5520-5f46-4d2c-b2c4-822eabf53419",
+  "name": "Linkin Park",
+  "comment": "American rock band",
+  "type": "Group",
+  "gender": null,
+  "score": 7398,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "eeb1195b-f213-4ce1-b28c-8565211f8e43",
+  "name": "Guns N’ Roses",
+  "comment": "American hard rock band from Los Angeles",
+  "type": "Group",
+  "gender": null,
+  "score": 7216,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "4bd95eea-b9f6-4d70-a36c-cfea77431553",
+  "name": "Alice in Chains",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 7203,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "39ab1aed-75e0-4140-bd47-540276886b60",
+  "name": "Oasis",
+  "comment": "Noel & Liam Gallagher",
+  "type": "Group",
+  "gender": null,
+  "score": 7198,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "7dc8f5bd-9d0b-4087-9f73-dc164950bbd8",
+  "name": "Queens of the Stone Age",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 7151,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ },
+ {
+  "artist_mbid": "b071f9fa-14b0-4217-8e97-eb41da73f598",
+  "name": "The Rolling Stones",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 7139,
+  "reference_mbid": "5b11f4ce-a62d-471e-81fc-a69a8278c7da"
+ }
+]

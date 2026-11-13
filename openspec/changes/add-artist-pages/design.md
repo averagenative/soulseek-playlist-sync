@@ -113,7 +113,7 @@ Favorites come from the signed-in profile's rows in `hit_favorites` (see the `ad
 
 ### 10. Get their hits uses the hits rules
 
-**Get their hits** picks a suggested artist's songs with the same rules a hits playlist applies to an album you own. The per-album picking moves out of `hits.plan()` into `hits.pick_album(songs, kind, opts, stats)`, with no change in behavior for hits playlists, so both callers share one rule set.
+**Get their hits** picks a suggested artist's songs with the same rules a hits playlist applies to an album you own. The per-album picking moves out of `hits.plan()` into `hits.pick_album(songs, kind, opts)`, and reading a song's numbers into `hits.signals()`, with no change in behavior for hits playlists, so both callers share one rule set.
 
 For a suggested artist, the albums come from MusicBrainz:
 
@@ -123,6 +123,8 @@ For a suggested artist, the albums come from MusicBrainz:
 4. Each song counts once, on the earliest album it's on, as in a hits playlist. Run `pick_album()` on each album and single with the Suggestions rules.
 
 The Suggestions rules are a max songs per album (default 5) and a cutoff (default 1.25), set on the Suggestions page and stored in `kv` as `suggestions_rules:<profile id>`. There's no minimum per album: these are albums you don't own, and filling every album to two songs would add 60 songs for an artist with 30 albums. So a song is picked only when it passes a rule: it charted on the Hot 100, it came out as a single near its album, or its listener count or Genius views are at least the cutoff times its album's median. When no song passes (an artist with no chart, single, or listener data), the suggestion says so and doesn't offer the button.
+
+A live run on 2026-11-13 showed that the album's median alone isn't enough for artists you don't own: an EP of remixes and B-sides has a tiny median, so its one known song looked like a 100x standout, and prolific artists came to 60 to 114 songs. So the median a suggested artist's song is compared with is never lower than the median of the artist's album songs, and titles that mark another version (mix, edit, version, take, and the like) are left out. Hits playlists are unchanged. With both, the top 25 suggestions for a test library came to 13 to 68 songs each, 28 in the middle, led by the artists' best-known songs.
 
 A discography costs one request per album or EP, plus one or two for the release groups: about 20 to 35 seconds for most artists at MusicBrainz's pace. The scheduled artist job fetches the top 25 suggestions ahead of time, so their cards list the songs and the button shows the count. For any other suggestion, **Get their hits** puts the artist at the front of the job's queue, the card shows the progress, and the songs are added when the lookup finishes.
 
@@ -146,7 +148,7 @@ Songs are keyed `mb:<recording id>` and saved in `songs` with title, artist, alb
 - `GET /artists`: index (search, letter, sort) and the lookup status (a live region like the hits status).
 - `GET /artists/{mbid}`: the artist page.
 - `GET /artists/by-name?n=`: resolves a name to an ID and redirects, or shows the library-only page.
-- `POST /artists/{mbid}/identify` (a pasted link), and `POST /artists/lookup` (all, or `?mbid=` for one artist first).
+- `POST /artists/identify` (a library name and a pasted link, which also works for a name with no ID yet), and `POST /artists/lookup` (all, or one artist first by `mbid` or `name`).
 - `GET /suggestions`, `POST /suggestions/rules`, `POST /suggestions/{mbid}/get`, `POST /suggestions/{mbid}/dismiss`, and `POST /suggestions/{mbid}/undismiss`.
 - A **Artists** pill in the nav next to **My music**.
 

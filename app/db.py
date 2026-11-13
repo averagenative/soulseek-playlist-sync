@@ -200,6 +200,88 @@ CREATE TABLE IF NOT EXISTS hit_charts (
 );
 -- Song keys of each profile's Apple Music Favorite Songs and Spotify Liked Songs.
 """ + HIT_FAVORITES + """;
+
+-- Artist pages: what the app has learned about artists from open sources, keyed by MusicBrainz artist ID.
+-- Which artist a library name is ('' = looked, nothing matched).
+CREATE TABLE IF NOT EXISTS artist_names (
+    name       TEXT PRIMARY KEY,          -- norm(primary_artist(...))
+    mbid       TEXT NOT NULL DEFAULT '',
+    how        TEXT,                      -- tag | search | manual
+    checked_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS artists (
+    mbid           TEXT PRIMARY KEY,
+    name           TEXT,
+    sort_name      TEXT,
+    type           TEXT,                  -- Group, Person, ...
+    area           TEXT,
+    begin_area     TEXT,
+    life_begin     TEXT,
+    life_end       TEXT,
+    ended          INTEGER,
+    disambiguation TEXT,
+    genres         TEXT,                  -- JSON list
+    wikidata       TEXT,                  -- Q-ID
+    enwiki         TEXT,                  -- English Wikipedia title
+    links          TEXT,                  -- JSON: kind -> URL
+    facts          TEXT,                  -- JSON: what Wikidata adds (inception, dissolved, formed_in, image)
+    image_file     TEXT,                  -- file name under DATA_DIR/artwork/artists
+    image_source   TEXT,                  -- the Commons file or URL it came from
+    image_credit   TEXT,                  -- JSON: author, license, page
+    fetched        TEXT                   -- JSON: source -> when it was last fetched
+);
+CREATE TABLE IF NOT EXISTS artist_bios (
+    mbid       TEXT NOT NULL,
+    source     TEXT NOT NULL,             -- wikipedia | lastfm | discogs | audiodb
+    text       TEXT NOT NULL,
+    url        TEXT,
+    license    TEXT,
+    fetched_at REAL NOT NULL,
+    PRIMARY KEY (mbid, source)
+);
+-- Related artists. kind: member, member_of, influenced_by, influenced, similar. other_key is the other
+-- artist's MusicBrainz ID, else its Wikidata ID, else its normalized name.
+CREATE TABLE IF NOT EXISTS artist_links (
+    mbid           TEXT NOT NULL,
+    kind           TEXT NOT NULL,
+    other_key      TEXT NOT NULL,
+    other_mbid     TEXT,
+    other_wikidata TEXT,
+    other_name     TEXT,
+    source         TEXT NOT NULL,         -- musicbrainz | wikidata | listenbrainz | lastfm
+    score          REAL,                  -- similarity, 0 to 1 within the source's list
+    detail         TEXT,                  -- JSON: a membership's years and instruments
+    PRIMARY KEY (mbid, kind, other_key, source)
+);
+CREATE INDEX IF NOT EXISTS artist_links_other ON artist_links(other_mbid);
+-- Suggestions a profile said no to.
+CREATE TABLE IF NOT EXISTS suggestion_dismissed (
+    profile INTEGER NOT NULL,
+    mbid    TEXT NOT NULL,
+    name    TEXT,
+    at      REAL NOT NULL,
+    PRIMARY KEY (profile, mbid)
+);
+-- A suggested artist's albums, EPs and singles, each with one tracklist, for Get their hits.
+CREATE TABLE IF NOT EXISTS artist_releases (
+    rgid       TEXT PRIMARY KEY,          -- MusicBrainz release group
+    mbid       TEXT NOT NULL,
+    title      TEXT,
+    kind       TEXT,                      -- album | ep | single | soundtrack
+    year       INTEGER,
+    release_id TEXT,                      -- the release the tracklist is from
+    fetched_at REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS artist_releases_mbid ON artist_releases(mbid);
+CREATE TABLE IF NOT EXISTS artist_tracks (
+    rgid      TEXT NOT NULL,
+    disc      INTEGER NOT NULL,
+    track     INTEGER NOT NULL,
+    recording TEXT,
+    title     TEXT,
+    length    INTEGER,                    -- milliseconds
+    PRIMARY KEY (rgid, disc, track)
+);
 """
 
 _path: Path | None = None

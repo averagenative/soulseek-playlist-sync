@@ -1,0 +1,184 @@
+{
+ "similarartists": {
+  "artist": [
+   {
+    "name": "Kurt Cobain",
+    "mbid": "3c9b356d-d1db-4f4e-a7a3-2d00c1d70255",
+    "match": "1",
+    "url": "https://www.last.fm/music/Kurt+Cobain",
+    "streamable": "0"
+   },
+   {
+    "name": "The Jins",
+    "mbid": "dc010eb5-ebdc-4b88-85cf-6db44c3a9ba3",
+    "match": "0.429748",
+    "url": "https://www.last.fm/music/The+Jins",
+    "streamable": "0"
+   },
+   {
+    "name": "Alice in Chains",
+    "mbid": "4bd95eea-b9f6-4d70-a36c-cfea77431553",
+    "match": "0.429712",
+    "url": "https://www.last.fm/music/Alice+in+Chains",
+    "streamable": "0"
+   },
+   {
+    "name": "Soundgarden",
+    "mbid": "153c9281-268f-4cf3-8938-f5a4593e5df4",
+    "match": "0.374561",
+    "url": "https://www.last.fm/music/Soundgarden",
+    "streamable": "0"
+   },
+   {
+    "name": "Mudhoney",
+    "mbid": "e675295a-1efe-4247-aa3b-53b78d0cdffc",
+    "match": "0.368610",
+    "url": "https://www.last.fm/music/Mudhoney",
+    "streamable": "0"
+   },
+   {
+    "name": "Stone Temple Pilots",
+    "mbid": "8c32bb01-58a3-453b-8050-8c0620edb0e5",
+    "match": "0.309368",
+    "url": "https://www.last.fm/music/Stone+Temple+Pilots",
+    "streamable": "0"
+   },
+   {
+    "name": "Hole",
+    "mbid": "1dcc8968-f2cd-441c-beda-6270f70f2863",
+    "match": "0.274293",
+    "url": "https://www.last.fm/music/Hole",
+    "streamable": "0"
+   },
+   {
+    "name": "Green River",
+    "mbid": "78f56916-fe11-4110-8f10-d553ddf8de7b",
+    "match": "0.273321",
+    "url": "https://www.last.fm/music/Green+River",
+    "streamable": "0"
+   },
+   {
+    "name": "Meat Puppets",
+    "mbid": "3df040ee-2b8b-446b-937a-3f86f4b2cabf",
+    "match": "0.259685",
+    "url": "https://www.last.fm/music/Meat+Puppets",
+    "streamable": "0"
+   },
+   {
+    "name": "Mad Season",
+    "mbid": "bfd085b8-0bbf-46b3-8ab9-193bca5c85e7",
+    "match": "0.257318",
+    "url": "https://www.last.fm/music/Mad+Season",
+    "streamable": "0"
+   },
+   {
+    "name": "Local H",
+    "mbid": "baaf92f5-f2b2-4f51-9723-abed41a257f8",
+    "match": "0.256455",
+    "url": "https://www.last.fm/music/Local+H",
+    "streamable": "0"
+   },
+   {
+    "name": "Pearl Jam",
+    "mbid": "83b9cbe7-9857-49e2-ab8e-b57b01038103",
+    "match": "0.239332",
+    "url": "https://www.last.fm/music/Pearl+Jam",
+    "streamable": "0"
+   },
+   {
+    "name": "Screaming Trees",
+    "mbid": "bc5e6e42-73ba-44fa-a41e-3379402f0429",
+    "match": "0.223639",
+    "url": "https://www.last.fm/music/Screaming+Trees",
+    "streamable": "0"
+   },
+   {
+    "name": "Silverchair",
+    "mbid": "b0799818-22cb-4564-8e68-3c410d0722ee",
+    "match": "0.220353",
+    "url": "https://www.last.fm/music/Silverchair",
+    "streamable": "0"
+   },
+   {
+    "name": "Temple of the Dog",
+    "mbid": "e9571c17-817f-4d34-ae3f-0c7a96f822c1",
+    "match": "0.210348",
+    "url": "https://www.last.fm/music/Temple+of+the+Dog",
+    "streamable": "0"
+   },
+   {
+    "name": "Foo Fighters",
+    "mbid": "67f66c07-6e61-4026-ade5-7e782fad3a5d",
+    "match": "0.201283",
+    "url": "https://www.last.fm/music/Foo+Fighters",
+    "streamable": "0"
+   },
+   {
+    "name": "L7",
+    "mbid": "57111f1f-9829-45ea-bb4e-a5aba37cd1d1",
+    "match": "0.195430",
+    "url": "https://www.last.fm/music/L7",
+    "streamable": "0"
+   },
+   {
+    "name": "Tad",
+    "mbid": "867d3fb7-9cd1-47a4-a8f0-de29cdca2004",
+    "match": "0.190608",
+    "url": "https://www.last.fm/music/Tad",
+    "streamable": "0"
+   },
+   {
+    "name": "Mother Love Bone",
+    "mbid": "a5585acd-9b65-49a7-a63b-3cc4ee18846e",
+    "match": "0.187273",
+    "url": "https://www.last.fm/music/Mother+Love+Bone",
+    "streamable": "0"
+   },
+   {
+    "name": "SAP",
+    "mbid": "51d70bd8-04e7-48e5-8b1e-db710a4bddd7",
+    "match": "0.178859",
+    "url": "https://www.last.fm/music/SAP",
+    "streamable": "0"
+   },
+   {
+    "name": "Radiohead",
+    "mbid": "a74b1b7f-71a5-4011-9441-d0b5e4122711",
+    "match": "0.176338",
+    "url": "https://www.last.fm/music/Radiohead",
+    "streamable": "0"
+   },
+   {
+    "name": "The Smashing Pumpkins",
+    "mbid": "ba0d6274-db14-4ef5-b28d-657ebde1a396",
+    "match": "0.175555",
+    "url": "https://www.last.fm/music/The+Smashing+Pumpkins",
+    "streamable": "0"
+   },
+   {
+    "name": "Rage Against the Machine",
+    "mbid": "3798b104-01cb-484c-a3b0-56adc6399b80",
+    "match": "0.162384",
+    "url": "https://www.last.fm/music/Rage+Against+the+Machine",
+    "streamable": "0"
+   },
+   {
+    "name": "Jerry Cantrell",
+    "mbid": "960eb93f-e73c-4df8-864d-08a06c2dcc11",
+    "match": "0.161157",
+    "url": "https://www.last.fm/music/Jerry+Cantrell",
+    "streamable": "0"
+   },
+   {
+    "name": "Bush",
+    "mbid": "93ccd76c-3790-4435-a8bf-02bc26294b93",
+    "match": "0.157426",
+    "url": "https://www.last.fm/music/Bush",
+    "streamable": "0"
+   }
+  ],
+  "@attr": {
+   "artist": "Nirvana"
+  }
+ }
+}

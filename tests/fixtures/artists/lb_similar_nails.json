@@ -1,0 +1,227 @@
+[
+ {
+  "artist_mbid": "fa31e7d4-a03a-4110-98fc-f8826e95ec25",
+  "name": "Converge",
+  "comment": "US metalcore band",
+  "type": "Group",
+  "gender": null,
+  "score": 529,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "af2373bf-4b18-4e06-954c-ab83946992c9",
+  "name": "Full of Hell",
+  "comment": "US grindcore band",
+  "type": "Group",
+  "gender": null,
+  "score": 473,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "b87d5807-c37a-4d0e-a53c-9cdf6bc6caa1",
+  "name": "Code Orange",
+  "comment": "metalcore band from Pittsburgh",
+  "type": "Group",
+  "gender": null,
+  "score": 337,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "5c0d3974-33d5-4f7a-bebc-8f50c057927e",
+  "name": "Pig Destroyer",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 283,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "f4ccf6c5-ad41-4f8f-bb9e-6e2c6ad23302",
+  "name": "Deafheaven",
+  "comment": "USA post‐black metal/shoegaze",
+  "type": "Group",
+  "gender": null,
+  "score": 260,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "ce7bba8b-026b-4aa6-bddb-f98ed6d595e4",
+  "name": "Napalm Death",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 251,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "bc5e2ad6-0a4a-4d90-b911-e9a7e6861727",
+  "name": "Mastodon",
+  "comment": "American heavy metal band",
+  "type": "Group",
+  "gender": null,
+  "score": 235,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "143fd9a0-28a4-42fb-911e-e5c00baf06f9",
+  "name": "Wormrot",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 228,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "f9133036-ab3d-4e97-bd11-7a2c98ad148a",
+  "name": "Death Grips",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 226,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "75042f03-597a-4e1c-bc5d-4a62f4df05b6",
+  "name": "Oathbreaker",
+  "comment": "Belgian post‐black metal band",
+  "type": "Group",
+  "gender": null,
+  "score": 221,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "7f6bd658-482c-4b5f-be6e-316cedd33148",
+  "name": "All Pigs Must Die",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 219,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "e9df4e93-6f7a-448a-a5ac-d30c27a6d22c",
+  "name": "Black Breath",
+  "comment": "USA, death/thrash metal/crossover/crust",
+  "type": "Group",
+  "gender": null,
+  "score": 218,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "f2ddd6e8-ef48-4d65-8940-a755491a5fde",
+  "name": "Weekend Nachos",
+  "comment": "United States powerviolence / doom / sludge",
+  "type": "Group",
+  "gender": null,
+  "score": 208,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "7f179acc-d6eb-4ca9-af90-c14e397fb613",
+  "name": "Power Trip",
+  "comment": "US thrash metal/crossover band",
+  "type": "Group",
+  "gender": null,
+  "score": 206,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "cf8b3b8c-118e-4136-8d1d-c37091173413",
+  "name": "Meshuggah",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 197,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "9ca10859-49e2-44e3-b3d6-04c535207bc2",
+  "name": "Knocked Loose",
+  "comment": "hardcore band",
+  "type": "Group",
+  "gender": null,
+  "score": 192,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "86547248-6f52-421f-a1bf-a58afde87399",
+  "name": "Magrudergrind",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 191,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "d50a4b89-ff1f-4659-9fde-f76f8d5b3c89",
+  "name": "Carcass",
+  "comment": "British grindcore/technical death metal",
+  "type": "Group",
+  "gender": null,
+  "score": 188,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "7b748dac-f5ce-45a7-9b95-c1d8b5b013ed",
+  "name": "Turnstile",
+  "comment": "US hardcore punk band",
+  "type": "Group",
+  "gender": null,
+  "score": 185,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "b24b6ae8-333e-4351-b3b7-6be843195a16",
+  "name": "Trap Them",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 185,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "dbb3b771-ae77-4381-b61c-758b5b7898ec",
+  "name": "Death",
+  "comment": "US death metal band",
+  "type": "Group",
+  "gender": null,
+  "score": 179,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "ecb76a4e-8863-4b4c-a512-bf58c8c845dd",
+  "name": "Cult Leader",
+  "comment": "",
+  "type": "Group",
+  "gender": null,
+  "score": 177,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "0bfb489b-7da8-4b28-b144-eee7599ed1e9",
+  "name": "Cattle Decapitation",
+  "comment": "American deathgrind band",
+  "type": "Group",
+  "gender": null,
+  "score": 167,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "bdacc37b-8633-4bf8-9dd5-4662ee651aec",
+  "name": "Slayer",
+  "comment": "US thrash metal band",
+  "type": "Group",
+  "gender": null,
+  "score": 164,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ },
+ {
+  "artist_mbid": "c9368a03-bf26-40b6-bdfa-9af8d10b568b",
+  "name": "Daughters",
+  "comment": "US mathcore/noise rock band",
+  "type": "Group",
+  "gender": null,
+  "score": 157,
+  "reference_mbid": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1"
+ }
+]

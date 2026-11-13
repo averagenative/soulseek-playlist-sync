@@ -1,0 +1,832 @@
+{
+ "release-count": 9,
+ "release-offset": 0,
+ "releases": [
+  {
+   "media": [
+    {
+     "title": "",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "id": "5fec82d2-d0d8-374a-97e5-69add8b57442",
+     "position": 1,
+     "track-offset": 0,
+     "track-count": 3,
+     "tracks": [
+      {
+       "length": 81000,
+       "number": "1",
+       "title": "Obscene Humanity",
+       "position": 1,
+       "recording": {
+        "title": "Obscene Humanity",
+        "first-release-date": "2009",
+        "disambiguation": "",
+        "length": 102000,
+        "id": "ba975c66-edc0-474e-a9a9-2a8577fbab81",
+        "video": false
+       },
+       "id": "1a68f9c7-f719-3f57-be1f-53091f26cb9a"
+      },
+      {
+       "number": "2",
+       "title": "Confront Them",
+       "position": 2,
+       "length": 101000,
+       "id": "b2252a25-6e4d-3543-a2e1-c29dd78faf42",
+       "recording": {
+        "id": "37e1b230-8b93-4ad1-82c2-3121ce2b2689",
+        "video": false,
+        "title": "Confront Them",
+        "disambiguation": "",
+        "first-release-date": "2009",
+        "length": 81000
+       }
+      },
+      {
+       "recording": {
+        "id": "ea916e7c-8ac3-40e0-993f-56f8f1d896dc",
+        "video": false,
+        "length": 217000,
+        "title": "Lies",
+        "first-release-date": "2009",
+        "disambiguation": ""
+       },
+       "id": "dfa6fc7a-2ad7-3726-b688-cf5f67b59131",
+       "length": 213460,
+       "number": "3",
+       "title": "Lies",
+       "position": 3
+      }
+     ],
+     "format": "Digital Media"
+    }
+   ],
+   "disambiguation": "",
+   "quality": "normal",
+   "release-events": [
+    {
+     "date": "2013-01-22",
+     "area": {
+      "type": null,
+      "disambiguation": "",
+      "sort-name": "[Worldwide]",
+      "type-id": null,
+      "name": "[Worldwide]",
+      "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+      "iso-3166-1-codes": [
+       "XW"
+      ]
+     }
+    }
+   ],
+   "cover-art-archive": {
+    "darkened": false,
+    "back": false,
+    "front": true,
+    "artwork": true,
+    "count": 1
+   },
+   "title": "Obscene Humanity",
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "date": "2013-01-22",
+   "id": "05afaa4d-1307-4200-bc30-64ccbfcdd4d3",
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+   },
+   "packaging": "None",
+   "asin": null,
+   "barcode": "886443726376",
+   "status": "Official",
+   "country": "XW",
+   "release-group": {
+    "secondary-types": [],
+    "disambiguation": "",
+    "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+    "first-release-date": "2013-01-22",
+    "secondary-type-ids": [],
+    "title": "Obscene Humanity",
+    "primary-type": "Single",
+    "id": "1c1516c2-b391-4583-a5cb-1aae75904404"
+   }
+  },
+  {
+   "text-representation": {
+    "language": null,
+    "script": "Latn"
+   },
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "packaging": "None",
+   "asin": null,
+   "release-group": {
+    "disambiguation": "",
+    "secondary-types": [],
+    "title": "Imposing Will",
+    "secondary-type-ids": [],
+    "first-release-date": "2024-06-10",
+    "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+    "id": "20611820-e36e-45b0-981f-3016efdd0f0a",
+    "primary-type": "Single"
+   },
+   "country": "XW",
+   "status": "Official",
+   "barcode": "4065629730109",
+   "quality": "normal",
+   "disambiguation": "",
+   "media": [
+    {
+     "format": "Digital Media",
+     "tracks": [
+      {
+       "length": 82105,
+       "position": 1,
+       "number": "1",
+       "title": "Imposing Will",
+       "recording": {
+        "length": 82093,
+        "disambiguation": "",
+        "first-release-date": "2024-06-10",
+        "title": "Imposing Will",
+        "video": false,
+        "id": "32af2463-edf7-49d3-9f2a-9f7c445b6f8d"
+       },
+       "id": "ec267623-e7b4-486c-ba83-8d9dd5e18311"
+      }
+     ],
+     "track-count": 1,
+     "track-offset": 0,
+     "position": 1,
+     "id": "87b85155-fa69-304c-8ed6-b077c2970475",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "title": ""
+    }
+   ],
+   "release-events": [
+    {
+     "area": {
+      "sort-name": "[Worldwide]",
+      "disambiguation": "",
+      "type": null,
+      "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+      "iso-3166-1-codes": [
+       "XW"
+      ],
+      "name": "[Worldwide]",
+      "type-id": null
+     },
+     "date": "2024-06-10"
+    }
+   ],
+   "cover-art-archive": {
+    "darkened": false,
+    "back": false,
+    "artwork": true,
+    "front": true,
+    "count": 1
+   },
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "title": "Imposing Will",
+   "id": "0ad5d2d6-7589-4b42-804a-a1990847fe2a",
+   "date": "2024-06-10"
+  },
+  {
+   "packaging": "None",
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "text-representation": {
+    "language": null,
+    "script": "Latn"
+   },
+   "barcode": "859713929661",
+   "status": "Official",
+   "country": null,
+   "release-group": {
+    "disambiguation": "",
+    "secondary-types": [],
+    "id": "6f2c34e6-1725-4c4e-b891-baa5a5ef0d2c",
+    "primary-type": "Single",
+    "secondary-type-ids": [],
+    "title": "Two Song Flexi",
+    "first-release-date": "2014-12-23",
+    "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9"
+   },
+   "asin": null,
+   "release-events": [
+    {
+     "area": null,
+     "date": "2014-12-23"
+    }
+   ],
+   "media": [
+    {
+     "title": "",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "id": "0f25b5f8-b2bd-3fa6-947c-e80351066e93",
+     "tracks": [
+      {
+       "id": "b2422483-3742-4100-b14a-19156daa3972",
+       "recording": {
+        "id": "98a4a5ab-793e-4ec9-a551-8887c1f44993",
+        "video": false,
+        "length": 120272,
+        "title": "Two Song Flexi",
+        "first-release-date": "2014-12-23",
+        "disambiguation": ""
+       },
+       "position": 1,
+       "title": "Two Song Flexi",
+       "number": "1",
+       "length": 120272
+      }
+     ],
+     "format": "Digital Media",
+     "position": 1,
+     "track-count": 1,
+     "track-offset": 0
+    }
+   ],
+   "disambiguation": "",
+   "quality": "normal",
+   "date": "2014-12-23",
+   "id": "249052dc-9cbd-4268-b6c9-206e7ee1f42c",
+   "cover-art-archive": {
+    "darkened": false,
+    "back": false,
+    "front": true,
+    "artwork": true,
+    "count": 1
+   },
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "title": "Two Song Flexi"
+  },
+  {
+   "release-events": [
+    {
+     "date": "2024-07-08",
+     "area": {
+      "name": "[Worldwide]",
+      "type-id": null,
+      "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+      "iso-3166-1-codes": [
+       "XW"
+      ],
+      "type": null,
+      "disambiguation": "",
+      "sort-name": "[Worldwide]"
+     }
+    }
+   ],
+   "media": [
+    {
+     "track-offset": 0,
+     "track-count": 2,
+     "position": 1,
+     "format": "Digital Media",
+     "tracks": [
+      {
+       "id": "983ec367-61e8-489f-8c5e-f693a6bc7e5b",
+       "recording": {
+        "id": "2e9e3c56-7a49-4f06-853b-153b80008acf",
+        "video": false,
+        "length": 164704,
+        "title": "Give Me the Painkiller",
+        "first-release-date": "2024-07-08",
+        "disambiguation": ""
+       },
+       "position": 1,
+       "number": "1",
+       "title": "Give Me the Painkiller",
+       "length": 164704
+      },
+      {
+       "position": 2,
+       "title": "Imposing Will",
+       "number": "2",
+       "length": 82105,
+       "id": "d1232569-115d-4b69-a886-45c4e01f1d7b",
+       "recording": {
+        "video": false,
+        "id": "32af2463-edf7-49d3-9f2a-9f7c445b6f8d",
+        "length": 82093,
+        "disambiguation": "",
+        "first-release-date": "2024-06-10",
+        "title": "Imposing Will"
+       }
+      }
+     ],
+     "title": "",
+     "id": "1ec92466-9dde-3301-bcd5-e1b177eceb2f",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794"
+    }
+   ],
+   "quality": "normal",
+   "disambiguation": "",
+   "id": "4c181724-cad6-44da-9b38-d8a2c88ca916",
+   "date": "2024-07-08",
+   "cover-art-archive": {
+    "back": false,
+    "artwork": true,
+    "front": true,
+    "count": 1,
+    "darkened": false
+   },
+   "title": "Give Me the Painkiller",
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "packaging": "None",
+   "text-representation": {
+    "language": null,
+    "script": "Latn"
+   },
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "status": "Official",
+   "barcode": "4065629730116",
+   "release-group": {
+    "disambiguation": "",
+    "secondary-types": [],
+    "first-release-date": "2024-07-08",
+    "secondary-type-ids": [],
+    "title": "Give Me the Painkiller",
+    "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+    "primary-type": "Single",
+    "id": "b9d6795b-bd07-4b53-82e9-a2b3193d5096"
+   },
+   "country": "XW",
+   "asin": null
+  },
+  {
+   "asin": null,
+   "barcode": "4065629730123",
+   "status": "Official",
+   "country": "XW",
+   "release-group": {
+    "secondary-types": [],
+    "disambiguation": "",
+    "id": "2bc7c187-8076-49a6-8621-8fa390d63c8d",
+    "primary-type": "Single",
+    "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+    "title": "Lacking the Ability to Process Empathy",
+    "secondary-type-ids": [],
+    "first-release-date": "2024-08-05"
+   },
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "text-representation": {
+    "script": "Latn",
+    "language": null
+   },
+   "packaging": "None",
+   "title": "Lacking the Ability to Process Empathy",
+   "cover-art-archive": {
+    "count": 1,
+    "artwork": true,
+    "front": true,
+    "back": false,
+    "darkened": false
+   },
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "date": "2024-08-05",
+   "id": "515b8647-c8ae-4f4f-8ed1-18e769139de7",
+   "media": [
+    {
+     "title": "",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "id": "4097469d-6bd3-3792-b0a4-f54386443435",
+     "position": 1,
+     "track-count": 3,
+     "track-offset": 0,
+     "tracks": [
+      {
+       "title": "Lacking the Ability to Process Empathy",
+       "number": "1",
+       "position": 1,
+       "length": 123135,
+       "id": "013965d5-fe85-4054-b3c9-95860ae69d91",
+       "recording": {
+        "video": false,
+        "id": "f6ae3fdc-9812-464a-bb1a-bc2e5175554d",
+        "length": 123135,
+        "disambiguation": "",
+        "first-release-date": "2024-08-05",
+        "title": "Lacking the Ability to Process Empathy"
+       }
+      },
+      {
+       "recording": {
+        "video": false,
+        "id": "2e9e3c56-7a49-4f06-853b-153b80008acf",
+        "length": 164704,
+        "disambiguation": "",
+        "first-release-date": "2024-07-08",
+        "title": "Give Me the Painkiller"
+       },
+       "id": "f053fadf-9b68-431e-b570-6228bc5a7656",
+       "length": 164704,
+       "title": "Give Me the Painkiller",
+       "number": "2",
+       "position": 2
+      },
+      {
+       "length": 82105,
+       "position": 3,
+       "title": "Imposing Will",
+       "number": "3",
+       "recording": {
+        "length": 82093,
+        "first-release-date": "2024-06-10",
+        "disambiguation": "",
+        "title": "Imposing Will",
+        "video": false,
+        "id": "32af2463-edf7-49d3-9f2a-9f7c445b6f8d"
+       },
+       "id": "dc724138-8c7b-4b07-b7c2-76c0bd76f6db"
+      }
+     ],
+     "format": "Digital Media"
+    }
+   ],
+   "disambiguation": "",
+   "quality": "normal",
+   "release-events": [
+    {
+     "date": "2024-08-05",
+     "area": {
+      "iso-3166-1-codes": [
+       "XW"
+      ],
+      "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+      "type-id": null,
+      "name": "[Worldwide]",
+      "sort-name": "[Worldwide]",
+      "disambiguation": "",
+      "type": null
+     }
+    }
+   ]
+  },
+  {
+   "media": [
+    {
+     "id": "b0a7a723-d730-399e-a57c-9ae44c1df2aa",
+     "format-id": "1d5a48e4-e94a-36dc-84e2-0c5f9f880aa7",
+     "title": "",
+     "format": "7\" Vinyl",
+     "tracks": [
+      {
+       "length": 82000,
+       "title": "I Don't Want To Know You",
+       "number": "A1",
+       "position": 1,
+       "recording": {
+        "title": "I Don’t Want to Know You",
+        "disambiguation": "",
+        "first-release-date": "2019-04-12",
+        "length": 82000,
+        "id": "f722f786-e790-4a8f-8e82-a6bd34b96eef",
+        "video": false
+       },
+       "id": "5e5fa9a7-c11f-4465-bcf8-3c1fedede138"
+      },
+      {
+       "recording": {
+        "disambiguation": "",
+        "first-release-date": "2019-04-12",
+        "title": "Endless Resistance",
+        "length": 197000,
+        "video": false,
+        "id": "a5456481-6aa6-4667-b0c1-52abb853fe82"
+       },
+       "id": "ffef76b9-71cd-4a0e-9ba6-49ad5c2c31a8",
+       "length": 197000,
+       "position": 2,
+       "number": "A2",
+       "title": "Endless Resistance"
+      },
+      {
+       "length": null,
+       "title": "Endless Resistance (Petbrick Remix)",
+       "number": "B1",
+       "position": 3,
+       "recording": {
+        "video": false,
+        "id": "3da7ef56-697f-4ad9-86c0-21ff3f5b2c19",
+        "disambiguation": "",
+        "first-release-date": "2019-06-07",
+        "title": "Endless Resistance (Petbrick Remix)",
+        "length": null
+       },
+       "id": "59e55f14-8559-4b1b-b58e-b51b0ade74d0"
+      }
+     ],
+     "track-offset": 0,
+     "track-count": 3,
+     "position": 1
+    }
+   ],
+   "quality": "normal",
+   "disambiguation": "",
+   "release-events": [
+    {
+     "area": null,
+     "date": "2019-06-07"
+    }
+   ],
+   "packaging-id": null,
+   "cover-art-archive": {
+    "back": false,
+    "front": true,
+    "artwork": true,
+    "count": 4,
+    "darkened": false
+   },
+   "title": "I Don't Want to Know You",
+   "id": "736db914-7f1d-4d50-ac7f-b2e78e6b5936",
+   "date": "2019-06-07",
+   "text-representation": {
+    "script": null,
+    "language": null
+   },
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "packaging": null,
+   "asin": null,
+   "status": "Official",
+   "barcode": "727361478742",
+   "release-group": {
+    "disambiguation": "",
+    "secondary-types": [],
+    "first-release-date": "2019-04-12",
+    "secondary-type-ids": [],
+    "title": "I Don’t Want to Know You",
+    "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+    "primary-type": "Single",
+    "id": "945965ff-7af6-47cc-a2ab-0a77e3152c45"
+   },
+   "country": null
+  },
+  {
+   "media": [
+    {
+     "id": "f97d969b-2ad9-3348-9a19-f9f9e5522b19",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "title": "",
+     "track-offset": 0,
+     "track-count": 1,
+     "position": 1,
+     "format": "Digital Media",
+     "tracks": [
+      {
+       "id": "a785e225-bff7-4778-be92-064fc1c3dd5f",
+       "recording": {
+        "id": "cd514dec-2c67-4923-8044-91e3b2b35858",
+        "video": false,
+        "title": "Enemy",
+        "disambiguation": "",
+        "first-release-date": "2010-09-28",
+        "length": 80514
+       },
+       "title": "Enemy",
+       "number": "1",
+       "position": 1,
+       "length": 80514
+      }
+     ]
+    }
+   ],
+   "quality": "normal",
+   "disambiguation": "",
+   "release-events": [
+    {
+     "date": "2010-09-28",
+     "area": {
+      "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+      "iso-3166-1-codes": [
+       "XW"
+      ],
+      "name": "[Worldwide]",
+      "type-id": null,
+      "sort-name": "[Worldwide]",
+      "type": null,
+      "disambiguation": ""
+     }
+    }
+   ],
+   "cover-art-archive": {
+    "darkened": false,
+    "count": 1,
+    "front": true,
+    "artwork": true,
+    "back": false
+   },
+   "title": "Enemy",
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "id": "9fd2ce6a-7796-487f-81c6-c95ff9c2ba1d",
+   "date": "2010-09-28",
+   "text-representation": {
+    "script": "Latn",
+    "language": null
+   },
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "packaging": "None",
+   "asin": null,
+   "status": "Official",
+   "barcode": "195497401321",
+   "release-group": {
+    "secondary-types": [],
+    "disambiguation": "",
+    "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+    "title": "Enemy",
+    "secondary-type-ids": [],
+    "first-release-date": "2010-09-28",
+    "id": "83925a70-fe57-4aa8-9f78-877c89baf773",
+    "primary-type": "Single"
+   },
+   "country": "XW"
+  },
+  {
+   "id": "c71be7e5-08b1-412c-9a49-bdb204f27e95",
+   "date": "2019-04-12",
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "cover-art-archive": {
+    "front": true,
+    "artwork": true,
+    "count": 1,
+    "back": false,
+    "darkened": false
+   },
+   "title": "I Don’t Want to Know You",
+   "release-events": [
+    {
+     "area": {
+      "name": "[Worldwide]",
+      "type-id": null,
+      "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+      "iso-3166-1-codes": [
+       "XW"
+      ],
+      "type": null,
+      "disambiguation": "",
+      "sort-name": "[Worldwide]"
+     },
+     "date": "2019-04-12"
+    }
+   ],
+   "media": [
+    {
+     "format": "Digital Media",
+     "tracks": [
+      {
+       "position": 1,
+       "number": "1",
+       "title": "I Don’t Want to Know You",
+       "length": 82619,
+       "id": "c3a51562-a1bd-4e5c-9434-5bfa0b44e0ed",
+       "recording": {
+        "first-release-date": "2019-04-12",
+        "disambiguation": "",
+        "title": "I Don’t Want to Know You",
+        "length": 82000,
+        "video": false,
+        "id": "f722f786-e790-4a8f-8e82-a6bd34b96eef"
+       }
+      },
+      {
+       "length": 197266,
+       "position": 2,
+       "title": "Endless Resistance",
+       "number": "2",
+       "recording": {
+        "length": 197000,
+        "title": "Endless Resistance",
+        "first-release-date": "2019-04-12",
+        "disambiguation": "",
+        "id": "a5456481-6aa6-4667-b0c1-52abb853fe82",
+        "video": false
+       },
+       "id": "ad502705-dae7-4256-87d0-babe92418fba"
+      }
+     ],
+     "track-offset": 0,
+     "track-count": 2,
+     "position": 1,
+     "id": "b88ff1d3-502a-3776-bd3f-d20ab3cc1747",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "title": ""
+    }
+   ],
+   "quality": "normal",
+   "disambiguation": "",
+   "status": "Official",
+   "barcode": "727361478766",
+   "release-group": {
+    "secondary-types": [],
+    "disambiguation": "",
+    "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+    "title": "I Don’t Want to Know You",
+    "secondary-type-ids": [],
+    "first-release-date": "2019-04-12",
+    "id": "945965ff-7af6-47cc-a2ab-0a77e3152c45",
+    "primary-type": "Single"
+   },
+   "country": "XW",
+   "asin": null,
+   "packaging": "None",
+   "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+   },
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe"
+  },
+  {
+   "release-events": [
+    {
+     "date": "2026-09-02",
+     "area": {
+      "sort-name": "[Worldwide]",
+      "type": null,
+      "disambiguation": "",
+      "id": "525d4e18-3d00-31b9-a58b-a146a916de8f",
+      "iso-3166-1-codes": [
+       "XW"
+      ],
+      "type-id": null,
+      "name": "[Worldwide]"
+     }
+    }
+   ],
+   "media": [
+    {
+     "id": "ba48db75-e54c-4853-bbff-a8a1c86fc78b",
+     "format-id": "907a28d9-b3b2-3ef6-89a8-7b18d91d4794",
+     "title": "",
+     "format": "Digital Media",
+     "tracks": [
+      {
+       "length": 107632,
+       "position": 1,
+       "number": "1",
+       "title": "Dollar Bin Generation",
+       "recording": {
+        "disambiguation": "",
+        "first-release-date": "2026-09-02",
+        "title": "Dollar Bin Generation",
+        "length": 107632,
+        "video": false,
+        "id": "065f85b9-13b9-433a-8b43-d1b7e22a1fdb"
+       },
+       "id": "e6e65ca6-4c89-4403-af65-40e089038b50"
+      },
+      {
+       "id": "2396cfa6-00fd-4e80-b5c6-8abf3836611a",
+       "recording": {
+        "id": "c76b6488-a87d-4722-9607-9f7205f3ce88",
+        "video": false,
+        "title": "Fear Based Life",
+        "disambiguation": "",
+        "first-release-date": "2026-09-02",
+        "length": 154653
+       },
+       "number": "2",
+       "title": "Fear Based Life",
+       "position": 2,
+       "length": 154653
+      }
+     ],
+     "track-offset": 0,
+     "track-count": 2,
+     "position": 1
+    }
+   ],
+   "disambiguation": "",
+   "quality": "normal",
+   "date": "2026-09-02",
+   "id": "d8801844-2aa0-432f-94c2-784482d3a4d7",
+   "cover-art-archive": {
+    "darkened": false,
+    "count": 1,
+    "front": true,
+    "artwork": true,
+    "back": false
+   },
+   "title": "Fear Based Life",
+   "packaging-id": "119eba76-b343-3e02-a292-f0f00644bb9b",
+   "packaging": "None",
+   "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+   "text-representation": {
+    "language": "eng",
+    "script": "Latn"
+   },
+   "barcode": "885288383393",
+   "status": "Official",
+   "country": "XW",
+   "release-group": {
+    "primary-type": "Single",
+    "id": "01e8d9be-38d9-4c49-85e4-aa7d5734f1b9",
+    "first-release-date": "2026-09-02",
+    "title": "Fear Based Life",
+    "secondary-type-ids": [],
+    "primary-type-id": "d6038452-8ee0-3f68-affc-2de9a1ede0b9",
+    "disambiguation": "",
+    "secondary-types": []
+   },
+   "asin": null
+  }
+ ]
+}

@@ -1,0 +1,1530 @@
+{
+ "id": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+ "tags": [
+  {
+   "count": 4,
+   "name": "90s"
+  },
+  {
+   "count": 8,
+   "name": "acoustic rock"
+  },
+  {
+   "count": 1,
+   "name": "alternative"
+  },
+  {
+   "name": "alternative metal",
+   "count": 1
+  },
+  {
+   "name": "alternative pop",
+   "count": 1
+  }
+ ],
+ "area": {
+  "id": "489ce91b-6658-3307-9877-795b68554c98",
+  "type-id": null,
+  "type": null,
+  "iso-3166-1-codes": [
+   "US"
+  ],
+  "disambiguation": "",
+  "name": "United States",
+  "sort-name": "United States"
+ },
+ "ipis": [],
+ "end-area": null,
+ "gender": null,
+ "name": "Nirvana",
+ "isnis": [
+  "0000000123486830"
+ ],
+ "sort-name": "Nirvana",
+ "relations": [
+  {
+   "artist": {
+    "id": "86d3f2c7-2a19-4249-ad7c-6feec74118d7",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "type": "Person",
+    "sort-name": "Burckhard, Aaron",
+    "disambiguation": "",
+    "country": "US",
+    "name": "Aaron Burckhard"
+   },
+   "attribute-ids": {
+    "drums (drum set)": "12092505-6ee1-46af-a15a-b5b468b6b155",
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c"
+   },
+   "ended": true,
+   "target-type": "artist",
+   "attributes": [
+    "drums (drum set)",
+    "original"
+   ],
+   "begin": "1987",
+   "source-credit": "",
+   "end": "1987",
+   "attribute-credits": {},
+   "target-credit": "",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-values": {},
+   "type": "member of band",
+   "direction": "backward"
+  },
+  {
+   "target-type": "artist",
+   "ended": true,
+   "artist": {
+    "sort-name": "Crover, Dale",
+    "name": "Dale Crover",
+    "disambiguation": "",
+    "country": "US",
+    "type": "Person",
+    "id": "9b93a71b-1484-4bea-b096-f660c1161f8a",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+   },
+   "attribute-ids": {
+    "drums (drum set)": "12092505-6ee1-46af-a15a-b5b468b6b155"
+   },
+   "begin": "1987",
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "source-credit": "",
+   "end": "1988",
+   "attribute-credits": {},
+   "target-credit": "",
+   "attribute-values": {},
+   "type": "member of band",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "direction": "backward"
+  },
+  {
+   "source-credit": "",
+   "end": "1994-04-05",
+   "artist": {
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "id": "3c9b356d-d1db-4f4e-a7a3-2d00c1d70255",
+    "type": "Person",
+    "country": "US",
+    "disambiguation": "lead singer and guitarist for Nirvana",
+    "name": "Kurt Cobain",
+    "sort-name": "Cobain, Kurt"
+   },
+   "attribute-ids": {
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c"
+   },
+   "ended": true,
+   "target-type": "artist",
+   "attributes": [
+    "original"
+   ],
+   "begin": "1987",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-values": {},
+   "type": "member of band",
+   "direction": "backward",
+   "target-credit": ""
+  },
+  {
+   "begin": "1987",
+   "attributes": [
+    "lead vocals",
+    "original"
+   ],
+   "ended": true,
+   "target-type": "artist",
+   "attribute-ids": {
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c",
+    "lead vocals": "8e2a3255-87c2-4809-a174-98cb3704f1a5"
+   },
+   "artist": {
+    "name": "Kurt Cobain",
+    "country": "US",
+    "disambiguation": "lead singer and guitarist for Nirvana",
+    "sort-name": "Cobain, Kurt",
+    "type": "Person",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "id": "3c9b356d-d1db-4f4e-a7a3-2d00c1d70255"
+   },
+   "end": "1994-04-05",
+   "source-credit": "",
+   "target-credit": "",
+   "attribute-credits": {},
+   "direction": "backward",
+   "type": "member of band",
+   "attribute-values": {},
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821"
+  },
+  {
+   "source-credit": "",
+   "end": "1994-04-05",
+   "artist": {
+    "country": "US",
+    "disambiguation": "lead singer and guitarist for Nirvana",
+    "name": "Kurt Cobain",
+    "sort-name": "Cobain, Kurt",
+    "id": "3c9b356d-d1db-4f4e-a7a3-2d00c1d70255",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "type": "Person"
+   },
+   "attribute-ids": {
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c",
+    "background vocals": "75052401-7340-4e5b-a71d-ea024a128849"
+   },
+   "ended": true,
+   "target-type": "artist",
+   "attributes": [
+    "background vocals",
+    "original"
+   ],
+   "begin": "1987",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-values": {},
+   "type": "member of band",
+   "direction": "backward",
+   "attribute-credits": {},
+   "target-credit": ""
+  },
+  {
+   "target-credit": "",
+   "attribute-credits": {},
+   "direction": "backward",
+   "attribute-values": {},
+   "type": "member of band",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "begin": "1987",
+   "attributes": [
+    "guitar",
+    "original"
+   ],
+   "target-type": "artist",
+   "ended": true,
+   "attribute-ids": {
+    "guitar": "63021302-86cd-4aee-80df-2270d54f4978",
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c"
+   },
+   "artist": {
+    "country": "US",
+    "disambiguation": "lead singer and guitarist for Nirvana",
+    "name": "Kurt Cobain",
+    "sort-name": "Cobain, Kurt",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "id": "3c9b356d-d1db-4f4e-a7a3-2d00c1d70255",
+    "type": "Person"
+   },
+   "end": "1994-04-05",
+   "source-credit": ""
+  },
+  {
+   "source-credit": "",
+   "end": "1994-04-05",
+   "artist": {
+    "sort-name": "Novoselic, Krist",
+    "name": "Krist Novoselic",
+    "country": "US",
+    "disambiguation": "",
+    "type": "Person",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "id": "ac05e29f-0561-4445-bb26-5562d2389531"
+   },
+   "attribute-ids": {
+    "accordion": "bdf08ac2-b9c2-4391-85e5-9a7716bdd690",
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c"
+   },
+   "target-type": "artist",
+   "ended": true,
+   "attributes": [
+    "accordion",
+    "original"
+   ],
+   "begin": "1987",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-values": {},
+   "type": "member of band",
+   "direction": "backward",
+   "attribute-credits": {},
+   "target-credit": ""
+  },
+  {
+   "direction": "backward",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "type": "member of band",
+   "attribute-values": {},
+   "target-credit": "",
+   "attribute-credits": {},
+   "end": "1994-04-05",
+   "source-credit": "",
+   "attributes": [
+    "original",
+    "other vocals"
+   ],
+   "begin": "1987",
+   "artist": {
+    "type": "Person",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "id": "ac05e29f-0561-4445-bb26-5562d2389531",
+    "name": "Krist Novoselic",
+    "country": "US",
+    "disambiguation": "",
+    "sort-name": "Novoselic, Krist"
+   },
+   "attribute-ids": {
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c",
+    "other vocals": "c359be96-620a-435c-bd25-2eb0ce81a22e"
+   },
+   "target-type": "artist",
+   "ended": true
+  },
+  {
+   "end": "1994-04-05",
+   "source-credit": "",
+   "begin": "1987",
+   "attributes": [
+    "bass guitar",
+    "original"
+   ],
+   "target-type": "artist",
+   "ended": true,
+   "artist": {
+    "disambiguation": "",
+    "country": "US",
+    "name": "Krist Novoselic",
+    "sort-name": "Novoselic, Krist",
+    "id": "ac05e29f-0561-4445-bb26-5562d2389531",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "type": "Person"
+   },
+   "attribute-ids": {
+    "original": "4fd3b255-a7d7-4424-9a63-40fa543b601c",
+    "bass guitar": "17f9f065-2312-4a24-8309-6f6dd63e2e33"
+   },
+   "direction": "backward",
+   "attribute-values": {},
+   "type": "member of band",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "target-credit": "",
+   "attribute-credits": {}
+  },
+  {
+   "attribute-credits": {},
+   "target-credit": "",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-values": {},
+   "type": "member of band",
+   "direction": "backward",
+   "attribute-ids": {
+    "drums (drum set)": "12092505-6ee1-46af-a15a-b5b468b6b155"
+   },
+   "artist": {
+    "id": "e2f28104-72bb-4c8f-b0f9-78d4eaf492fd",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "type": "Person",
+    "sort-name": "Channing, Chad",
+    "country": "US",
+    "disambiguation": "",
+    "name": "Chad Channing"
+   },
+   "target-type": "artist",
+   "ended": true,
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "begin": "1988-05",
+   "source-credit": "",
+   "end": "1990-06"
+  },
+  {
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "begin": "1988",
+   "artist": {
+    "disambiguation": "Nirvana's 3rd drummer",
+    "country": null,
+    "name": "Dave Foster",
+    "sort-name": "Foster, Dave",
+    "id": "6740416b-a0ab-4a46-9ee5-8cd9c69c6442",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "type": "Person"
+   },
+   "attribute-ids": {
+    "drums (drum set)": "12092505-6ee1-46af-a15a-b5b468b6b155"
+   },
+   "ended": true,
+   "target-type": "artist",
+   "end": "1988",
+   "source-credit": "",
+   "target-credit": "",
+   "attribute-credits": {},
+   "direction": "backward",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "type": "member of band",
+   "attribute-values": {}
+  },
+  {
+   "source-credit": "",
+   "end": "1989-07",
+   "attribute-ids": {
+    "background vocals": "75052401-7340-4e5b-a71d-ea024a128849"
+   },
+   "artist": {
+    "disambiguation": "",
+    "country": "US",
+    "name": "Jason Everman",
+    "sort-name": "Everman, Jason",
+    "id": "797dc323-fc39-4597-98cc-d10493f67326",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "type": "Person"
+   },
+   "ended": true,
+   "target-type": "artist",
+   "attributes": [
+    "background vocals"
+   ],
+   "begin": "1989-02",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-values": {},
+   "type": "member of band",
+   "direction": "backward",
+   "attribute-credits": {},
+   "target-credit": ""
+  },
+  {
+   "attributes": [
+    "guitar"
+   ],
+   "begin": "1989-02",
+   "attribute-ids": {
+    "guitar": "63021302-86cd-4aee-80df-2270d54f4978"
+   },
+   "artist": {
+    "sort-name": "Everman, Jason",
+    "disambiguation": "",
+    "country": "US",
+    "name": "Jason Everman",
+    "id": "797dc323-fc39-4597-98cc-d10493f67326",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "type": "Person"
+   },
+   "ended": true,
+   "target-type": "artist",
+   "end": "1989-07",
+   "source-credit": "",
+   "target-credit": "",
+   "attribute-credits": {},
+   "direction": "backward",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-values": {},
+   "type": "member of band"
+  },
+  {
+   "end": "1990-09-24",
+   "source-credit": "",
+   "begin": "1990-07",
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "ended": true,
+   "target-type": "artist",
+   "artist": {
+    "name": "Dan Peters",
+    "disambiguation": "Mudhoney drummer",
+    "country": "US",
+    "sort-name": "Peters, Dan",
+    "type": "Person",
+    "id": "3402566b-20dc-47f1-973b-2af1dedae702",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+   },
+   "attribute-ids": {
+    "drums (drum set)": "12092505-6ee1-46af-a15a-b5b468b6b155"
+   },
+   "direction": "backward",
+   "attribute-values": {},
+   "type": "member of band",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "target-credit": "",
+   "attribute-credits": {}
+  },
+  {
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "type": "member of band",
+   "attribute-values": {},
+   "direction": "backward",
+   "attribute-credits": {},
+   "target-credit": "",
+   "source-credit": "",
+   "end": "1994-04-05",
+   "attribute-ids": {
+    "background vocals": "75052401-7340-4e5b-a71d-ea024a128849"
+   },
+   "artist": {
+    "sort-name": "Grohl, Dave",
+    "country": "US",
+    "disambiguation": "",
+    "name": "Dave Grohl",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "id": "4d5f891d-9bce-45ae-ad86-912dd27252fa",
+    "type": "Person"
+   },
+   "target-type": "artist",
+   "ended": true,
+   "attributes": [
+    "background vocals"
+   ],
+   "begin": "1990-09-24"
+  },
+  {
+   "direction": "backward",
+   "attribute-values": {},
+   "type": "member of band",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "target-credit": "",
+   "attribute-credits": {},
+   "end": "1994-04-05",
+   "source-credit": "",
+   "begin": "1990-09-24",
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "ended": true,
+   "target-type": "artist",
+   "attribute-ids": {
+    "drums (drum set)": "12092505-6ee1-46af-a15a-b5b468b6b155"
+   },
+   "artist": {
+    "disambiguation": "",
+    "country": "US",
+    "name": "Dave Grohl",
+    "sort-name": "Grohl, Dave",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df",
+    "id": "4d5f891d-9bce-45ae-ad86-912dd27252fa",
+    "type": "Person"
+   }
+  },
+  {
+   "end": "1990",
+   "source-credit": "",
+   "attributes": [
+    "drums (drum set)"
+   ],
+   "begin": "1990",
+   "attribute-ids": {
+    "drums (drum set)": "12092505-6ee1-46af-a15a-b5b468b6b155"
+   },
+   "artist": {
+    "name": "Dale Crover",
+    "country": "US",
+    "disambiguation": "",
+    "sort-name": "Crover, Dale",
+    "type": "Person",
+    "id": "9b93a71b-1484-4bea-b096-f660c1161f8a",
+    "type-id": "b6e035f4-3ce9-331c-97df-83397230b0df"
+   },
+   "target-type": "artist",
+   "ended": true,
+   "direction": "backward",
+   "type-id": "5be4c609-9afa-4ea0-910b-12ffb71e3821",
+   "attribute-values": {},
+   "type": "member of band",
+   "target-credit": "",
+   "attribute-credits": {}
+  },
+  {
+   "source-credit": "",
+   "end": null,
+   "attribute-ids": {},
+   "artist": {
+    "type": "Group",
+    "id": "7ebf3107-78ee-45b2-a83e-9a57a3e5a4d6",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "name": "Seattle Supersonics",
+    "country": "AR",
+    "disambiguation": "Argentinian Nirvana tribute band",
+    "sort-name": "Supersonics, Seattle"
+   },
+   "ended": false,
+   "target-type": "artist",
+   "attributes": [],
+   "begin": "2010",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "type": "tribute",
+   "attribute-values": {},
+   "direction": "backward",
+   "target-credit": ""
+  },
+  {
+   "begin": null,
+   "attributes": [],
+   "target-type": "artist",
+   "ended": false,
+   "artist": {
+    "type": "Group",
+    "id": "807afed3-f6cb-4c5b-96ed-160d7b8b5419",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "sort-name": "Creep, The",
+    "name": "The Creep",
+    "country": "BE",
+    "disambiguation": "Belgian Nirvana tribute"
+   },
+   "attribute-ids": {},
+   "end": null,
+   "source-credit": "",
+   "target-credit": "",
+   "direction": "backward",
+   "type": "tribute",
+   "attribute-values": {},
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f"
+  },
+  {
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "attribute-values": {},
+   "type": "tribute",
+   "direction": "backward",
+   "target-credit": "",
+   "source-credit": "",
+   "end": null,
+   "attribute-ids": {},
+   "artist": {
+    "type": "Group",
+    "id": "521018bd-81ce-4280-944a-04fc0b1e52e5",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "name": "Elvana",
+    "country": null,
+    "disambiguation": "\"Elvis fronted Nirvana\" tribute band",
+    "sort-name": "Elvana"
+   },
+   "ended": false,
+   "target-type": "artist",
+   "attributes": [],
+   "begin": null
+  },
+  {
+   "target-credit": "",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "attribute-values": {},
+   "type": "tribute",
+   "direction": "backward",
+   "artist": {
+    "sort-name": "Folk Nevermind",
+    "country": "BE",
+    "disambiguation": "Belgian Nirvana folk tribute",
+    "name": "Folk Nevermind",
+    "id": "01b45344-7ff3-4a95-b72d-ab7ad4921c53",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "type": "Group"
+   },
+   "attribute-ids": {},
+   "target-type": "artist",
+   "ended": false,
+   "attributes": [],
+   "begin": null,
+   "source-credit": "",
+   "end": null
+  },
+  {
+   "target-credit": "",
+   "type": "tribute",
+   "attribute-values": {},
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "direction": "backward",
+   "ended": false,
+   "target-type": "artist",
+   "artist": {
+    "name": "FooVana",
+    "disambiguation": "Foo Fighters & Nirvana tribute band from Portland Oregon",
+    "country": "US",
+    "sort-name": "FooVana",
+    "type": "Group",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "64106f4c-129a-4745-81f5-441ec9c8c62c"
+   },
+   "attribute-ids": {},
+   "begin": null,
+   "attributes": [],
+   "source-credit": "",
+   "end": null
+  },
+  {
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "attribute-values": {},
+   "type": "tribute",
+   "direction": "backward",
+   "target-credit": "",
+   "source-credit": "",
+   "end": null,
+   "artist": {
+    "disambiguation": "",
+    "country": "US",
+    "name": "Goat Punishment",
+    "sort-name": "Goat Punishment",
+    "id": "50c213ed-a109-4677-9b7b-d57ef580dd2d",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "type": "Group"
+   },
+   "attribute-ids": {},
+   "target-type": "artist",
+   "ended": false,
+   "attributes": [],
+   "begin": null
+  },
+  {
+   "target-credit": "",
+   "attribute-values": {},
+   "type": "tribute",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "direction": "backward",
+   "ended": false,
+   "target-type": "artist",
+   "artist": {
+    "id": "836a22e2-7c0b-49dd-8173-aab53de1c8e6",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "type": "Group",
+    "sort-name": "Grunge",
+    "country": "US",
+    "disambiguation": "The Sounds of Seattle",
+    "name": "Grunge"
+   },
+   "attribute-ids": {},
+   "begin": null,
+   "attributes": [],
+   "source-credit": "",
+   "end": null
+  },
+  {
+   "direction": "backward",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "type": "tribute",
+   "attribute-values": {},
+   "target-credit": "",
+   "end": null,
+   "source-credit": "",
+   "attributes": [],
+   "begin": null,
+   "artist": {
+    "country": null,
+    "disambiguation": "",
+    "name": "Grunge Type Thing",
+    "sort-name": "Grunge Type Thing",
+    "type-id": null,
+    "id": "2719b18e-0a01-4f09-9919-4416507ec051",
+    "type": null
+   },
+   "attribute-ids": {},
+   "target-type": "artist",
+   "ended": false
+  },
+  {
+   "attribute-values": {},
+   "type": "tribute",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "direction": "backward",
+   "target-credit": "",
+   "source-credit": "",
+   "end": null,
+   "target-type": "artist",
+   "ended": false,
+   "artist": {
+    "type": "Group",
+    "id": "5bf1baba-0d4a-4610-9f6d-f84f2a96c7ce",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "name": "Love Buzz",
+    "country": "DE",
+    "disambiguation": "Nirvana cover band",
+    "sort-name": "Love Buzz"
+   },
+   "attribute-ids": {},
+   "begin": null,
+   "attributes": []
+  },
+  {
+   "target-credit": "",
+   "attribute-values": {},
+   "type": "tribute",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "direction": "backward",
+   "target-type": "artist",
+   "ended": false,
+   "attribute-ids": {},
+   "artist": {
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "406d394a-bca2-4c3e-bd97-4d77b7b644e9",
+    "type": "Group",
+    "disambiguation": "Australian grunge tribute band; fka Riot Act",
+    "country": "AU",
+    "name": "The Masters of Grunge",
+    "sort-name": "Masters of Grunge, The"
+   },
+   "begin": null,
+   "attributes": [],
+   "source-credit": "",
+   "end": null
+  },
+  {
+   "target-credit": "",
+   "direction": "backward",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "type": "tribute",
+   "attribute-values": {},
+   "attributes": [],
+   "begin": null,
+   "artist": {
+    "country": null,
+    "disambiguation": "Nirvana tribute band",
+    "name": "Nervana",
+    "sort-name": "Nervana",
+    "id": "ad1c4fad-d645-4deb-bab5-eb1c41cf3a39",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "type": "Group"
+   },
+   "attribute-ids": {},
+   "target-type": "artist",
+   "ended": false,
+   "end": null,
+   "source-credit": ""
+  },
+  {
+   "ended": false,
+   "target-type": "artist",
+   "artist": {
+    "type": "Group",
+    "id": "5563d826-456c-4124-8022-7bc5c280fa27",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "name": "Nier Van A",
+    "disambiguation": "Belgian Nirvana tribute band",
+    "country": "BE",
+    "sort-name": "Nier Van A"
+   },
+   "attribute-ids": {},
+   "begin": null,
+   "attributes": [],
+   "source-credit": "",
+   "end": null,
+   "target-credit": "",
+   "type": "tribute",
+   "attribute-values": {},
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "direction": "backward"
+  },
+  {
+   "end": null,
+   "source-credit": "",
+   "begin": null,
+   "attributes": [],
+   "target-type": "artist",
+   "ended": false,
+   "attribute-ids": {},
+   "artist": {
+    "type": "Group",
+    "id": "e5a4c61b-1613-4841-8706-33d99b1e7ba5",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "sort-name": "Nirvana Experience",
+    "name": "Nirvana Experience",
+    "disambiguation": "Brazilian Nirvana cover band",
+    "country": "BR"
+   },
+   "direction": "backward",
+   "type": "tribute",
+   "attribute-values": {},
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "target-credit": ""
+  },
+  {
+   "attribute-values": {},
+   "type": "tribute",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "direction": "backward",
+   "target-credit": "",
+   "source-credit": "",
+   "end": null,
+   "target-type": "artist",
+   "ended": false,
+   "artist": {
+    "sort-name": "Nirvana Tribute",
+    "name": "Nirvana Tribute",
+    "disambiguation": "Finnish Nirvana tribute band",
+    "country": null,
+    "type": "Group",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "1d7c7a00-a650-47a3-8073-9b33cafbed5c"
+   },
+   "attribute-ids": {},
+   "begin": null,
+   "attributes": []
+  },
+  {
+   "target-credit": "",
+   "direction": "backward",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "type": "tribute",
+   "attribute-values": {},
+   "attributes": [],
+   "begin": null,
+   "artist": {
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "cd2a35bb-e454-4f9e-b384-580505890aef",
+    "type": "Group",
+    "sort-name": "Nirvana Tribute",
+    "country": "GB",
+    "disambiguation": "UK Nirvana Tribute band - formerly Nervana until 2016",
+    "name": "Nirvana Tribute"
+   },
+   "attribute-ids": {},
+   "target-type": "artist",
+   "ended": false,
+   "end": null,
+   "source-credit": ""
+  },
+  {
+   "direction": "backward",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "attribute-values": {},
+   "type": "tribute",
+   "target-credit": "",
+   "end": null,
+   "source-credit": "",
+   "attributes": [],
+   "begin": null,
+   "attribute-ids": {},
+   "artist": {
+    "type": "Group",
+    "id": "8f32371e-4bac-4090-ba13-2c1cd1aeab0d",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "name": "Nirvana UK",
+    "disambiguation": "tribute band",
+    "country": "GB",
+    "sort-name": "Nirvana UK"
+   },
+   "target-type": "artist",
+   "ended": false
+  },
+  {
+   "target-credit": "",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "attribute-values": {},
+   "type": "tribute",
+   "direction": "backward",
+   "artist": {
+    "country": "US",
+    "disambiguation": "A tribute to Nirvana",
+    "name": "Nirvanna",
+    "sort-name": "Nirvanna",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "7f443295-95ce-4d84-99a5-32e201b4206d",
+    "type": "Group"
+   },
+   "attribute-ids": {},
+   "ended": false,
+   "target-type": "artist",
+   "attributes": [],
+   "begin": null,
+   "source-credit": "",
+   "end": null
+  },
+  {
+   "target-credit": "",
+   "direction": "backward",
+   "attribute-values": {},
+   "type": "tribute",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "begin": null,
+   "attributes": [],
+   "target-type": "artist",
+   "ended": false,
+   "artist": {
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "79c692c2-e98b-4f21-9046-42b3385d0c19",
+    "type": "Group",
+    "sort-name": "Nirvanot",
+    "disambiguation": "",
+    "country": null,
+    "name": "Nirvanot"
+   },
+   "attribute-ids": {},
+   "end": null,
+   "source-credit": ""
+  },
+  {
+   "source-credit": "",
+   "end": null,
+   "ended": false,
+   "target-type": "artist",
+   "artist": {
+    "type": "Group",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "0aa15710-f6be-4aae-9b55-abbd23d1df79",
+    "sort-name": "Nivrana",
+    "name": "Nivrana",
+    "country": "US",
+    "disambiguation": "tribute band"
+   },
+   "attribute-ids": {},
+   "begin": null,
+   "attributes": [],
+   "attribute-values": {},
+   "type": "tribute",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "direction": "backward",
+   "target-credit": ""
+  },
+  {
+   "target-credit": "",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "attribute-values": {},
+   "type": "tribute",
+   "direction": "backward",
+   "attribute-ids": {},
+   "artist": {
+    "disambiguation": "",
+    "country": "US",
+    "name": "Orphanage Road",
+    "sort-name": "Orphanage Road",
+    "id": "e434db02-61e6-41e6-8c88-c824d068e70d",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "type": "Group"
+   },
+   "target-type": "artist",
+   "ended": false,
+   "attributes": [],
+   "begin": null,
+   "source-credit": "",
+   "end": null
+  },
+  {
+   "direction": "backward",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "attribute-values": {},
+   "type": "tribute",
+   "target-credit": "",
+   "end": null,
+   "source-credit": "",
+   "attributes": [],
+   "begin": null,
+   "attribute-ids": {},
+   "artist": {
+    "sort-name": "Servants, The",
+    "name": "The Servants",
+    "disambiguation": "Belgian Nirvana tribute band",
+    "country": "BE",
+    "type": "Group",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "8e795a15-7f99-402a-bf8a-8949d23c7716"
+   },
+   "ended": false,
+   "target-type": "artist"
+  },
+  {
+   "artist": {
+    "type": "Group",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "e43ad11b-5d29-45ae-90f7-73ac47fb815d",
+    "sort-name": "Smells Like Nirvana",
+    "name": "Smells Like Nirvana",
+    "country": "US",
+    "disambiguation": "Nirvana tribute band from Chicago"
+   },
+   "attribute-ids": {},
+   "target-type": "artist",
+   "ended": false,
+   "attributes": [],
+   "begin": null,
+   "source-credit": "",
+   "end": null,
+   "target-credit": "",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "type": "tribute",
+   "attribute-values": {},
+   "direction": "backward"
+  },
+  {
+   "direction": "backward",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "type": "tribute",
+   "attribute-values": {},
+   "target-credit": "",
+   "end": null,
+   "source-credit": "",
+   "attributes": [],
+   "begin": null,
+   "attribute-ids": {},
+   "artist": {
+    "sort-name": "Smells Like Nirvana U.K",
+    "country": "GB",
+    "disambiguation": "",
+    "name": "Smells Like Nirvana U.K",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "c00c1f94-55b6-4306-8457-1d46fc823ec1",
+    "type": "Group"
+   },
+   "ended": false,
+   "target-type": "artist"
+  },
+  {
+   "artist": {
+    "sort-name": "Stomachal Ache",
+    "country": "AR",
+    "disambiguation": "Argentinean Nirvana tribute band",
+    "name": "Stomachal Ache",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+    "id": "422fe360-839a-4581-8f0d-eccd3d059aae",
+    "type": "Group"
+   },
+   "attribute-ids": {},
+   "ended": false,
+   "target-type": "artist",
+   "attributes": [],
+   "begin": null,
+   "source-credit": "",
+   "end": null,
+   "target-credit": "",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "type": "tribute",
+   "attribute-values": {},
+   "direction": "backward"
+  },
+  {
+   "direction": "backward",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "type": "tribute",
+   "attribute-values": {},
+   "target-credit": "",
+   "end": null,
+   "source-credit": "",
+   "attributes": [],
+   "begin": null,
+   "attribute-ids": {},
+   "artist": {
+    "sort-name": "Unit Shifter",
+    "name": "Unit Shifter",
+    "country": null,
+    "disambiguation": "Nirvana Tribute Band",
+    "type": "Group",
+    "id": "8774449c-736f-4188-b1f5-b8f7cf9dc420",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+   },
+   "target-type": "artist",
+   "ended": false
+  },
+  {
+   "attribute-values": {},
+   "type": "tribute",
+   "type-id": "a6f62641-2f58-470e-b02b-88d7b984dc9f",
+   "direction": "backward",
+   "target-credit": "",
+   "source-credit": "",
+   "end": null,
+   "target-type": "artist",
+   "ended": false,
+   "attribute-ids": {},
+   "artist": {
+    "sort-name": "Zircus",
+    "name": "Zircus",
+    "country": null,
+    "disambiguation": "Nirvana tribute band",
+    "type": "Group",
+    "id": "fc3e1185-da06-48fa-86e7-df43fec418ee",
+    "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b"
+   },
+   "begin": null,
+   "attributes": []
+  },
+  {
+   "attribute-values": {},
+   "type": "allmusic",
+   "type-id": "6b3e3c85-0002-4f34-aca6-80ace0d7e846",
+   "direction": "forward",
+   "url": {
+    "resource": "https://www.allmusic.com/artist/mn0000357406",
+    "id": "4a425cd3-641d-409c-a282-2334935bf1bd"
+   },
+   "target-credit": "",
+   "source-credit": "",
+   "end": null,
+   "target-type": "url",
+   "ended": false,
+   "attribute-ids": {},
+   "begin": null,
+   "attributes": []
+  },
+  {
+   "target-type": "url",
+   "ended": false,
+   "attribute-ids": {},
+   "begin": null,
+   "attributes": [],
+   "source-credit": "",
+   "end": null,
+   "target-credit": "",
+   "type": "bandcamp",
+   "attribute-values": {},
+   "type-id": "c550166e-0548-4a18-b1d4-e2ae423a3e88",
+   "url": {
+    "id": "9306ca3d-bc38-467e-b6da-382876da7fb9",
+    "resource": "https://nirvana.bandcamp.com/"
+   },
+   "direction": "forward"
+  },
+  {
+   "attributes": [],
+   "begin": null,
+   "attribute-ids": {},
+   "ended": false,
+   "target-type": "url",
+   "end": null,
+   "source-credit": "",
+   "target-credit": "",
+   "direction": "forward",
+   "url": {
+    "resource": "https://www.discogs.com/artist/125246",
+    "id": "81846eca-af41-43d0-bcae-b62dbf5cfa2f"
+   },
+   "type-id": "04a5b104-a4c2-4bac-99a1-7b837c37d9e4",
+   "type": "discogs",
+   "attribute-values": {}
+  },
+  {
+   "attribute-ids": {},
+   "target-type": "url",
+   "ended": false,
+   "attributes": [],
+   "begin": null,
+   "source-credit": "",
+   "end": null,
+   "target-credit": "",
+   "type-id": "221132e9-e30e-43f2-a741-15afc4c5fa7c",
+   "type": "image",
+   "attribute-values": {},
+   "url": {
+    "resource": "https://commons.wikimedia.org/wiki/File:Nirvana_around_1992.jpg",
+    "id": "88867281-e540-4b37-9fce-870dda1bfd8b"
+   },
+   "direction": "forward"
+  },
+  {
+   "end": null,
+   "source-credit": "",
+   "attributes": [],
+   "begin": null,
+   "attribute-ids": {},
+   "ended": false,
+   "target-type": "url",
+   "direction": "forward",
+   "url": {
+    "resource": "https://www.last.fm/music/Nirvana",
+    "id": "36dc918b-2a58-4d31-9ccd-10af003e7386"
+   },
+   "type-id": "08db8098-c0df-4b78-82c3-c8697b4bba7f",
+   "attribute-values": {},
+   "type": "last.fm",
+   "target-credit": ""
+  },
+  {
+   "target-credit": "",
+   "direction": "forward",
+   "url": {
+    "id": "740505c7-3a30-4482-8ca6-10183b37d308",
+    "resource": "http://muzikum.eu/en/122-4216/nirvana/lyrics.html"
+   },
+   "type-id": "e4d73442-3762-45a8-905c-401da65544ed",
+   "attribute-values": {},
+   "type": "lyrics",
+   "attributes": [],
+   "begin": null,
+   "attribute-ids": {},
+   "target-type": "url",
+   "ended": false,
+   "end": null,
+   "source-credit": ""
+  },
+  {
+   "source-credit": "",
+   "end": null,
+   "attribute-ids": {},
+   "ended": false,
+   "target-type": "url",
+   "attributes": [],
+   "begin": null,
+   "type-id": "e4d73442-3762-45a8-905c-401da65544ed",
+   "attribute-values": {},
+   "type": "lyrics",
+   "direction": "forward",
+   "url": {
+    "id": "eb2efdf0-05cf-4ea8-bc00-b1b0d2bcdcfb",
+    "resource": "https://genius.com/artists/Nirvana"
+   },
+   "target-credit": ""
+  },
+  {
+   "attributes": [],
+   "begin": null,
+   "attribute-ids": {},
+   "ended": false,
+   "target-type": "url",
+   "end": null,
+   "source-credit": "",
+   "target-credit": "",
+   "url": {
+    "id": "b7863533-0c1f-405a-9ca0-cd5c09f94efd",
+    "resource": "https://www.musixmatch.com/artist/Nirvana"
+   },
+   "direction": "forward",
+   "type-id": "e4d73442-3762-45a8-905c-401da65544ed",
+   "attribute-values": {},
+   "type": "lyrics"
+  },
+  {
+   "url": {
+    "resource": "https://www.nirvana.com/",
+    "id": "508e1dc5-bd9e-46ee-a48d-0852fb715029"
+   },
+   "direction": "forward",
+   "attribute-values": {},
+   "type": "official homepage",
+   "type-id": "fe33d22f-c3b0-4d68-bd53-a856badf2b15",
+   "target-credit": "",
+   "end": null,
+   "source-credit": "",
+   "begin": null,
+   "attributes": [],
+   "target-type": "url",
+   "ended": false,
+   "attribute-ids": {}
+  },
+  {
+   "url": {
+    "id": "5f33ae58-aa56-40bd-ad14-ab7db9b3d3fd",
+    "resource": "https://secondhandsongs.com/artist/169"
+   },
+   "direction": "forward",
+   "attribute-values": {},
+   "type": "secondhandsongs",
+   "type-id": "79c5b84d-a206-4f4c-9832-78c028c312c3",
+   "target-credit": "",
+   "end": null,
+   "source-credit": "",
+   "begin": null,
+   "attributes": [],
+   "ended": false,
+   "target-type": "url",
+   "attribute-ids": {}
+  },
+  {
+   "target-credit": "",
+   "type-id": "689870a4-a1e4-4912-b17f-7b2664215698",
+   "type": "wikidata",
+   "attribute-values": {},
+   "direction": "forward",
+   "url": {
+    "id": "1221730c-3a48-49fa-8001-beaa6e93c892",
+    "resource": "https://www.wikidata.org/wiki/Q11649"
+   },
+   "attribute-ids": {},
+   "target-type": "url",
+   "ended": false,
+   "attributes": [],
+   "begin": null,
+   "source-credit": "",
+   "end": null
+  }
+ ],
+ "genres": [
+  {
+   "id": "00055e8b-b951-46e2-af1e-58b5624e7952",
+   "disambiguation": "",
+   "name": "acoustic rock",
+   "count": 8
+  },
+  {
+   "id": "7983ff25-ddf9-411e-a7f9-6cca238bff79",
+   "disambiguation": "",
+   "name": "alternative metal",
+   "count": 1
+  },
+  {
+   "count": 1,
+   "id": "d3ebe947-7c03-43f5-b333-09379881b0f6",
+   "disambiguation": "",
+   "name": "alternative pop"
+  },
+  {
+   "count": 30,
+   "disambiguation": "",
+   "name": "alternative rock",
+   "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18"
+  },
+  {
+   "count": 1,
+   "id": "608b0471-7531-4854-a348-e698c69cb699",
+   "name": "ambient",
+   "disambiguation": ""
+  },
+  {
+   "count": 1,
+   "name": "conscious hip hop",
+   "disambiguation": "",
+   "id": "c0e73bb6-37a4-485e-aaea-11c63b40c9f3"
+  },
+  {
+   "count": 1,
+   "name": "electronic",
+   "disambiguation": "",
+   "id": "89255676-1f14-4dd8-bbad-fca839d6aff4"
+  },
+  {
+   "id": "68c81274-5770-4e7b-a4bf-ab0d7d425d99",
+   "name": "experimental",
+   "disambiguation": "",
+   "count": 1
+  },
+  {
+   "count": 68,
+   "id": "3f08faa9-6c3e-4b6d-b4b8-08eea45954e2",
+   "name": "grunge",
+   "disambiguation": ""
+  },
+  {
+   "count": 1,
+   "name": "hard rock",
+   "disambiguation": "",
+   "id": "51cb9f91-e6a2-41bf-891f-e78e3f1e52ab"
+  },
+  {
+   "name": "hip hop",
+   "disambiguation": "",
+   "id": "52faa157-6bad-4d86-a0ab-d4dec7d2513c",
+   "count": 1
+  },
+  {
+   "count": 1,
+   "id": "24695813-4a26-4872-bc95-b3378e0ae1b4",
+   "disambiguation": "",
+   "name": "instrumental hip hop"
+  },
+  {
+   "disambiguation": "",
+   "name": "new age",
+   "id": "6c76d9ec-0924-4fc9-bb22-91a695ca09d6",
+   "count": 1
+  },
+  {
+   "count": 12,
+   "disambiguation": "",
+   "name": "noise rock",
+   "id": "8e5474b7-f445-49a7-866d-0f8e34b0a519"
+  },
+  {
+   "disambiguation": "",
+   "name": "pigfuck",
+   "id": "4a3546b4-ec9f-431f-8532-55434f1038ea",
+   "count": 1
+  },
+  {
+   "id": "911c7bbb-172d-4df8-9478-dbff4296e791",
+   "disambiguation": "",
+   "name": "pop",
+   "count": 1
+  },
+  {
+   "name": "post-hardcore",
+   "disambiguation": "",
+   "id": "aec382b7-b635-470c-9051-2f84e0b5ea1e",
+   "count": 1
+  },
+  {
+   "id": "2aeb5340-c474-4677-b9a6-35ddac9b6a58",
+   "disambiguation": "",
+   "name": "psychedelic pop",
+   "count": 1
+  },
+  {
+   "count": 1,
+   "id": "b3cccf71-e843-4546-87fa-728055ba3147",
+   "disambiguation": "",
+   "name": "psytrance"
+  },
+  {
+   "disambiguation": "",
+   "name": "punk",
+   "id": "8cc9b280-230b-4a3a-b1e2-8acab0744dd3",
+   "count": 2
+  },
+  {
+   "count": 1,
+   "disambiguation": "",
+   "name": "punk rock",
+   "id": "bd7e1d40-43b1-4ba5-97b3-05b891466962"
+  },
+  {
+   "count": 26,
+   "name": "rock",
+   "disambiguation": "",
+   "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798"
+  },
+  {
+   "count": 3,
+   "disambiguation": "",
+   "name": "sludge metal",
+   "id": "66544dbb-08a8-44c2-a21a-4d251481d2b6"
+  },
+  {
+   "id": "03a8749c-93e6-4b71-8204-b33de116d8fd",
+   "name": "underground hip hop",
+   "disambiguation": "",
+   "count": 1
+  }
+ ],
+ "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+ "type": "Group",
+ "life-span": {
+  "begin": "1987",
+  "end": "1994-04-05",
+  "ended": true
+ },
+ "gender-id": null,
+ "aliases": [
+  {
+   "primary": true,
+   "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+   "type": "Artist name",
+   "end": null,
+   "name": "Nirvana",
+   "ended": false,
+   "sort-name": "Nirvana",
+   "begin": null,
+   "locale": "en"
+  },
+  {
+   "end": null,
+   "primary": null,
+   "type-id": null,
+   "type": null,
+   "sort-name": "Nirvana US",
+   "locale": null,
+   "begin": null,
+   "ended": false,
+   "name": "Nirvana US"
+  },
+  {
+   "locale": "ja",
+   "begin": null,
+   "sort-name": "ニルヴァーナ",
+   "ended": false,
+   "name": "ニルヴァーナ",
+   "end": null,
+   "type": "Artist name",
+   "type-id": "894afba6-2816-3c24-8072-eadb66bd04bc",
+   "primary": true
+  }
+ ],
+ "begin-area": {
+  "type": null,
+  "type-id": null,
+  "id": "a640b45c-c173-49b1-8030-973603e895b5",
+  "sort-name": "Aberdeen",
+  "name": "Aberdeen",
+  "disambiguation": ""
+ },
+ "disambiguation": "1980s–1990s US grunge band",
+ "country": "US"
+}

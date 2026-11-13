@@ -467,3 +467,73 @@ input[type=password] {
 .profile-row .stack { min-width: 0; box-shadow: none; }
 .showing { align-items: center; margin: -6px 0 14px; }
 .group-head { font-size: 16px; margin: 22px 0 10px; }
+
+/* artist pages */
+.source.suggested::before { background: var(--grad); }
+.letters { gap: 4px; }
+.letters .chip { padding: 2px 8px; font-size: 12.5px; min-width: 2em; justify-content: center; }
+.letters .chip.on::before { content: none; }
+.chip.small { font-size: 12px; padding: 2px 9px; }
+table.artists td { padding-top: 7px; padding-bottom: 7px; }
+.artist-status { margin-top: 22px; }
+.artist-hero { display: grid; grid-template-columns: 180px 1fr; gap: 22px; align-items: center; margin: 6px 0 20px; }
+.artist-hero .info { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.artist-hero h1 { font-size: 32px; overflow-wrap: anywhere; }
+.artist-pic img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius);
+  box-shadow: var(--shadow); background: var(--dim-bg); }
+.artist-pic .avatar, .sug-pic .avatar { width: 100%; height: auto; aspect-ratio: 1; border-radius: var(--radius);
+  font-size: 56px; font-weight: 700; }
+.facts { font-size: 15px; }
+.genres { display: flex; flex-wrap: wrap; gap: 6px; }
+.links-out { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.credit a { color: inherit; text-decoration: underline; }
+.artist-section { margin: 26px 0; }
+.artist-section h2 { margin: 0 0 10px; }
+.artist-section .muted.small { margin: 8px 0 0; }
+.bio p { max-width: 74ch; margin: 0 0 10px; }
+.bio .credit { margin-top: 4px; }
+.bio details.more > summary, .other-bio > summary { color: var(--accent); font-size: 13.5px; font-weight: 600; margin: 0 0 10px; }
+.other-bio { margin-top: 10px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 28px; }
+.two-col h2 { margin-top: 12px; }
+ul.people { list-style: none; margin: 0; padding: 0; columns: 2 220px; column-gap: 24px; }
+ul.people li { break-inside: avoid; padding: 3px 0; }
+ul.people.members { columns: 1; }
+.two-col ul.people { columns: 1; }
+.tag.out { font-weight: 600; }
+.tag.sug { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+a.tag.sug:hover { text-decoration: none; }
+ul.albums { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px 18px; }
+ul.albums li { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+ul.albums li > div { min-width: 0; overflow-wrap: anywhere; }
+.sources ul { margin: 0 0 8px; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.identify { margin: 0 0 16px; }
+.identify .stack { max-width: 560px; }
+.suggestion-box { padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.suggestion-box p { margin: 0 0 10px; }
+
+/* suggestions */
+ol.suggestions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.sug-card { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 14px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); scroll-margin-top: 80px; }
+.sug-pic img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; background: var(--dim-bg); }
+.sug-pic .avatar { font-size: 40px; border-radius: 10px; }
+.sug-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.sug-body h2 a { color: var(--text); }
+.sug-body p { margin: 0; }
+.sug-body .reasons { font-weight: 550; }
+.sug-body .excerpt { max-width: 80ch; }
+.picks { margin: 2px 0 0; padding-left: 18px; }
+.picks li { padding: 1px 0; overflow-wrap: anywhere; }
+.dismissed { margin-top: 22px; }
+.dismissed ul.people { margin-top: 10px; }
+@media (max-width: 640px) {
+  .artist-hero { grid-template-columns: 96px 1fr; gap: 14px; }
+  .artist-hero h1 { font-size: 23px; }
+  .artist-pic .avatar { font-size: 36px; }
+  .two-col { grid-template-columns: 1fr; }
+  .sug-card { grid-template-columns: 64px 1fr; gap: 12px; padding: 12px; }
+  .sug-pic .avatar { font-size: 26px; }
+  ul.albums { grid-template-columns: 1fr; }
+}
+.more-people > summary { color: var(--accent); font-weight: 600; margin: 4px 0; }

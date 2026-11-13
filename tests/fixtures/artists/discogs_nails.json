@@ -1,0 +1,72 @@
+{
+ "name": "Nails",
+ "id": 1769424,
+ "resource_url": "https://api.discogs.com/artists/1769424",
+ "uri": "https://www.discogs.com/artist/1769424-Nails",
+ "releases_url": "https://api.discogs.com/artists/1769424/releases",
+ "profile": "NAILS (official capitalization) is an American three-piece Hardcore / Metal band from California, formed in December 2007 by Todd Jones with the help of Taylor Young and John Gianelli.\r\n\r\nIn July 2016 the band went on a sudden hiatus, which resulted in the cancellation of their European tour. However, the band resumed activity in October 2016, releasing a split 7\" with Full Of Hell in November and announcing that they would perform at Power of the Riff 2016. \r\n\r\nOn November 30, 2020, Taylor Young announced his departure from the group, with John Gianelli announcing his departure just one day later. ",
+ "urls": [
+  "https://www.facebook.com/NAILSoxnard",
+  "http://nailssl.bandcamp.com/",
+  "https://www.instagram.com/nailstyranny",
+  "https://en.wikipedia.org/wiki/Nails_(band)"
+ ],
+ "members": [
+  {
+   "id": 617459,
+   "name": "Todd Jones",
+   "resource_url": "https://api.discogs.com/artists/617459",
+   "active": true
+  },
+  {
+   "id": 949111,
+   "name": "Tom Hogan",
+   "resource_url": "https://api.discogs.com/artists/949111",
+   "active": false
+  },
+  {
+   "id": 2020644,
+   "name": "Taylor Young (2)",
+   "resource_url": "https://api.discogs.com/artists/2020644",
+   "active": false
+  },
+  {
+   "id": 2020645,
+   "name": "John Gianelli (2)",
+   "resource_url": "https://api.discogs.com/artists/2020645",
+   "active": false
+  },
+  {
+   "id": 2573423,
+   "name": "Carlos Cruz (2)",
+   "resource_url": "https://api.discogs.com/artists/2573423",
+   "active": true
+  },
+  {
+   "id": 3329632,
+   "name": "Andy Saba",
+   "resource_url": "https://api.discogs.com/artists/3329632",
+   "active": false
+  },
+  {
+   "id": 3903960,
+   "name": "Andrew Solis",
+   "resource_url": "https://api.discogs.com/artists/3903960",
+   "active": true
+  },
+  {
+   "id": 4026793,
+   "name": "Leon Sandow",
+   "resource_url": "https://api.discogs.com/artists/4026793",
+   "active": false
+  },
+  {
+   "id": 4696249,
+   "name": "Shelby Lermo",
+   "resource_url": "https://api.discogs.com/artists/4696249",
+   "active": false
+  }
+ ],
+ "data_quality": "Needs Vote",
+ "namevariations": []
+}

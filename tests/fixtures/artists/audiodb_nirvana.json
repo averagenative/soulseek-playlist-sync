@@ -1,0 +1,17 @@
+{
+ "artists": [
+  {
+   "idArtist": "111319",
+   "strArtist": "Nirvana",
+   "intFormedYear": "1988",
+   "strStyle": "Rock/Pop",
+   "strGenre": "Rock",
+   "strMood": "Sad",
+   "strCountry": "Washington, USA",
+   "strArtistThumb": "https://r2.theaudiodb.com/images/media/artist/thumb/n46y7i1639060786.jpg",
+   "strBiographyEN": null,
+   "strMusicBrainzID": "5b11f4ce-a62d-471e-81fc-a69a8278c7da",
+   "strWebsite": "www.nirvana.com"
+  }
+ ]
+}

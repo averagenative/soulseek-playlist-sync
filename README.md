@@ -18,6 +18,8 @@ Keep local MP3 copies of your Apple Music and Spotify playlists. Pick a playlist
 - **Browse your own music** on the **My music** page: search, filter by folder, play songs, and see album art from your files.
 - **Make playlists from your music**, by hand or as "every song in these folders" playlists that keep up as your library changes, and copy them to Spotify, Apple Music, or both. Put your whole collection on your phone's music app and shuffle it.
 - **Hits playlists.** Keep only the standout songs of each album in a big collection: the songs that charted, came out as singles, or get the most listeners, plus your favorites. The filler stays out.
+- **Artist pages.** A page for each artist in your library, built from open sources: a bio with its source and license, years active, origin, members, who influenced them and whom they influenced, similar artists split into ones you have and ones you don't, and your albums by them with the hits marked.
+- **Suggestions.** Artists you don't have that your artists are similar to or influenced by, each with the reasons. **Get their hits** downloads a suggested artist's standout songs through Soulseek into a playlist for that artist and one Suggestions playlist.
 - **Profiles for everyone at home.** Each person picks their profile (a password is optional) and gets their own playlists and their own Apple Music and Spotify connections, while the music library and downloads are shared. You can look at each other's playlists, and only change your own.
 - **Check songs by ear.** Play any downloaded song in the browser, and compare it with Apple's 30-second clip of the original.
 - **Download a playlist as a ZIP** to the computer you're browsing from, with its `.m3u`.
@@ -276,7 +278,7 @@ Each album gets its 2 best songs, and up to 5 when more of them stand out. A son
 
 The following songs are left out:
 
-- **Skits, intros, and interludes,** and songs under 90 seconds, unless they charted or you favorited them.
+- **Skits, intros, and interludes,** and songs under 90 seconds, unless they charted, came out as a single, or you favorited them.
 - **Live, demo, and remix versions**, by their titles, and live albums when the artist has studio albums in the collection.
 - **Second copies.** A song on both an album and a greatest-hits record counts once, on the album. Compilations and singles only add songs that stand out and aren't on an album you have.
 
@@ -291,6 +293,58 @@ ListenBrainz needs a user token for each artist's listener counts, which catch l
 Songs are found by the MusicBrainz IDs that taggers such as MusicBrainz Picard write into files. For a song without them, the app tries its ISRC, then a MusicBrainz search by artist, title, and length. Genius page views are optional: set `GENIUS_API_TOKEN` to a Genius API client access token, which you can make at https://genius.com/api-clients. Genius allows 10,000 requests a day, so a big library can take two days to finish.
 
 The lookups send song titles, artists, and MusicBrainz IDs to ListenBrainz, MusicBrainz, and Genius, and download the Hot 100 history from the `utdata/rwd-billboard-data` project on GitHub. Nothing about you or your account is sent.
+
+## Explore your artists
+
+Click **Artists** at the top of the page for every artist in your library, with a search box, a first-letter filter, and how many albums and songs of theirs you have. Artist names on **My music**, on playlist pages, and on a hits playlist's picks also open the artist's page.
+
+### Artist pages
+
+An artist's page shows the following, when the sources know it:
+
+- **A bio**, from Wikipedia, Last.fm, Discogs, or TheAudioDB, in that order of preference, with its source, a link to it, and its license under the text. When more than one source has a bio, the others are a click away.
+- **Facts:** whether it's a person or a group, the years they were active, where they're from, and their genres.
+- **Members** of a group, with their years and instruments, or the groups a person was in. Members and groups that are in your library link to their own pages.
+- **Influenced by** and **Influenced**, from Wikidata. Artists you have come first and link to their pages; the others are marked **Not in your library** and link to MusicBrainz.
+- **Similar artists**, from listening data: **Fans of this artist also have** lists the ones in your library, and **If you like this artist** lists the ones you don't have. Similar artists aren't influences, and the page keeps them apart.
+- **Your albums** by the artist, newest first, with the songs your hits playlists picked from each.
+- **Links** to the artist on MusicBrainz, Wikipedia, Wikidata, AllMusic, Discogs, Last.fm, Genius, Bandcamp, and their official site, and a **Sources** list with each source's license.
+
+The page reads only what the app has already looked up, so it opens right away. If you open an artist the app hasn't looked up yet, it looks that artist up first and the page fills in, usually within a minute.
+
+If a page shows the wrong artist (two bands with the same name, say), or no artist at all, open **Wrong artist?** or **Know who this is?**, paste the artist's MusicBrainz link, and click **Use this artist**. The app uses that artist from then on.
+
+### Artist lookups
+
+Artists are identified by the MusicBrainz artist IDs that taggers such as MusicBrainz Picard write into files. For an artist without them, the app searches MusicBrainz for one of the artist's albums by name, and only accepts an album credited to an artist with the same name.
+
+The app looks artists up in the background after the song lookups, every 6 hours, and keeps what it finds. The first run takes about an hour for a library of about 1,500 artists, because MusicBrainz answers one request a second and Discogs 25 a minute. After that, it only looks up new artists, similar artists more than 60 days old, and everything else more than 180 days old. To run it now, click **Look up artists now** at the bottom of the **Artists** page, which also shows its progress.
+
+Every source but Last.fm works without a key:
+
+- **Last.fm** adds bios, tags, and a second list of similar artists. Make a key at https://www.last.fm/api/account/create and set `LASTFM_API_KEY`.
+- **Discogs** allows 25 requests a minute, or 60 with a personal access token from https://www.discogs.com/settings/developers in `DISCOGS_TOKEN`.
+- **TheAudioDB** gives artist pictures with its free key, and bios with a paid one in `THEAUDIODB_API_KEY`.
+
+If a source refuses or keeps failing, the app stops asking it for the rest of the run, says why on the **Artists** page, and goes on with the others.
+
+### Get suggestions
+
+Click **Suggestions** on the **Artists** page. A suggestion is an artist you don't have that your artists point to: artists listeners play alongside yours, artists that influenced yours, and artists yours influenced. An artist several of yours point to ranks higher, and so does one that the artists you have the most songs and favorites of point to. Each suggestion says why it's there, for example "Similar to Nirvana, Pixies, and Mudhoney; influenced Nirvana". Each profile gets its own suggestions, from its own favorites.
+
+**Get their hits** picks the artist's songs with the same rules as a hits playlist, applied to their albums, EPs, and singles on MusicBrainz: songs that charted on the Hot 100, came out as a single near their album, or have at least 1.25 times the album's median listeners or Genius page views. There's no minimum per album, so an album with no standout songs adds none, and each album adds at most 5. A song on an EP or single also has to beat the artist's typical album song, so a B-side that only outshines a few remixes doesn't count, and other versions such as mixes and edits are left out. You can change both numbers under **Hits rules**. Songs you already have are skipped.
+
+The songs go into two playlists: one for the artist, such as **Melvins Hits**, and one **Suggestions** playlist with every artist's songs. Both download through Soulseek like any other playlist, each song once, into folders under `Suggestions/`. Copy either one to Spotify or Apple Music from its page. To drop an artist, open its playlist and click **Stop tracking** in its settings; its songs leave the Suggestions playlist too.
+
+The top 25 suggestions have their albums looked up ahead of time, so their cards list the songs **Get their hits** would add. For any other suggestion, **Get their hits** looks the artist's albums up first, which takes about half a minute, and then adds the songs.
+
+To stop seeing a suggestion, click **Not interested**. **Not interested** at the bottom of the page lists the ones you hid, each with **Suggest again**.
+
+### What the lookups send, and licenses
+
+The artist lookups send artist names, album titles, and MusicBrainz, Wikidata, and Discogs IDs to MusicBrainz, Wikidata, Wikipedia, Wikimedia Commons, ListenBrainz, Discogs, and, with their keys, Last.fm and TheAudioDB. Nothing about you or your account is sent.
+
+Facts from MusicBrainz, Wikidata, and ListenBrainz are CC0. Wikipedia text is CC BY-SA 4.0 and Last.fm bios are CC BY-SA, so the page credits and links them under each bio. Discogs profiles are shown as "Data provided by Discogs" with a link back, as Discogs asks. Each picture shows its author and license from Wikimedia Commons. The app copies no text from AllMusic or Genius; it only links to them.
 
 ## Share the app with your household
 
@@ -344,6 +398,10 @@ The following environment variables configure things that can't change while the
 | `APP_PASSWORD` | none | Asks for one shared password (HTTP basic auth) before showing the app, before anyone picks a profile. |
 | `GENIUS_API_TOKEN` or `GENIUS_API_TOKEN_FILE` | none | Genius API client access token. Adds Genius page views to hits playlists. |
 | `LISTENBRAINZ_TOKEN` or `LISTENBRAINZ_TOKEN_FILE` | none | ListenBrainz user token. Adds each artist's listener counts to hits playlists. |
+| `LASTFM_API_KEY` or `LASTFM_API_KEY_FILE` | none | Last.fm API key. Adds Last.fm bios, tags, and similar artists to artist pages and suggestions. |
+| `DISCOGS_TOKEN` or `DISCOGS_TOKEN_FILE` | none | Discogs personal access token. Raises Discogs' limit from 25 to 60 requests a minute. |
+| `THEAUDIODB_API_KEY` or `THEAUDIODB_API_KEY_FILE` | none | TheAudioDB key. Adds TheAudioDB bios; pictures work without it. |
+| `SUGGESTIONS_DIR` | `Suggestions` | Folder under `MUSIC_ROOT` for the playlists that **Get their hits** makes. Also on the Settings page. |
 | `YOUTUBE_COOKIES_FILE` | none | A `cookies.txt` from a browser signed in to YouTube, so age-restricted videos download. yt-dlp writes to it, so it can't be read-only. |
 | `SLSKD_CONTROL` | `none` | `docker` or `webhook` adds a **Turn on** button for a stopped slskd. `docker` needs `/var/run/docker.sock` mounted and `SLSKD_CONTAINERS` (container names, in start order); `webhook` needs `SLSKD_CONTROL_URL`. |
 

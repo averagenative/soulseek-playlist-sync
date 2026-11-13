@@ -22,7 +22,9 @@ from fastapi.templating import Jinja2Templates
 
 import httpx
 
-from . import apple, art, control, db, export, favorites, hits, library, mirror, profiles, settings, spotify, sync, youtube
+from . import apple, art, artists, control, db, export, favorites, hits, library, mirror, profiles, settings, spotify, sync, youtube
+from .match import norm, primary_artist
+from .sources import musicbrainz
 from .config import Config, load
 from .slskd import Slskd
 from .worker import Worker
@@ -898,6 +900,9 @@ def playlist_action(pid: str, action: str, back: str | None = None, target: str 
         sync.run_job(pid, label, fn, C(), pid)
     elif action == "forget":
         sync.remove_playlist(pid)
+        every = sync.suggestions_playlist(p["owner"]) if p["source"] == "suggested" else None
+        if every and every != pid:
+            sync.run_job(every, "Refreshing", sync.refresh_suggested, C(), every)
         return _back("/")
     else:
         raise HTTPException(404)
@@ -1232,6 +1237,227 @@ def art_image(key: str):
     if not path:
         return Response(art.PLACEHOLDER, media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=3600"})
     return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=604800"})
+
+
+# ------------------------------------------------------------------ artists
+
+ARTISTS_PAGE = 120       # artists per page of the Artists index
+SUGGESTIONS_SHOWN = artists.SUGGESTIONS_SHOWN   # suggestions per "Show more"
+_MBID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+
+
+def _artists_status_ctx() -> dict:
+    cfg = C()
+    return {"ast": artists.status(), "ast_running": artists.running(), "ast_counts": artists.cache_counts(),
+            "ast_lastfm": bool(cfg.lastfm_api_key), "ast_discogs": bool(cfg.discogs_token)}
+
+
+@app.get("/artists", response_class=HTMLResponse)
+def artists_page(request: Request, q: str = "", letter: str = "", sort: str = "name", page: int = 1):
+    letter = letter if len(letter) == 1 and (letter.isalpha() or letter == "#") else ""
+    sort = "songs" if sort == "songs" else "name"
+    rows = library.artists(C(), q, letter, sort)
+    page = max(page, 1)
+    pages = max(1, -(-len(rows) // ARTISTS_PAGE))
+    view = [("q", q.strip()), ("letter", letter), ("sort", sort if sort != "name" else "")]
+    return templates.TemplateResponse(request, "artists.html", {
+        **_common(), **_artists_status_ctx(), "rows": rows[(page - 1) * ARTISTS_PAGE:page * ARTISTS_PAGE],
+        "total": len(rows), "page": page, "pages": pages, "q": q.strip(), "letter": letter, "sort": sort,
+        "letters": "#ABCDEFGHIJKLMNOPQRSTUVWXYZ", "view_qs": urlencode([(k, v) for k, v in view if v]),
+        "base_qs": urlencode([(k, v) for k, v in view if v and k != "letter"])})
+
+
+@app.get("/partials/artists", response_class=HTMLResponse)
+def artists_partial(request: Request, back: str = "/artists"):
+    return templates.TemplateResponse(request, "_artists_status.html", {
+        **_common(), **_artists_status_ctx(), "back": back if back.startswith("/") else "/artists"})
+
+
+@app.post("/artists/lookup")
+def artists_lookup(back: str = Form("/artists"), mbid: str = Form(""), name: str = Form(""), again: str = Form("")):
+    """Look up every artist, or one first (by ID, or a library name with no ID yet). again=1 fetches the
+    artist's data again even when it isn't stale."""
+    if mbid and _MBID.fullmatch(mbid):
+        if again:
+            artists.make_stale(mbid)
+        artists.lookup_first(C(), mbid)
+    elif name:
+        artists.lookup_first(C(), "name:" + norm(name))
+    else:
+        artists.start(C())
+    return _back(back if back.startswith("/") else "/artists")
+
+
+@app.get("/artists/by-name", response_class=HTMLResponse)
+def artist_by_name(request: Request, n: str = "", error: str = ""):
+    """An artist page from a name as songs credit it: the artist's page when it has an ID, else what the
+    library has."""
+    key = norm(primary_artist(n))
+    lib = library.artist_index()["by_key"].get(key)
+    if lib and lib["mbid"]:
+        return _back(f"/artists/{lib['mbid']}")
+    if not lib:
+        with db.connect() as c:
+            r = c.execute("SELECT mbid FROM artists WHERE name = ? COLLATE NOCASE AND fetched LIKE '%\"musicbrainz\"%' "
+                          "LIMIT 1", (primary_artist(n),)).fetchone()
+        if r:
+            return _back(f"/artists/{r[0]}")
+    if lib:
+        with db.connect() as c:
+            checked = c.execute("SELECT 1 FROM artist_names WHERE name = ?", (key,)).fetchone()
+        if not checked and not artists.waiting("name:" + key):
+            artists.lookup_first(C(), "name:" + key)
+    return templates.TemplateResponse(request, "artist.html", {
+        **_common(), **_artist_ctx(None, [key] if lib else [], primary_artist(n) or "Unknown artist", n, error)})
+
+
+@app.get("/artists/by-name/body", response_class=HTMLResponse)
+def artist_by_name_body(request: Request, n: str = ""):
+    key = norm(primary_artist(n))
+    lib = library.artist_index()["by_key"].get(key)
+    return templates.TemplateResponse(request, "_artist_body.html", {
+        **_common(), **_artist_ctx(None, [key] if lib else [], primary_artist(n) or "Unknown artist", n)})
+
+
+def _artist_ctx(mbid: str | None, names: list[str], fallback: str = "", asked: str = "", error: str = "") -> dict:
+    me = _me()
+    pg = artists.page(mbid, me["id"], names)
+    if not pg["lib"] and not pg["row"]:
+        pg["name"] = fallback or pg["name"]
+    key = (pg["lib"] or {}).get("key")
+    looking = artists.waiting(mbid) if mbid else bool(key and artists.waiting("name:" + key))
+    found = None
+    name_checked = False
+    if not mbid and key:
+        with db.connect() as c:
+            r = c.execute("SELECT mbid FROM artist_names WHERE name = ?", (key,)).fetchone()
+        name_checked = r is not None
+        found = f"/artists/{r[0]}" if r and r[0] else None
+    sug = pg.get("suggestion")
+    return {"a": pg, "looking": looking and not found, "suggestion": sug, "found_url": found, "name_checked": name_checked,
+            "sug_hits": artists.suggested_hits(mbid, me["id"]) if sug else None,
+            "pending": bool(mbid and artists.is_pending(me["id"], mbid)), "error": error,
+            "live_url": f"/artists/{mbid}/body" if mbid else ("/artists/by-name/body?" + urlencode({"n": asked}) if key else ""),
+            "library_qs": urlencode({"artist": pg["lib"]["name"]}) if pg["lib"] else ""}
+
+
+@app.get("/artists/{mbid}", response_class=HTMLResponse)
+def artist_page(request: Request, mbid: str, error: str = ""):
+    if not _MBID.fullmatch(mbid):
+        raise HTTPException(404)
+    ctx = _artist_ctx(mbid, [], error=error)
+    if not ctx["a"]["has_data"] and not ctx["looking"]:
+        artists.lookup_first(C(), mbid)        # nothing known yet: look this artist up first
+        ctx["looking"] = True
+    return templates.TemplateResponse(request, "artist.html", {**_common(), **ctx})
+
+
+@app.get("/artists/{mbid}/body", response_class=HTMLResponse)
+def artist_body(request: Request, mbid: str):
+    if not _MBID.fullmatch(mbid):
+        raise HTTPException(404)
+    return templates.TemplateResponse(request, "_artist_body.html", {**_common(), **_artist_ctx(mbid, [])})
+
+
+@app.get("/artists/{mbid}/image")
+def artist_image(mbid: str):
+    if not _MBID.fullmatch(mbid):
+        raise HTTPException(404)
+    path = C().artwork_dir / "artists" / f"{mbid}.jpg"
+    if not path.is_file():
+        raise HTTPException(404)
+    return FileResponse(path, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.post("/artists/identify")
+def artist_identify(name: str = Form(""), link: str = Form(""), back: str = Form("")):
+    """Set which MusicBrainz artist a library name is, from a pasted link. A hand-set ID is never replaced."""
+    mbid = musicbrainz.mbid_from_link(link)
+    lib = library.artist_index()["by_key"].get(norm(name))
+    if not lib:
+        raise HTTPException(404, "That artist isn't in your library")
+    if not mbid:
+        url = f"/artists/{lib['mbid']}" if lib["mbid"] else "/artists/by-name?" + urlencode({"n": lib["name"]})
+        return _back(url + ("&" if "?" in url else "?") + urlencode({"error": "Paste a MusicBrainz artist link, "
+                                                                             "like https://musicbrainz.org/artist/..."}))
+    with db.connect() as c:
+        for k in lib["keys"]:
+            c.execute("INSERT INTO artist_names (name, mbid, how, checked_at) VALUES (?, ?, 'manual', ?) "
+                      "ON CONFLICT(name) DO UPDATE SET mbid = excluded.mbid, how = 'manual', "
+                      "checked_at = excluded.checked_at", (k, mbid, time.time()))
+    artists.lookup_first(C(), mbid)
+    return _back(f"/artists/{mbid}")
+
+
+# ------------------------------------------------------------------ suggestions
+
+def _suggestions_ctx(n: int) -> dict:
+    me = _me()
+    cfg = C()
+    rules = artists.rules_for(me["id"])
+    st = hits._load_stats(me["id"])
+    with db.connect() as c:
+        owned = {r[0] for r in c.execute("SELECT DISTINCT song_key FROM library WHERE song_key IS NOT NULL")}
+    rows = artists.suggestions(me["id"])
+    shown = []
+    for s in rows[:n]:
+        got = artists.suggested_hits(s["mbid"], me["id"], rules, st=st, owned=owned)
+        shown.append({**s, **artists.card(s["mbid"]), "hits": got,
+                      "pending": artists.is_pending(me["id"], s["mbid"]),
+                      "playlist": sync.playlist(sync._suggested_id(s["mbid"], me["id"]))})
+    busy = artists.running() and any(x["pending"] for x in shown)
+    return {"suggestions": shown, "total": len(rows), "n": n, "rules": rules, "dismissed": artists.dismissed(me["id"]),
+            "busy": busy, "all_playlist": sync.suggestions_playlist(me["id"]),
+            "lastfm": bool(cfg.lastfm_api_key), "ast": artists.status(), "ast_running": artists.running()}
+
+
+@app.get("/suggestions", response_class=HTMLResponse)
+def suggestions_page(request: Request, n: int = SUGGESTIONS_SHOWN, saved: str = "", error: str = ""):
+    n = max(SUGGESTIONS_SHOWN, min(n, artists.TOP))
+    return templates.TemplateResponse(request, "suggestions.html", {
+        **_common(), **_suggestions_ctx(n), "saved": saved, "error": error})
+
+
+@app.get("/suggestions/list", response_class=HTMLResponse)
+def suggestions_list(request: Request, n: int = SUGGESTIONS_SHOWN):
+    n = max(SUGGESTIONS_SHOWN, min(n, artists.TOP))
+    return templates.TemplateResponse(request, "_suggestions.html", {**_common(), **_suggestions_ctx(n)})
+
+
+@app.post("/suggestions/rules")
+def suggestions_rules(max_songs: int = Form(5), cutoff: float = Form(1.25)):
+    artists.save_rules(_me()["id"], max_songs, cutoff)
+    return _back("/suggestions?saved=rules")
+
+
+def _suggestion_back(back: str, mbid: str) -> str:
+    return back if back.startswith("/") else f"/suggestions#s-{mbid}"
+
+
+@app.post("/suggestions/{mbid}/get")
+def suggestion_get(mbid: str, back: str = Form("")):
+    if not _MBID.fullmatch(mbid):
+        raise HTTPException(404)
+    n = artists.get_hits(C(), mbid)
+    if n == 0 and artists.albums_known(mbid):
+        return _back("/suggestions?" + urlencode({"error": "None of their songs pass the hits rules, so nothing was added."}))
+    return _back(_suggestion_back(back, mbid))
+
+
+@app.post("/suggestions/{mbid}/dismiss")
+def suggestion_dismiss(mbid: str, name: str = Form(""), back: str = Form("")):
+    if not _MBID.fullmatch(mbid):
+        raise HTTPException(404)
+    artists.dismiss(_me()["id"], mbid, name.strip() or None)
+    return _back(back if back.startswith("/") else "/suggestions")
+
+
+@app.post("/suggestions/{mbid}/undismiss")
+def suggestion_undismiss(mbid: str, back: str = Form("")):
+    if not _MBID.fullmatch(mbid):
+        raise HTTPException(404)
+    artists.undismiss(_me()["id"], mbid)
+    return _back(back if back.startswith("/") else "/suggestions#dismissed")
 
 
 # ------------------------------------------------------------------ system

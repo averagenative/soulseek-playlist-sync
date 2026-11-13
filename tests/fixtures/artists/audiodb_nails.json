@@ -1,0 +1,17 @@
+{
+ "artists": [
+  {
+   "idArtist": "125729",
+   "strArtist": "Nails",
+   "intFormedYear": "2010",
+   "strStyle": "",
+   "strGenre": "Grindcore",
+   "strMood": "",
+   "strCountry": "Oxnard, USA",
+   "strArtistThumb": "https://r2.theaudiodb.com/images/media/artist/thumb/qjga241663790871.jpg",
+   "strBiographyEN": null,
+   "strMusicBrainzID": "a7d9c5f6-751d-4ea5-bf6d-39f1751d44a1",
+   "strWebsite": "abandonalllife.com"
+  }
+ ]
+}

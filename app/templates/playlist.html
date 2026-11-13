@@ -12,7 +12,11 @@
     {% if hits %}<div class="small"><span class="tag">HITS</span> {{ rule_text }}, kept up to date.
       <a href="/playlists/{{ p.id }}/hits">See each album's picks</a></div>
     {% elif rule_text %}<div class="small"><span class="tag">AUTO</span> {{ rule_text }}, kept up to date.
-      <a href="/library?{{ rule_qs }}">Browse them</a></div>{% endif %}
+      <a href="/library?{{ rule_qs }}">Browse them</a></div>
+    {% elif p.source == 'suggested' and p.remote_id == 'suggestions' %}<div class="small">Every artist you used Get their hits on.
+      Removing an artist's playlist takes its songs out of this one. <a href="/suggestions">See your suggestions</a></div>
+    {% elif p.source == 'suggested' %}<div class="small">The songs Get their hits picked for
+      <a href="/artists/{{ p.remote_id }}">{{ p.name[:-5] if p.name.endswith(' Hits') else 'this artist' }}</a>. They're in the Suggestions playlist too.</div>{% endif %}
   </div>
   <div class="hero-actions">
   <div class="toolbar">
@@ -50,7 +54,7 @@
     <details class="settings">
       <summary class="btn">Settings</summary>
       <form method="post" action="/playlists/{{ p.id }}/settings" class="stack">
-        {% if local %}
+        {% if local or p.source == 'suggested' %}
         <label class="field"><span class="label">Name</span>
           <input type="text" name="name" value="{{ p.name }}" required></label>
         {% else %}

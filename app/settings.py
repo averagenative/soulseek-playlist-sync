@@ -13,6 +13,7 @@ EDITABLE = {
     "spotify_dir": (str, "Spotify folder", "Under the music root. New Spotify playlists get a folder in here."),
     "youtube_dir": (str, "YouTube folder", "Under the music root. New YouTube playlists get a folder in here."),
     "local_dir": (str, "My music folder", "Under the music root. Playlists you make on the My music page get a folder in here."),
+    "suggestions_dir": (str, "Suggestions folder", "Under the music root. Playlists from Get their hits on the Suggestions page get a folder in here."),
     "default_numbering": (bool, "Number files in playlist order", "Default for new playlists."),
     "default_library_mode": (str, "Songs already in your library", "Default for new playlists."),
     "min_bitrate": (int, "Lowest MP3 bitrate (kbps)", "Downloads below this are ignored."),

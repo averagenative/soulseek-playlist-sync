@@ -29,7 +29,7 @@ ADD_BATCH = 100     # songs per request when adding to an Apple Music copy
 
 def targets_for(source: str) -> list[str]:
     return {"apple": ["spotify"], "spotify": ["apple"], "local": ["spotify", "apple"],
-            "youtube": ["spotify", "apple"]}[source]
+            "youtube": ["spotify", "apple"], "suggested": ["spotify", "apple"]}[source]
 
 
 def target_for(source: str) -> str:

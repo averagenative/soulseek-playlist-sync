@@ -1,0 +1,168 @@
+{% macro bio_text(b) -%}
+  {% set paras = b.text.split('\n') | map('trim') | select | list %}
+  {% set ns = namespace(n=0, cut=paras|length) %}
+  {% for p in paras %}{% set ns.n = ns.n + p|length %}{% if ns.n > 1100 and ns.cut == paras|length and not loop.first %}{% set ns.cut = loop.index0 %}{% endif %}{% endfor %}
+  {% for p in paras[:ns.cut] %}<p>{{ p }}</p>{% endfor %}
+  {% if ns.cut < paras|length %}<details class="more"><summary>Show all</summary>{% for p in paras[ns.cut:] %}<p>{{ p }}</p>{% endfor %}</details>{% endif %}
+  <p class="credit small muted">{% if b.source == 'discogs' %}<a href="{{ b.url }}" target="_blank" rel="noopener">Data provided by Discogs</a>{% else %}From {% if b.url %}<a href="{{ b.url }}" target="_blank" rel="noopener">{{ b.label }}</a>{% else %}{{ b.label }}{% endif %}{% if b.license %}, {{ b.license }}{% endif %}{% endif %}</p>
+{%- endmacro %}
+{% macro person(x, tag=True) -%}
+  {% if x.url %}<a href="{{ x.url }}" {% if not x.in_library %}target="_blank" rel="noopener"{% endif %}>{{ x.name }}</a>{% else %}{{ x.name }}{% endif %}
+  {%- if tag and not x.in_library %} <span class="tag out">Not in your library</span>{% endif %}
+  {%- if x.suggested %} <a class="tag sug" href="/suggestions#s-{{ x.mbid }}">Suggested</a>{% endif %}
+{%- endmacro %}
+{% macro people(xs, empty, cap=12) -%}
+  {% if xs %}<ul class="people">{% for x in xs[:cap] %}<li>{{ person(x) }}</li>{% endfor %}</ul>
+    {% if xs|length > cap %}<details class="more-people"><summary class="small">{{ xs|length - cap }} more</summary>
+      <ul class="people">{% for x in xs[cap:] %}<li>{{ person(x) }}</li>{% endfor %}</ul></details>{% endif %}
+  {% else %}<p class="muted small">{{ empty }}</p>{% endif %}
+{%- endmacro %}
+<div class="artist" data-active="{{ 1 if looking else 0 }}">
+<section class="artist-hero">
+  <div class="artist-pic">{% if a.image %}<img src="{{ a.image }}" alt="{{ a.name }}">{% else %}<span class="avatar" aria-hidden="true">{{ a.name[:1]|upper }}</span>{% endif %}</div>
+  <div class="info">
+    <div class="eyebrow">{{ 'In your library' if a.in_library else 'Not in your library' }}</div>
+    <h1>{{ a.name }}</h1>
+    {% if a.disambiguation %}<div class="muted small">{{ a.disambiguation }}</div>{% endif %}
+    {% set facts = [a.type, a.years, ('from ' ~ a.origin) if a.origin else None]|select|list %}
+    {% if facts %}<div class="facts">{{ facts|join(', ') }}</div>{% endif %}
+    {% if a.genres %}<div class="genres">{% for g in a.genres %}<span class="chip small">{{ g }}</span>{% endfor %}</div>{% endif %}
+    {% if a.lib %}<div class="small">{{ a.lib.albums|n }} album{{ '' if a.lib.albums == 1 else 's' }} and {{ a.lib.songs|n }} song{{ '' if a.lib.songs == 1 else 's' }} in your library.
+      <a href="/library?{{ library_qs }}">Browse them on My music</a></div>{% endif %}
+    {% if a.links_out %}<div class="links-out small">{% for label, url in a.links_out %}<a href="{{ url }}" target="_blank" rel="noopener">{{ label }}</a>{% endfor %}</div>{% endif %}
+    {% if a.image and a.credit %}<div class="muted small credit">Picture: {% if a.credit.author %}{{ a.credit.author }}, {% endif %}{% if a.credit.license %}{% if a.credit.license_url %}<a href="{{ a.credit.license_url }}" target="_blank" rel="noopener">{{ a.credit.license }}</a>{% else %}{{ a.credit.license }}{% endif %}, {% endif %}{% if a.credit.page %}<a href="{{ a.credit.page }}" target="_blank" rel="noopener">{{ a.credit.source }}</a>{% else %}{{ a.credit.source }}{% endif %}</div>{% endif %}
+  </div>
+</section>
+
+{% if error %}<p class="notice bad" role="alert">{{ error }}</p>{% endif %}
+{% if looking %}
+  <p class="notice info" role="status"><span class="badge busy">Looking up</span> Getting {{ a.name }}'s facts, bio, influences, and similar artists. This page fills in when it's done, usually within a minute.</p>
+{% elif found_url %}
+  <p class="notice ok">Found {{ a.name }} on MusicBrainz. <a href="{{ found_url }}">Open the artist page</a></p>
+{% elif not a.has_data %}
+  <div class="notice warn">
+    {% if a.mbid %}No information about {{ a.name }} has been fetched yet.
+    {% elif name_checked %}MusicBrainz has no artist called {{ a.name }} with these albums, so there's nothing more to show than your music.
+    {% else %}{{ a.name }} isn't identified on MusicBrainz yet.{% endif %}
+  </div>
+{% endif %}
+{% if not looking and (not a.has_data or a.lib) and a.in_library %}
+<details class="identify" {% if not a.has_data and not a.mbid %}open{% endif %}>
+  <summary class="small">{{ 'Wrong artist?' if a.has_data else 'Know who this is?' }} Paste their MusicBrainz link</summary>
+  <form method="post" action="/artists/identify" class="stack">
+    <input type="hidden" name="name" value="{{ a.lib.key if a.lib else '' }}">
+    <label class="field"><span class="label">MusicBrainz artist link</span>
+      <input type="text" name="link" placeholder="https://musicbrainz.org/artist/..." required>
+      <span class="muted small">Find the artist on <a href="https://musicbrainz.org/search?type=artist&amp;query={{ a.name|urlencode }}" target="_blank" rel="noopener">MusicBrainz</a> and copy the page's address.
+        The app uses it for {{ a.name }} from then on.</span></label>
+    <div class="actions">
+      <button class="btn small primary">Use this artist</button>
+      {% if not a.mbid %}<button class="btn small" formaction="/artists/lookup" formnovalidate name="name" value="{{ a.lib.key if a.lib else a.name }}">Search MusicBrainz again</button>{% endif %}
+    </div>
+  </form>
+</details>
+{% endif %}
+
+{% if suggestion %}
+<section class="artist-section suggestion-box">
+  <h2>Suggested for you</h2>
+  <p>{{ suggestion.reasons }}.</p>
+  {% if sug_hits and sug_hits.known %}
+    {% if sug_hits.songs %}
+      <form method="post" action="/suggestions/{{ a.mbid }}/get" class="inline"><input type="hidden" name="back" value="/artists/{{ a.mbid }}">
+        <button class="btn primary small">Get their hits ({{ sug_hits.songs|length }} song{{ '' if sug_hits.songs|length == 1 else 's' }})</button></form>
+    {% else %}<p class="muted small">None of their songs pass the hits rules, so there's nothing to get.</p>{% endif %}
+  {% elif pending %}<p class="small"><span class="badge busy">Looking up</span> Finding their albums. The songs are added when it's done.</p>
+  {% else %}
+    <form method="post" action="/suggestions/{{ a.mbid }}/get" class="inline"><input type="hidden" name="back" value="/artists/{{ a.mbid }}">
+      <button class="btn primary small">Get their hits</button></form>
+    <span class="muted small">Looks up their albums first, which takes about half a minute.</span>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if a.bio %}
+<section class="artist-section bio">
+  <h2>Biography</h2>
+  {{ bio_text(a.bio) }}
+  {% for b in a.other_bios %}
+  <details class="other-bio"><summary class="small">The bio from {{ b.label }}</summary>{{ bio_text(b) }}</details>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if a.members or a.groups %}
+<section class="artist-section">
+  {% if a.members %}<h2>Members</h2>
+  <ul class="people members">
+    {% for m in a.members %}<li>{{ person(m, tag=False) }}
+      <span class="muted small">{% if m.begin %}{{ m.begin }}{% if m.end != m.begin %} to {{ m.end or 'now' }}{% endif %}{% endif %}{% if m.instruments %}{% if m.begin %} &middot; {% endif %}{{ m.instruments|join(', ') }}{% endif %}</span></li>{% endfor %}
+  </ul>{% endif %}
+  {% if a.groups %}<h2>Member of</h2>
+  <ul class="people members">
+    {% for m in a.groups %}<li>{{ person(m, tag=False) }} <span class="muted small">{% if m.begin %}{{ m.begin }}{% if m.end != m.begin %} to {{ m.end or 'now' }}{% endif %}{% endif %}{% if m.instruments %}{% if m.begin %} &middot; {% endif %}{{ m.instruments|join(', ') }}{% endif %}</span></li>{% endfor %}
+  </ul>{% endif %}
+</section>
+{% endif %}
+
+{% if a.has_data %}
+<section class="artist-section">
+  <div class="two-col">
+    <div>
+      <h2>Influenced by</h2>
+      {{ people(a.influenced_by, 'No influences are known for ' ~ a.name ~ ' on Wikidata.') }}
+    </div>
+    <div>
+      <h2>Influenced</h2>
+      {{ people(a.influenced, 'Wikidata names no one ' ~ a.name ~ ' influenced.') }}
+    </div>
+  </div>
+  <p class="muted small">Influences are from Wikidata, where people record who shaped whom.</p>
+</section>
+
+<section class="artist-section">
+  <div class="two-col">
+    <div>
+      <h2>Fans of {{ a.name }} also have</h2>
+      {{ people(a.similar_have, 'None of the artists listeners play with ' ~ a.name ~ ' are in your library.' if a.similar_sources else 'No similar artists are known yet.') }}
+    </div>
+    <div>
+      <h2>If you like {{ a.name }}</h2>
+      {{ people(a.similar_not, 'Every similar artist known is already in your library.' if a.similar_sources else 'No similar artists are known yet.') }}
+    </div>
+  </div>
+  {% if a.similar_sources %}<p class="muted small">Similar artists are from listening data ({{ a.similar_sources|join(' and ') }}): people who play {{ a.name }} also play them. That's not the same as an influence.</p>{% endif %}
+</section>
+{% endif %}
+
+{% if a.albums %}
+<section class="artist-section">
+  <h2>Your albums</h2>
+  <ul class="albums">
+    {% for al in a.albums %}
+    <li>
+      {% if al.art %}<img class="thumb" src="{{ al.art }}" alt="" loading="lazy">{% else %}<div class="thumb blank">&#9835;</div>{% endif %}
+      <div>
+        <a href="{{ al.url }}"><b>{{ al.title }}</b></a>
+        <div class="muted small">{{ [al.year, al.kind|capitalize if al.kind != 'ep' else 'EP', al.count ~ (' song' if al.count == 1 else ' songs')]|select|join(' · ') }}</div>
+        {% if al.picks %}<div class="small"><span class="tag">HITS</span> {{ al.picks|join(', ') }}</div>{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if a.sources %}
+<section class="artist-section sources">
+  <h2>Sources</h2>
+  <ul class="small">
+    {% for name, what, license, url in a.sources %}
+    <li><b>{% if url %}<a href="{{ url }}" target="_blank" rel="noopener">{{ name }}</a>{% else %}{{ name }}{% endif %}</b>: {{ what }}{% if license %} ({{ license }}){% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% if a.fetched.musicbrainz %}<div class="muted small">Looked up {{ a.fetched.musicbrainz|ago }}.
+    <form method="post" action="/artists/lookup" class="inline"><input type="hidden" name="mbid" value="{{ a.mbid }}"><input type="hidden" name="again" value="1"><input type="hidden" name="back" value="/artists/{{ a.mbid }}"><button class="btn tiny">Look up again</button></form></div>{% endif %}
+</section>
+{% endif %}
+</div>
