@@ -17,6 +17,7 @@ Keep local MP3 copies of your Apple Music and Spotify playlists. Pick a playlist
 - **Sync favorites.** Add the songs you like on Spotify to Apple Music Favorite Songs, the songs you favorite on Apple Music to Spotify Liked Songs, or both, on a schedule.
 - **Browse your own music** on the **My music** page: search, filter by folder, play songs, and see album art from your files.
 - **Make playlists from your music**, by hand or as "every song in these folders" playlists that keep up as your library changes, and copy them to Spotify, Apple Music, or both. Put your whole collection on your phone's music app and shuffle it.
+- **Hits playlists.** Keep only the standout songs of each album in a big collection: the songs that charted, came out as singles, or get the most listeners, plus your favorites. The filler stays out.
 - **Check songs by ear.** Play any downloaded song in the browser, and compare it with Apple's 30-second clip of the original.
 - **Download a playlist as a ZIP** to the computer you're browsing from, with its `.m3u`.
 - **Download all** button per playlist, live progress from slskd, a Downloads page for everything in flight, and pages that refresh themselves.
@@ -148,7 +149,8 @@ How YouTube playlists differ from the other services:
 
 - **Artist and title come from the video's title.** "Artist - Song (Official Video)" becomes "Song" by "Artist". For YouTube Music's "Artist - Topic" uploads, the artist comes from the channel. A video whose title doesn't name the artist gets the channel's name as the artist.
 - **Music videos don't set the song's length.** A music video often has an intro or an ending, so for those, a Soulseek file's length doesn't have to match. Lyric videos, audio uploads, and "Topic" uploads keep their length.
-- **The YouTube fallback uses the playlist's own video.** With **Try YouTube when Soulseek doesn't have a song** on, a song Soulseek doesn't have is downloaded from the video in the playlist, instead of a search.
+- **The YouTube fallback uses the playlist's own video.** With **Try YouTube when Soulseek doesn't have a song** on, a song Soulseek doesn't have is downloaded from the video in the playlist, instead of a search. If that video can't be downloaded, the app tries up to three other uploads of the song, such as the artist's "Topic" upload.
+- **Age-restricted videos need a YouTube sign-in.** To download them, export a `cookies.txt` from a browser that's signed in to YouTube, put it where the container can write to it, and set `YOUTUBE_COOKIES_FILE` to its path. YouTube can limit an account that downloads a lot, so use one you don't mind losing.
 - **Cover art** is the middle of the video's thumbnail, which for "Topic" uploads is the album cover.
 - **Deleted and private videos are left out.** YouTube still lists them in the playlist, but with no title or artist.
 - **Private playlists, Liked videos, Liked Music, and Mixes can't be added**, because reading them needs a YouTube sign-in. Save the songs to a Public or Unlisted playlist and add that.
@@ -165,6 +167,8 @@ When you click **Download all**, the app does the following for each song in the
 1. It writes the `.m3u` in the playlist's order.
 
 ![The Downloads page in dark mode, with live speed and time left for each song](docs/screenshots/downloads-dark.png)
+
+To see the songs with one status, click its count over the song list, such as **Failed 12**. A song that failed shows a short reason, such as a copyright block or an age restriction. Click the reason to see the full message.
 
 Run **Download all** again whenever the playlist changes. New songs are added, reordered songs are renumbered, and songs removed from the playlist are marked **Removed upstream** and kept until you click **Prune removed**. The app only ever deletes files it created.
 
@@ -251,6 +255,42 @@ Keep the following in mind:
 
 Your Apple Music library also appears at the top of the list when you add Apple Music playlists, as **Apple Music library**. Track it like a playlist to download it, or to copy it to Spotify. Spotify's equivalent is **Liked Songs**.
 
+## Make a hits playlist
+
+A hits playlist takes a big collection and keeps only each album's standout songs, so shuffling it skips the filler. It's a **Keep up to date** playlist, so new albums join it as you add them.
+
+To make one, do either of the following:
+
+- On the **My music** page, choose what to include (or clear the filters for everything), tick **Hits only**, and click **Make playlist**.
+- On the page of a **Keep up to date** playlist, click **Make a hits playlist**. The new playlist has the same songs, standouts only.
+
+### How songs are picked
+
+Each album gets its 2 best songs, and up to 5 when more of them stand out. A song stands out when it does any of the following:
+
+- Charted on the Billboard Hot 100, from 1958 on.
+- Came out as a single within two years of its album, according to MusicBrainz.
+- Has at least 1.25 times the album's median listeners on ListenBrainz, or the album's median page views on Genius. Comparing within the album works the same for a band with a few hundred listeners as for one with millions.
+- Is in your Apple Music Favorite Songs or Spotify Liked Songs. Favorites always go in.
+
+The following songs are left out:
+
+- **Skits, intros, and interludes,** and songs under 90 seconds, unless they charted or you favorited them.
+- **Live, demo, and remix versions**, by their titles, and live albums when the artist has studio albums in the collection.
+- **Second copies.** A song on both an album and a greatest-hits record counts once, on the album. Compilations and singles only add songs that stand out and aren't on an album you have.
+
+An album with no numbers at all keeps its first 2 songs. To see what was picked from each album and why, click **See each album's picks** on the playlist page. There you can change the 2, the 5, and the 1.25 under **Change the numbers**. To drop a song you don't want, leave it out on the playlist page: the album's next best song takes its place. When a song makes you want the rest of its album, click **Whole album** on the song: every song from that album goes in, skits and interludes too, and stays in through later rebuilds. To go back to the standouts, click **Back to the picks** on the album under **See each album's picks**.
+
+### Song lookups
+
+The app looks songs up in the background and keeps what it finds, so later rebuilds don't wait on the network. The first run takes an hour or two for a library of about 30,000 songs, because MusicBrainz answers one request a second. The playlist updates after each step. After that, the app looks up new songs every 6 hours, and refreshes counts that are more than 90 days old.
+
+ListenBrainz needs a user token for each artist's listener counts, which catch listens that went to another version of the same recording. Sign in at https://listenbrainz.org, copy the token from https://listenbrainz.org/settings/, and set `LISTENBRAINZ_TOKEN`. Without it, the app uses each recording's own count. If a service refuses or keeps failing, that step stops and the status box says why; the other steps still run.
+
+Songs are found by the MusicBrainz IDs that taggers such as MusicBrainz Picard write into files. For a song without them, the app tries its ISRC, then a MusicBrainz search by artist, title, and length. Genius page views are optional: set `GENIUS_API_TOKEN` to a Genius API client access token, which you can make at https://genius.com/api-clients. Genius allows 10,000 requests a day, so a big library can take two days to finish.
+
+The lookups send song titles, artists, and MusicBrainz IDs to ListenBrainz, MusicBrainz, and Genius, and download the Hot 100 history from the `utdata/rwd-billboard-data` project on GitHub. Nothing about you or your account is sent.
+
 ## Check songs and take them with you
 
 - Click a downloaded song's cover to play it in the browser. The player moves on to the next downloaded song. For Apple Music playlists, **Original** plays Apple's 30-second clip of the song so you can compare it with your copy.
@@ -276,6 +316,9 @@ The following environment variables configure things that can't change while the
 | `SPOTIFY_REDIRECT_URI` | worked out from the address you open | Set it if the app is behind a proxy that hides its public address. |
 | `YOUTUBE_FALLBACK` | `0` | `1` to try YouTube for songs Soulseek doesn't have. |
 | `APP_PASSWORD` | none | Asks for a password (HTTP basic auth) before showing the app. |
+| `GENIUS_API_TOKEN` or `GENIUS_API_TOKEN_FILE` | none | Genius API client access token. Adds Genius page views to hits playlists. |
+| `LISTENBRAINZ_TOKEN` or `LISTENBRAINZ_TOKEN_FILE` | none | ListenBrainz user token. Adds each artist's listener counts to hits playlists. |
+| `YOUTUBE_COOKIES_FILE` | none | A `cookies.txt` from a browser signed in to YouTube, so age-restricted videos download. yt-dlp writes to it, so it can't be read-only. |
 | `SLSKD_CONTROL` | `none` | `docker` or `webhook` adds a **Turn on** button for a stopped slskd. `docker` needs `/var/run/docker.sock` mounted and `SLSKD_CONTAINERS` (container names, in start order); `webhook` needs `SLSKD_CONTROL_URL`. |
 
 ## Use an slskd you already run

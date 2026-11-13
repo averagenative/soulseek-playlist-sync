@@ -53,6 +53,9 @@ class Config:
     queue_timeout: int
 
     app_password: str | None
+    genius_token: str | None = None   # optional: Genius page views for hits playlists
+    listenbrainz_token: str | None = None   # optional: ListenBrainz per-artist counts for hits playlists
+    youtube_cookies: Path | None = None   # optional: cookies.txt for age-restricted YouTube videos
 
     @property
     def apple_root(self) -> Path:
@@ -116,4 +119,7 @@ def load() -> Config:
         length_tolerance=float(_env("LENGTH_TOLERANCE", "3")),
         queue_timeout=int(_env("QUEUE_TIMEOUT", "900")),
         app_password=_secret("APP_PASSWORD"),
+        genius_token=_secret("GENIUS_API_TOKEN"),
+        listenbrainz_token=_secret("LISTENBRAINZ_TOKEN"),
+        youtube_cookies=Path(_env("YOUTUBE_COOKIES_FILE")) if _env("YOUTUBE_COOKIES_FILE") else None,
     )

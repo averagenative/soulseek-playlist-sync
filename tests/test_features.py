@@ -208,3 +208,39 @@ def test_apple_retries_gateway_errors_then_gives_up(monkeypatch):
         client([504] * 6).get("/v1/catalog/us/songs")
     with pytest.raises(apple.AppleError, match="ReadTimeout: slow"):
         client(["timeout"] * 6).get("/v1/catalog/us/songs")
+
+
+def test_searches_need_a_word_of_two_letters():
+    # Soulseek refuses "f e b n", so that query is dropped; the one with the artist stays.
+    assert search_queries("F.E.B.N.", "Trash Talk", None) == ["trash talk f e b n"]
+    assert search_queries("N.E.R.D", "X", None) == []
+
+
+def test_a_refused_search_moves_on_instead_of_blocking_the_queue(cfg):
+    from app import worker
+    from app.slskd import SlskdError
+
+    class Refuses:
+        def __init__(self, status):
+            self.status = status
+
+        def start_search(self, q):
+            raise SlskdError("slskd POST /searches: HTTP 500 Search query must contain ...", self.status)
+
+    with db.connect() as c:
+        sync._save_songs(c, [{"key": "apple:1", "title": "Loser", "artist": "Beck", "album": "Mellow Gold"}])
+        c.execute("INSERT INTO downloads (song_key, state) VALUES ('apple:1', 'pending')")
+    w = worker.Worker()
+
+    def row():
+        with db.connect() as c:
+            return dict(c.execute("SELECT * FROM downloads WHERE song_key = 'apple:1'").fetchone())
+    w.start_search(Refuses(500), row())
+    assert (row()["state"], row()["query_index"]) == ("pending", 1)        # on to the next query
+    w.start_search(Refuses(500), row())                                     # the last query
+    assert row()["state"] == "failed" and "Soulseek refused the search" in row()["detail"]
+    # slskd being down is still the run loop's business.
+    with db.connect() as c:
+        c.execute("UPDATE downloads SET state = 'pending', query_index = 0 WHERE song_key = 'apple:1'")
+    with pytest.raises(SlskdError):
+        w.start_search(Refuses(None), row())

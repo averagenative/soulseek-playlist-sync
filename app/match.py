@@ -121,7 +121,8 @@ def search_queries(title: str, artist: str, album: str | None) -> list[str]:
     seen, out = set(), []
     for q in queries:
         q = q.strip()
-        if q and q not in seen:
+        # Soulseek refuses a search with no word of two letters or more: "F.E.B.N." alone is "f e b n".
+        if q and q not in seen and any(len(w) > 1 for w in q.split()):
             seen.add(q)
             out.append(q)
     return out

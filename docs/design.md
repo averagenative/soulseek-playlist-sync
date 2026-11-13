@@ -24,6 +24,7 @@ browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
 | `app/mirror.py` | Copies a playlist to a streaming service: matches songs, creates or updates the copy, and takes a random sample when a playlist is over Spotify's 10,000-song limit. |
 | `app/favorites.py` | Favorites sync: reads Spotify Liked Songs and Apple Music Favorite Songs, matches each new song on the other service, and adds it there. Only adds, and remembers each pair. |
 | `app/export.py` | Streams a playlist as a ZIP without building it on disk. Checks the size first (asks above 2 GB, refuses above 20 GB) and records progress for the page. |
+| `app/hits.py` | Hits playlists. `research()` runs in the background and fills the `hit_*` tables from ListenBrainz, MusicBrainz, Genius, the Billboard Hot 100 history, and your favorites, fetching only what's missing or stale. `plan()` picks each album's songs from those tables without any requests, so a rebuild is quick. |
 | `app/match.py` | Text normalization and Soulseek candidate ranking. Pure functions. |
 | `app/library.py` | Index of the music already on disk (incremental, by size and modification time), plus the queries behind **My music** and auto-updating playlists. |
 | `app/art.py` | Cover thumbnails for library files, from embedded art or a `cover.jpg` next to the file, cached under `DATA_DIR/artwork/local`. A playlist's mosaic cover takes one album each from its first artists with art (`sync.covers`), checking at most 40 local albums per call. |
@@ -38,10 +39,11 @@ browser --> web app (FastAPI, Jinja templates, SQLite) --> Apple Music API
 - `entries`: the playlist's order, one row per position. A song can appear more than once.
 - `items`: what exists locally for each song in each playlist (file name, origin, skipped, wanted). In a My music playlist that keeps itself up to date, a skipped song is one you took out: it stays out of the `.m3u`, the ZIP, copies, and refreshes.
 - `downloads`: one row per song, shared by every playlist that has it: the Soulseek or YouTube search, candidates, transfer progress, and the finished file.
-- `library`: the index of files under the library folders, with their tags, song key, cover key (folder plus album), and a normalized search column.
+- `library`: the index of files under the library folders, with their tags, song key, cover key (folder plus album), and a normalized search column. It also keeps the MusicBrainz recording, artist, and release group IDs and the album type that taggers such as Picard write.
 - `mirrors`: a playlist's copy on the other service, with how many songs matched and which didn't.
 - `song_links`: each song's match on the other service, so later updates don't search again. Songs that weren't found are looked for again after a week.
 - `favorite_pairs`: each Spotify track and Apple Music song the favorites sync has seen as the same song. A paired song is never added again, so a favorite you remove stays removed.
+- `hit_ids`, `hit_recordings`, `hit_artist_songs`, `hit_artists`, `hit_charts`, `hit_favorites`: what hits playlists know about your songs. These hold MusicBrainz IDs looked up for files without them, ListenBrainz listeners per recording, per-artist lists (listeners per title, singles with their year, Genius page views), when each artist was last fetched, the Hot 100 history reduced to each song's peak and weeks, and the song keys of your favorites. A hits playlist's `rule` is a filter plus a `hits` object with `min`, `max`, and `cutoff`.
 
 A song's status on the playlist page comes from its item and its download row: synced, in library, waiting, searching, found, queued, downloading, not found, failed, removed upstream, or skipped.
 
@@ -52,6 +54,14 @@ A song's status on the playlist page comes from its item and its download row: s
 - **Soulseek**: MP3 only, at least the minimum bitrate, length within the tolerance, and every word of the core title (without "feat." and bracketed notes) in the file name. Ranked by bitrate, free upload slot, queue length, speed, and length difference. One candidate per peer, so a failing peer doesn't use up every fallback.
 - **Favorites**: first against the other service's favorites, by ISRC or normalized title and primary artist, so a song already favorited on both sides (even as another version) isn't added again; then like a copy, through `song_links`. On Apple Music, a song is favorited by adding it to the library and setting its library rating to 1 (`PUT /v1/me/ratings/library-songs/{id}`); the catalog rating is a separate, older "love". On Spotify, songs are saved with `PUT /me/library`.
 - **YouTube**: YouTube Music's song search first, then general YouTube search. Length within 6 seconds, every word of the core title in the video title, and no words such as live, cover, remix, sped up, or clip unless the wanted title has them. "Artist - Topic" channels rank first. If nothing passes, a second pass allows up to about 20 seconds of difference, but only when the artist is named in the title or channel; those files are labeled with the difference.
+
+## Hits playlists
+
+`hits.plan()` groups the filter's files by album (album artist plus album), and gives each song one home album: an album before an EP, soundtrack, single, compilation, or live album, then the earliest. Skits, interludes, songs under 90 seconds, and live, demo, and remix versions are out unless they charted or are favorites. A live album counts as an album only when it's all the artist has in the selection.
+
+For each album, listeners and page views are divided by the album's median among the songs that are in. An album needs counts for at least half its songs and a median of at least 30 listeners (300 page views) to be compared. A song's ListenBrainz count is the highest of its recordings' counts and the artist's count for that title, because listens collect on one version of a recording and a file can be tagged with another. A song's score is its higher ratio, plus 0.5 to 1.0 for a Hot 100 entry (more for the top 40 and top 10), and 0.15 for a single. A single counts when it came out within two years of the album. Live, remix, and DJ-mix singles don't count, and of a single with more than two songs only the first does.
+
+Favorites go in first. Albums, EPs, and soundtracks then fill up to `min` by score. Every kind then adds songs that stand out (charted, a single, a favorite, or a ratio of at least `cutoff`) until `max`. A song you leave out is skipped when picking, so the next best takes its place, and it stays listed as left out. Requests go out at one a second to MusicBrainz, within ListenBrainz's rate-limit headers, and at four a second to Genius, stopping 50 short of its daily allowance.
 
 ## Files on disk
 

@@ -9,7 +9,9 @@
     <div class="eyebrow">{{ source(p.source) }}</div>
     <h1>{{ p.name }}</h1>
     <div class="muted small path" title="{{ folder }}/{{ m3u }}">{{ p.folder }}/{{ m3u }}</div>
-    {% if rule_text %}<div class="small"><span class="tag">AUTO</span> {{ rule_text }}, kept up to date.
+    {% if hits %}<div class="small"><span class="tag">HITS</span> {{ rule_text }}, kept up to date.
+      <a href="/playlists/{{ p.id }}/hits">See each album's picks</a></div>
+    {% elif rule_text %}<div class="small"><span class="tag">AUTO</span> {{ rule_text }}, kept up to date.
       <a href="/library?{{ rule_qs }}">Browse them</a></div>{% endif %}
   </div>
   <div class="hero-actions">
@@ -20,6 +22,11 @@
               title="Look for new, changed and deleted files in your library, then update the playlist and its .m3u">Refresh</button>
     </form>
     {% if not rule %}<a class="btn" href="/library?to={{ p.id|urlencode }}">Add songs</a>{% endif %}
+    {% if rule and not hits %}
+    <form method="post" action="/playlists/{{ p.id }}/hits/new" class="inline">
+      <button class="btn" title="A new playlist of these songs with only the standout songs of each album: hits, singles, your favorites, and the songs listeners play most">Make a hits playlist</button>
+    </form>
+    {% endif %}
     {% else %}
     <form method="post" action="/playlists/{{ p.id }}/sync" class="inline">
       <button class="btn primary" data-busy-lock {% if p.busy %}disabled{% endif %}
@@ -103,7 +110,8 @@
     <span class="small"><b id="pl-n">0</b> selected</span>
     <button class="btn small danger">{{ 'Leave out of the playlist' if rule else 'Remove from the playlist' }}</button>
     <button type="button" class="btn small" id="pl-clear">Clear</button>
-    {% if rule %}<span class="muted small">They stay out when the playlist refreshes, and out of its copies.</span>{% endif %}
+    {% if hits %}<span class="muted small">The album's next best song takes each one's place. They stay out when the playlist refreshes, and out of its copies.</span>
+    {% elif rule %}<span class="muted small">They stay out when the playlist refreshes, and out of its copies.</span>{% endif %}
   </div>
 </form>
 <script src="/static/pick.js" defer></script>

@@ -417,3 +417,22 @@ a.badge { text-decoration: none; }
 #pl-bar { position: fixed; left: 16px; right: 16px; bottom: 12px; margin: 0 auto; }
 body.has-player #pl-bar { bottom: 96px; }
 @media (max-width: 640px) { body.has-player #pl-bar { bottom: 150px; } }
+
+/* Hits playlists: each album's picks */
+.hits-album { margin: 18px 0 6px; }
+.hits-album h2 { margin: 0 0 6px; font-weight: 400; }
+table.hits td { padding-top: 5px; padding-bottom: 5px; }
+table.hits tr.muted td { color: var(--muted); }
+table.hits .pick-mark { display: inline-block; width: 1.2em; color: var(--ok); font-weight: 700; }
+table.hits td.num { width: 2.5em; text-align: right; }
+.hits-opts { margin: 10px 0; }
+.hits-opts .stack { max-width: 420px; margin-top: 8px; }
+
+/* Why a download failed: a short reason that opens to the full message */
+details.why { margin-top: 3px; max-width: 42ch; }
+details.why summary { cursor: pointer; color: var(--bad, inherit); list-style: none; }
+details.why summary::-webkit-details-marker { display: none; }
+details.why summary::after { content: " (details)"; color: var(--muted); }
+details.why[open] summary::after { content: ""; }
+details.why > div.muted { margin-top: 4px; white-space: normal; overflow: visible; text-overflow: clip;
+  max-width: none; overflow-wrap: anywhere; }   /* beats .song .muted, which cuts text to one line */

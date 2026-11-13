@@ -9,7 +9,11 @@ from .config import Config
 
 
 class SlskdError(Exception):
-    pass
+    """status is slskd's HTTP status when it answered with an error, None when it couldn't be reached."""
+
+    def __init__(self, message: str, status: int | None = None):
+        super().__init__(message)
+        self.status = status
 
 
 class Slskd:
@@ -27,7 +31,7 @@ class Slskd:
         except httpx.HTTPError as e:
             raise SlskdError(f"slskd unreachable: {e}") from e
         if r.status_code >= 400:
-            raise SlskdError(f"slskd {method} {path}: HTTP {r.status_code} {r.text[:200]}")
+            raise SlskdError(f"slskd {method} {path}: HTTP {r.status_code} {r.text[:200]}", r.status_code)
         return r.json() if r.content and "json" in r.headers.get("content-type", "") else None
 
     # status -----------------------------------------------------------

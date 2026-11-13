@@ -132,8 +132,33 @@ def _music_search(query: str, title: str, look_at: int = 4) -> list[dict]:
     return out
 
 
-def download(candidate: dict, work_dir: Path, progress=None) -> Path:
-    """Download the audio and convert it to MP3 (VBR ~245 kbps). Returns the MP3's path."""
+_REASONS = [
+    (re.compile(r"confirm your age|age[- ]restricted|inappropriate for some users", re.I),
+     "Age-restricted: YouTube only plays it for a signed-in account"),
+    (re.compile(r"blocked due to the claimed content by ([^.]+)\.?", re.I), "Blocked on YouTube by a copyright claim from {0}"),
+    (re.compile(r"not available in your country|blocked it in your country|geo.?restrict", re.I),
+     "Blocked in the server's country"),
+    (re.compile(r"private video", re.I), "The video is private"),
+    (re.compile(r"video unavailable|this video is not available|has been removed|account .* terminated", re.I),
+     "The video was deleted or isn't available"),
+    (re.compile(r"HTTP Error 403", re.I), "YouTube refused the download (HTTP 403), which is often temporary"),
+    (re.compile(r"HTTP Error 429|too many requests", re.I), "YouTube is limiting downloads from this server for now"),
+    (re.compile(r"ffmpeg is not installed", re.I), "ffmpeg isn't installed in the container"),
+]
+
+
+def explain(error: str | None) -> str | None:
+    """A short reason for a yt-dlp error, or None when it isn't one we know."""
+    for pattern, reason in _REASONS:
+        m = pattern.search(error or "")
+        if m:
+            return reason.format(*(g.strip() for g in m.groups()))
+    return None
+
+
+def download(candidate: dict, work_dir: Path, progress=None, cookies: Path | None = None) -> Path:
+    """Download the audio and convert it to MP3 (VBR ~245 kbps). Returns the MP3's path. With cookies (a
+    cookies.txt from a browser signed in to YouTube), age-restricted videos download too."""
     import yt_dlp
     if not shutil.which("ffmpeg"):
         raise YouTubeError("ffmpeg is not installed")
@@ -153,6 +178,8 @@ def download(candidate: dict, work_dir: Path, progress=None) -> Path:
         "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "0"}],
         "progress_hooks": [hook],
     }
+    if cookies and cookies.exists():
+        opts["cookiefile"] = str(cookies)
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([candidate["url"]])

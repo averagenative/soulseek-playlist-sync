@@ -1,5 +1,6 @@
 """Web UI."""
 import base64
+import json
 import logging
 import os
 import re
@@ -18,7 +19,7 @@ from fastapi.templating import Jinja2Templates
 
 import httpx
 
-from . import apple, art, control, db, export, favorites, library, mirror, settings, spotify, sync, youtube
+from . import apple, art, control, db, export, favorites, hits, library, mirror, settings, spotify, sync, youtube
 from .config import Config, load
 from .slskd import Slskd
 from .worker import Worker
@@ -29,6 +30,7 @@ log = logging.getLogger(__name__)
 HERE = Path(__file__).parent
 ROW_LIMIT = 500          # songs shown on a playlist page before "Show all"
 PAGE_SIZE = 100          # songs per page on My music
+HITS_PAGE = 40           # albums per page of a hits playlist's picks
 AUDIO_TYPES = {".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".aac": "audio/aac", ".flac": "audio/flac",
                ".ogg": "audio/ogg", ".opus": "audio/ogg", ".wma": "audio/x-ms-wma"}
 base_cfg = load()
@@ -89,6 +91,8 @@ STATUS_LABELS = {
     "failed": "Failed", "removed": "Removed upstream", "skipped": "Skipped", "missing": "Not local",
 }
 templates.env.globals["STATUS_LABELS"] = STATUS_LABELS
+# A short reason for a failed download ("Age-restricted: ..."), or None to show the message as it is.
+templates.env.filters["why"] = youtube.explain
 templates.env.globals["SOURCES"] = sync.SOURCES
 templates.env.globals["DOWNLOAD_LABELS"] = {
     "downloading": "Downloading", "queued": "Queued", "searching": "Searching", "pending": "Waiting to search",
@@ -530,7 +534,8 @@ def _copies_ctx(pid: str) -> dict:
             "spotify_max": mirror.SPOTIFY_MAX}
 
 
-SHOW = {"left_out": "skipped"}      # ?show= filters on the playlist page, by status
+# ?show= filters on the playlist page, by status. Songs you took out are "left_out".
+SHOW = {"left_out": "skipped", **{s: s for s in STATUS_LABELS if s != "skipped"}}
 
 
 def _find_rows(rows: list[dict], q: str, show: str) -> list[dict]:
@@ -562,7 +567,7 @@ def _playlist_ctx(pid: str, show_all: bool = False, q: str = "", show: str = "")
             "rows_qs": urlencode([(k, v) for k, v in view + [("all", 1 if show_all else "")] if v]),
             "all_qs": urlencode([(k, v) for k, v in view if v] + [("all", 1)]),
             "counts": counts, "active": active, "music_root": str(cfg.music_root), "covers": sync.covers(cfg, pid),
-            "local": local, "rule": rule,
+            "local": local, "rule": rule, "hits": hits.options(rule),
             "STATUS_LABELS": {**STATUS_LABELS, "skipped": "Left out"} if local else STATUS_LABELS,
             "rule_text": _rule_text(rule) if rule is not None else None,
             "rule_qs": _filter_qs(rule) if rule is not None else None,
@@ -748,6 +753,109 @@ def _downloads_ctx() -> dict:
 
 # ------------------------------------------------------------------ My music
 
+# ------------------------------------------------------------------ hits playlists
+
+def _new_hits(cfg: Config, name: str, f: dict) -> str:
+    pid = sync.add_local_playlist(cfg, name, rule={**_filter(f.get("q", ""), f.get("folders"), f.get("artist", ""),
+                                                             f.get("album", "")), "hits": dict(hits.DEFAULTS)})
+    sync.run_job(pid, "Picking songs", sync.refresh_local, cfg, pid)
+    hits.start(cfg)
+    return pid
+
+
+def _hits_playlist(pid: str):
+    p = sync.playlist(pid)
+    if not p or hits.options(sync.rule_of(p)) is None:
+        raise HTTPException(404)
+    return p
+
+
+def _hits_status_ctx() -> dict:
+    st = hits.status()
+    return {"hs": st, "hs_running": hits.running(), "hs_counts": hits.cache_counts(),
+            "hs_genius": bool(C().genius_token)}
+
+
+@app.post("/playlists/{pid}/hits/new")
+def hits_new(pid: str):
+    """A hits playlist made from an auto-updating playlist: the same songs, standouts only."""
+    p = sync.playlist(pid)
+    rule = sync.rule_of(p)
+    if not p or rule is None or hits.options(rule) is not None:
+        raise HTTPException(400, "Make a hits playlist from an auto-updating My music playlist")
+    new = _new_hits(C(), p["name"] + " Hits", rule)
+    return _back(f"/playlists/{new}/hits")
+
+
+@app.get("/playlists/{pid}/hits", response_class=HTMLResponse)
+def hits_page(request: Request, pid: str, q: str = "", show: str = "", page: int = 1, saved: int = 0):
+    p = _hits_playlist(pid)
+    cfg = C()
+    rule = sync.rule_of(p)
+    with db.connect() as c:
+        skip = {r[0] for r in c.execute("SELECT song_key FROM items WHERE playlist_id = ? AND skip = 1", (pid,))}
+    groups = hits.plan(cfg, rule, skip)
+    albums = [g for g in groups if g["songs"]]
+    picked = sum(g["picked"] for g in albums)
+    no_data = sum(1 for g in albums if not g["has_data"] and g["kind"] in hits.BASE_KINDS)
+    words = (q or "").casefold().split()
+    if words:
+        albums = [g for g in albums if all(w in f"{g['artist'] or ''} {g['album'] or ''}".casefold() for w in words)]
+    if show == "nodata":
+        albums = [g for g in albums if not g["has_data"] and g["kind"] in hits.BASE_KINDS]
+    elif show == "picked":
+        albums = [g for g in albums if g["picked"]]
+    page = max(page, 1)
+    pages = max(1, -(-len(albums) // HITS_PAGE))
+    view = [("q", q), ("show", show)]
+    return templates.TemplateResponse(request, "hits.html", {
+        **_common(), **_hits_status_ctx(), "p": p, "opts": hits.options(rule), "albums": albums[(page - 1) * HITS_PAGE:page * HITS_PAGE],
+        "matching": len(albums), "total_albums": sum(1 for g in groups if g["songs"]), "picked": picked, "no_data": no_data,
+        "q": q, "show": show, "page": page, "pages": pages, "saved": saved,
+        "view_qs": urlencode([(k, v) for k, v in view if v]), "rule_text": _rule_text(rule)})
+
+
+@app.get("/partials/hits", response_class=HTMLResponse)
+def hits_partial(request: Request, back: str = "/"):
+    return templates.TemplateResponse(request, "_hits_status.html", {**_common(), **_hits_status_ctx(),
+                                                                     "back": back if back.startswith("/") else "/"})
+
+
+@app.post("/playlists/{pid}/hits/settings")
+def hits_settings(pid: str, min_songs: int = Form(2), max_songs: int = Form(5), cutoff: float = Form(1.25)):
+    p = _hits_playlist(pid)
+    rule = sync.rule_of(p)
+    rule["hits"] = hits.options({"hits": {"min": min_songs, "max": max(min_songs, max_songs), "cutoff": cutoff,
+                                          "whole": hits.options(rule)["whole"]}})
+    with db.connect() as c:
+        c.execute("UPDATE playlists SET rule = ? WHERE id = ?", (json.dumps(rule), pid))
+    sync.run_job(pid, "Picking songs", sync.refresh_local, C(), pid, False)
+    return _back(f"/playlists/{pid}/hits?saved=1")
+
+
+@app.post("/playlists/{pid}/hits/whole")
+def hits_whole(pid: str, album: str = Form(""), key: str = Form(""), on: str = Form("1"), back: str = Form("")):
+    """Put all of an album in a hits playlist (from a song on it, or from the picks page), or go back to its picks."""
+    p = _hits_playlist(pid)
+    rule = sync.rule_of(p)
+    album = album or (hits.album_of(key) if key else "")
+    if not album:
+        raise HTTPException(400, "Which album?")
+    whole = set(hits.options(rule)["whole"])
+    whole = whole - {album} if on == "0" else whole | {album}
+    rule["hits"] = {**rule.get("hits", {}), "whole": sorted(whole)}
+    with db.connect() as c:
+        c.execute("UPDATE playlists SET rule = ? WHERE id = ?", (json.dumps(rule), pid))
+    sync.run_job(pid, "Picking songs", sync.refresh_local, C(), pid, False)
+    return _back(back if back.startswith("/") else f"/playlists/{pid}")
+
+
+@app.post("/hits/research")
+def hits_research(back: str = Form("/")):
+    hits.start(C())
+    return _back(back if back.startswith("/") else "/")
+
+
 def _filter(q: str = "", folders: list[str] | None = None, artist: str = "", album: str = "") -> dict:
     return {"q": (q or "").strip(), "folders": [f for f in folders or [] if f], "artist": artist or "",
             "album": album or ""}
@@ -769,7 +877,8 @@ def _rule_text(f: dict) -> str:
         parts.append(f"from {f['album']}")
     if f.get("q"):
         parts.append(f"matching \"{f['q']}\"")
-    return "Every song in your library" + (" " + ", ".join(parts) if parts else "")
+    lead = "The standout songs of each album" if hits.options(f) is not None else "Every song"
+    return lead + " in your library" + (" " + ", ".join(parts) if parts else "")
 
 
 def _suggest_name(f: dict) -> str:
@@ -814,6 +923,8 @@ async def library_playlist(request: Request):
     f = _filter(form.get("q", ""), form.getlist("folder"), form.get("artist", ""), form.get("album", ""))
     back = "/library?" + (form.get("back") or "")
     name = (form.get("new_name" if form.get("what") == "selected" else "name") or "").strip() or _suggest_name(f)
+    if form.get("what") == "all" and form.get("hits"):
+        return _back(f"/playlists/{_new_hits(cfg, name if name != _suggest_name(f) else f'{name} Hits', f)}/hits")
     if form.get("what") == "all" and form.get("live"):
         pid = sync.add_local_playlist(cfg, name, rule=f)
         sync.run_job(pid, "Building the playlist", sync.refresh_local, cfg, pid)

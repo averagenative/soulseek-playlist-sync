@@ -1,4 +1,7 @@
 {% from "_macros.html" import segbar, thumb %}
+{% macro why(detail) %}{% set short = detail|why %}
+<details class="why small"><summary title="{{ detail }}">{{ short or detail }}</summary>
+  <div class="muted">{{ detail }}</div></details>{% endmacro %}
 <div data-active="{{ 1 if active else 0 }}" data-busy="{{ 1 if p.busy else 0 }}">
   <div style="margin-bottom: 10px">{{ segbar(counts, active) }}</div>
   <div class="counts">
@@ -7,7 +10,7 @@
       {% if local and status == 'skipped' %}
       <a class="badge {{ status }}" href="/playlists/{{ p.id }}?show=left_out" title="Show the songs you took out">{{ STATUS_LABELS[status] }} {{ n }}</a>
       {% else %}
-      <span class="badge {{ status }}">{{ STATUS_LABELS[status] }} {{ n }}</span>
+      <a class="badge {{ status }}" href="/playlists/{{ p.id }}?show={{ status }}" title="Show only these songs">{{ STATUS_LABELS[status] }} {{ n }}</a>
       {% endif %}
     {% endfor %}
     <span class="muted small">&middot; fetched {{ p.fetched_at|ago }}, synced {{ p.synced_at|ago }}</span>
@@ -24,6 +27,8 @@
 <div class="find-result small">
   <span>{% if show == 'left_out' %}{{ total_rows|n }} {{ 'song' if total_rows == 1 else 'songs' }} you took out{% if q %}, matching "{{ q }}"{% endif %}.
     {% if total_rows %}They stay out when the playlist refreshes, and out of its copies.{% endif %}
+    {% elif show %}{{ total_rows|n }} {{ 'song' if total_rows == 1 else 'songs' }}: {{ STATUS_LABELS[show] }}{% if q %}, matching "{{ q }}"{% endif %}.
+    {% if show in ('failed', 'not_found') and total_rows %}Click a reason to see the full message.{% endif %}
     {% else %}{{ total_rows|n }} of {{ song_rows|n }} songs match "{{ q }}".{% endif %}</span>
   {% if removable|length > 1 %}
     <button class="btn tiny danger" form="pl-pick" name="matching" value="1"
@@ -58,7 +63,8 @@
             <div class="title" title="{{ s.title }}">{{ s.title }}{% if s.content_rating == 'explicit' %} <span class="tag" title="Explicit">E</span>{% endif %}{% if r.download and r.download.source == 'youtube' and r.status == 'synced' %} <span class="tag yt" title="Downloaded from YouTube">YouTube</span>{% endif %}</div>
             <div class="muted small" title="{{ s.artist or '' }}">{{ s.artist or "Unknown artist" }}</div>
             <div class="show-sm"><span class="badge {{ r.status }}">{{ STATUS_LABELS[r.status] }}</span>
-              {% if r.status == 'downloading' and r.download %}<span class="muted small speed">{{ (r.download.percent or 0)|round|int }}%</span>{% endif %}</div>
+              {% if r.status == 'downloading' and r.download %}<span class="muted small speed">{{ (r.download.percent or 0)|round|int }}%</span>{% endif %}
+              {% if r.status in ('failed', 'not_found') and r.detail %}{{ why(r.detail) }}{% endif %}</div>
           </div>
         </div>
       </td>
@@ -68,7 +74,8 @@
         {% if r.status == 'downloading' and r.download and r.download.percent %}
           <div class="meter"><span style="width: {{ r.download.percent }}%"></span></div>
         {% endif %}
-        {% if r.detail %}<div class="muted small detail speed" title="{{ r.detail }}">{{ r.detail }}</div>{% endif %}
+        {% if r.status in ('failed', 'not_found') and r.detail %}{{ why(r.detail) }}
+        {% elif r.detail %}<div class="muted small detail speed" title="{{ r.detail }}">{{ r.detail }}</div>{% endif %}
       </td>
       <td class="right hide-sm">
         {% if s.preview_url %}
@@ -80,6 +87,12 @@
           <form method="post" action="/playlists/{{ p.id }}/songs/{{ r.key }}/putback?back={{ rows_qs|urlencode }}" class="inline"
                 title="Put this song back in the playlist"><button class="btn tiny">Put back</button></form>
         {% elif local and r.status != 'removed' %}
+          {% if hits and s.album %}
+          <form method="post" action="/playlists/{{ p.id }}/hits/whole" class="inline" title="Put every song from {{ s.album }} in the playlist">
+            <input type="hidden" name="key" value="{{ r.key }}">
+            <input type="hidden" name="back" value="/playlists/{{ p.id }}{{ '?' ~ rows_qs if rows_qs else '' }}#song-{{ r.key }}">
+            <button class="btn tiny">Whole album</button></form>
+          {% endif %}
           <form method="post" action="/playlists/{{ p.id }}/songs/{{ r.key }}/remove?back={{ rows_qs|urlencode }}" class="inline"
                 title="{{ 'Leave this song out of the playlist, its .m3u, and its copies. It stays out when the playlist refreshes.' if rule else 'Take this song out of the playlist' }}"><button class="btn tiny">Remove</button></form>
         {% elif r.status == 'skipped' %}

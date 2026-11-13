@@ -8,6 +8,7 @@ from collections import Counter
 from pathlib import Path
 
 import mutagen
+from mutagen.easymp4 import EasyMP4Tags
 
 from . import db
 from .config import Config
@@ -24,6 +25,23 @@ def _first(tags, *names):
         if v:
             return str(v[0]) if isinstance(v, list) else str(v)
     return None
+
+
+def _all(tags, *names) -> str | None:
+    """Every value of the first tag that has any, joined: 'album; compilation'."""
+    for n in names:
+        v = tags.get(n) if tags else None
+        if v:
+            vals = v if isinstance(v, list) else [v]
+            return "; ".join(str(x).strip().lower() for x in vals if str(x).strip()) or None
+    return None
+
+
+# Picard's MusicBrainz tags. MP4 files keep the release group in a free-form atom mutagen doesn't map.
+try:
+    EasyMP4Tags.RegisterFreeformKey("musicbrainz_releasegroupid", "MusicBrainz Release Group Id")
+except Exception:       # already registered
+    pass
 
 
 def _num(v: str | None) -> int | None:
@@ -65,6 +83,10 @@ def read_tags(path: Path) -> dict:
         "genre": _first(tags, "genre"),
         "isrc": (_first(tags, "isrc") or "").upper() or None,
         "duration": getattr(f.info, "length", None),
+        "mb_recording": _first(tags, "musicbrainz_trackid"),
+        "mb_artist": _first(tags, "musicbrainz_artistid", "musicbrainz_albumartistid"),
+        "mb_release_group": _first(tags, "musicbrainz_releasegroupid"),
+        "release_type": _all(tags, "musicbrainz_albumtype", "releasetype"),
     }
 
 
@@ -120,7 +142,8 @@ def scan(cfg: Config) -> dict:
 
 
 COLUMNS = ("path", "size", "mtime", "isrc", "artist", "title", "album", "duration", "norm_title", "song_key",
-           "art_key", "album_artist", "track_number", "disc_number", "year", "genre", "search")
+           "art_key", "album_artist", "track_number", "disc_number", "year", "genre", "search", "mb_recording",
+           "mb_artist", "mb_release_group", "release_type")
 
 
 def _derived(r: dict) -> dict:

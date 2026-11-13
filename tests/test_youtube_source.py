@@ -125,3 +125,63 @@ def test_add_a_youtube_playlist(cfg, monkeypatch):
         sync.wait_idle(pid)
         assert sync.playlist(pid)["name"] == "90s Alternative"
     assert mirror.targets_for("youtube") == ["spotify", "apple"]
+
+
+@pytest.mark.parametrize("error, want", [
+    ("ERROR: [youtube] abc: Sign in to confirm your age. This video may be inappropriate for some users.",
+     "Age-restricted: YouTube only plays it for a signed-in account"),
+    ("ERROR: [youtube] abc: Video unavailable. It was blocked due to the claimed content by Beggars Group Digital.",
+     "Blocked on YouTube by a copyright claim from Beggars Group Digital"),
+    ("ERROR: [youtube] abc: Video unavailable. This video is not available", "The video was deleted or isn't available"),
+    ("ERROR: unable to download video data: HTTP Error 403: Forbidden",
+     "YouTube refused the download (HTTP 403), which is often temporary"),
+    ("Not on Soulseek (no MP3 with the right length)", None),
+])
+def test_youtube_errors_get_a_short_reason(error, want):
+    assert youtube.explain(error) == want
+
+
+def _youtube_song(cfg, monkeypatch, download):
+    from app import worker
+    song = {"key": "youtube:own1", "title": "Break Up Your Band", "artist": "Chavez", "duration_ms": 200000,
+            "url": "https://www.youtube.com/watch?v=own1"}
+    with db.connect() as c:
+        sync._save_songs(c, [song])
+        c.execute("INSERT INTO downloads (song_key, state, source) VALUES (?, 'pending', 'youtube')", (song["key"],))
+    searched = []
+    monkeypatch.setattr(youtube, "search", lambda s, tol: searched.append(s["title"]) or [
+        {"id": "own1", "url": song["url"], "title": "Chavez - Break Up Your Band", "channel": "fan"},
+        {"id": "topic1", "url": "https://www.youtube.com/watch?v=topic1", "title": "Break Up Your Band",
+         "channel": "Chavez - Topic"}])
+    monkeypatch.setattr(youtube, "download", download)
+    monkeypatch.setattr(worker, "tag_mp3", lambda *a: None)
+    monkeypatch.setattr(worker, "artwork", lambda *a: None)
+    monkeypatch.setattr(sync, "place_download", lambda cfg, key, mp3: cfg.music_root / "placed.mp3")
+    monkeypatch.setattr(worker.library, "add_file", lambda *a: None)
+    w = worker.Worker()
+    with db.connect() as c:
+        w.youtube_job(dict(c.execute("SELECT * FROM downloads WHERE song_key = 'youtube:own1'").fetchone()))
+    with db.connect() as c:
+        return dict(c.execute("SELECT state, detail FROM downloads WHERE song_key = 'youtube:own1'").fetchone()), searched
+
+
+def test_a_playlist_video_that_fails_falls_back_to_another_upload(cfg, monkeypatch, tmp_path):
+    def download(cand, work, progress=None, cookies=None):
+        if "own1" in cand["url"]:
+            raise youtube.YouTubeError("YouTube download failed: ERROR: [youtube] own1: Video unavailable. "
+                                       "It was blocked due to the claimed content by Beggars Group Digital.")
+        mp3 = tmp_path / "x" / "audio.mp3"
+        mp3.parent.mkdir(exist_ok=True)
+        mp3.write_bytes(b"ID3")
+        return mp3
+    d, searched = _youtube_song(cfg, monkeypatch, download)
+    assert searched == ["Break Up Your Band"]                  # searched only after its own video failed
+    assert d == {"state": "done", "detail": "From YouTube: Chavez - Topic"}
+
+
+def test_a_failed_youtube_song_says_why(cfg, monkeypatch):
+    def download(cand, work, progress=None, cookies=None):
+        raise youtube.YouTubeError("YouTube download failed: ERROR: [youtube] x: Sign in to confirm your age.")
+    d, _ = _youtube_song(cfg, monkeypatch, download)
+    assert d["state"] == "failed" and d["detail"].endswith("Tried 1 other upload too.")
+    assert youtube.explain(d["detail"]) == "Age-restricted: YouTube only plays it for a signed-in account"

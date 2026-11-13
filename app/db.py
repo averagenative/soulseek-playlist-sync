@@ -135,6 +135,52 @@ CREATE TABLE IF NOT EXISTS favorite_pairs (
     PRIMARY KEY (spotify_id, apple_id)
 );
 CREATE INDEX IF NOT EXISTS favorite_pairs_apple ON favorite_pairs(apple_id);
+
+-- Hits playlists: what the app has looked up about your songs, kept so later builds cost nothing.
+-- MusicBrainz IDs found for songs whose files don't carry them ('' = looked, nothing matched).
+CREATE TABLE IF NOT EXISTS hit_ids (
+    song_key   TEXT PRIMARY KEY,
+    recording  TEXT NOT NULL DEFAULT '',
+    artist     TEXT NOT NULL DEFAULT '',
+    how        TEXT,                  -- isrc | search
+    checked_at REAL NOT NULL
+);
+-- ListenBrainz listener counts, per MusicBrainz recording.
+CREATE TABLE IF NOT EXISTS hit_recordings (
+    mbid       TEXT PRIMARY KEY,
+    listeners  INTEGER,
+    listens    INTEGER,
+    fetched_at REAL NOT NULL
+);
+-- Lists fetched per artist, one row per song title (norm_title):
+--   listenbrainz  value = listeners, the most for any recording with that title
+--   single        value = the year it came out as a single (MusicBrainz)
+--   genius        value = page views
+CREATE TABLE IF NOT EXISTS hit_artist_songs (
+    source TEXT NOT NULL,
+    artist TEXT NOT NULL,             -- MusicBrainz artist ID; normalized name for genius
+    title  TEXT NOT NULL,
+    value  INTEGER,
+    PRIMARY KEY (source, artist, title)
+);
+CREATE TABLE IF NOT EXISTS hit_artists (
+    source     TEXT NOT NULL,
+    artist     TEXT NOT NULL,
+    fetched_at REAL NOT NULL,
+    found      INTEGER NOT NULL DEFAULT 1,
+    PRIMARY KEY (source, artist)
+);
+-- Billboard Hot 100, one row per song and performer.
+CREATE TABLE IF NOT EXISTS hit_charts (
+    title      TEXT NOT NULL,         -- norm_title
+    performer  TEXT NOT NULL,
+    peak       INTEGER NOT NULL,
+    weeks      INTEGER NOT NULL,
+    first_week TEXT,
+    PRIMARY KEY (title, performer)
+);
+-- Song keys of your Apple Music Favorite Songs and Spotify Liked Songs.
+CREATE TABLE IF NOT EXISTS hit_favorites (song_key TEXT PRIMARY KEY);
 """
 
 _path: Path | None = None
@@ -159,10 +205,11 @@ def init(path: Path) -> None:
         lib_cols = {r["name"] for r in c.execute("PRAGMA table_info(library)")}
         for col, kind in (("song_key", "TEXT"), ("art_key", "TEXT"), ("album_artist", "TEXT"),
                           ("track_number", "INTEGER"), ("disc_number", "INTEGER"), ("year", "TEXT"),
-                          ("genre", "TEXT"), ("search", "TEXT")):
+                          ("genre", "TEXT"), ("search", "TEXT"), ("mb_recording", "TEXT"), ("mb_artist", "TEXT"),
+                          ("mb_release_group", "TEXT"), ("release_type", "TEXT")):
             if col not in lib_cols:
                 c.execute(f"ALTER TABLE library ADD COLUMN {col} {kind}")
-        if "song_key" not in lib_cols:
+        if "song_key" not in lib_cols or "mb_recording" not in lib_cols:
             c.execute("UPDATE library SET mtime = NULL")     # read every file's tags again for the new columns
         c.execute("CREATE INDEX IF NOT EXISTS library_song_key ON library(song_key)")
         c.execute("CREATE INDEX IF NOT EXISTS library_art_key ON library(art_key)")

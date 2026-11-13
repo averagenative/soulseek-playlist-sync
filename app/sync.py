@@ -8,7 +8,7 @@ import threading
 import time
 from pathlib import Path
 
-from . import apple, db, library, spotify, youtube
+from . import apple, db, hits, library, spotify, youtube
 from .config import Config
 from .folders import place, rename_all, safe_name, song_file_name, write_m3u
 
@@ -157,6 +157,11 @@ def _fetch_local(cfg: Config, p) -> None:
     """An auto-updating playlist lists what matches its filter now; a fixed one keeps its songs
     but picks up tag changes."""
     rule = rule_of(p)
+    if rule is not None and hits.options(rule) is not None:
+        with db.connect() as c:
+            skip = {r[0] for r in c.execute("SELECT song_key FROM items WHERE playlist_id = ? AND skip = 1", (p["id"],))}
+        _replace_entries(p["id"], hits.collection(cfg, rule, skip))
+        return
     if rule is not None:
         _replace_entries(p["id"], library.collection(cfg, rule))
         return
@@ -224,7 +229,10 @@ def leave_out(cfg: Config, pid: str, keys: list[str], out: bool = True) -> int:
                     (folder / it["file"]).unlink(missing_ok=True)
                     c.execute("UPDATE items SET file = NULL, origin = NULL, owned = 0 "
                               "WHERE playlist_id = ? AND song_key = ?", (pid, it["song_key"]))
-    if not out and p["library_mode"] == "copy":
+    if hits.options(rule_of(p)) is not None:
+        # A hits playlist fills the place with the album's next best song (or gives it back).
+        run_job(pid, "Picking songs", refresh_local, cfg, pid, False)
+    elif not out and p["library_mode"] == "copy":
         reconcile(cfg, pid, apply=True)         # makes the copies again
     else:
         write_playlist_m3u(cfg, pid)

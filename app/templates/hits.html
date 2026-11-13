@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Picks by album · {{ p.name }} · Playlist Sync{% endblock %}
+{% block crumb_here %}<span class="sep">/</span><a href="/playlists/{{ p.id }}">{{ p.name }}</a><span class="sep">/</span><span class="here">Picks by album</span>{% endblock %}
+{% block content %}
+<h1>Picks by album</h1>
+<p class="muted">{{ rule_text }}: <b>{{ picked|n }}</b> songs from {{ total_albums|n }} albums.
+  Each album gets its {{ opts.min }} best songs, and up to {{ opts.max }} when more of them stand out.
+  A song stands out when it charted, came out as a single, is one of your favorites, or has at least {{ '%.2f'|format(opts.cutoff) }} times the album's median listeners.
+  <a href="/playlists/{{ p.id }}">Back to the playlist</a></p>
+
+{% if saved %}<p class="notice ok" role="status">Saved. The playlist is being rebuilt with the new numbers.</p>{% endif %}
+{% if no_data %}<p class="notice warn small">{{ no_data|n }} {{ 'album has' if no_data == 1 else 'albums have' }} no numbers yet, so {{ 'it keeps its' if no_data == 1 else 'they keep their' }} first {{ opts.min }} songs.
+  <a href="?show=nodata">Show {{ 'it' if no_data == 1 else 'them' }}</a>. To choose others, leave songs out on the playlist page.</p>{% endif %}
+
+<div data-live="/partials/hits?back={{ ('/playlists/' ~ p.id ~ '/hits')|urlencode }}">
+{% set back = '/playlists/' ~ p.id ~ '/hits' %}
+{% include "_hits_status.html" %}
+</div>
+
+<details class="hits-opts">
+  <summary class="btn small">Change the numbers</summary>
+  <form method="post" action="/playlists/{{ p.id }}/hits/settings" class="stack">
+    <label class="field"><span class="label">Songs from every album</span>
+      <input type="number" name="min_songs" value="{{ opts.min }}" min="0" max="10" required></label>
+    <label class="field"><span class="label">Most songs from one album</span>
+      <input type="number" name="max_songs" value="{{ opts.max }}" min="1" max="20" required>
+      <span class="muted small">Your favorites always go in, even past this.</span></label>
+    <label class="field"><span class="label">Listeners a song needs to stand out, times the album's median</span>
+      <input type="number" name="cutoff" value="{{ '%.2f'|format(opts.cutoff) }}" min="1" max="5" step="0.05" required>
+      <span class="muted small">Lower takes more songs from albums with several strong ones.</span></label>
+    <div class="actions"><button class="btn small primary">Save and rebuild</button></div>
+  </form>
+</details>
+
+<form method="get" class="lib-search" role="search" style="margin: 14px 0">
+  <input type="search" name="q" value="{{ q }}" placeholder="Find an artist or album" aria-label="Find an artist or album">
+  <select name="show" aria-label="Which albums">
+    <option value="" {% if not show %}selected{% endif %}>All albums</option>
+    <option value="picked" {% if show == 'picked' %}selected{% endif %}>Albums with picks</option>
+    <option value="nodata" {% if show == 'nodata' %}selected{% endif %}>Albums with no numbers</option>
+  </select>
+  <button class="btn">Find</button>
+  {% if q or show %}<a class="btn" href="?">Show all</a>{% endif %}
+</form>
+{% if q or show %}<p class="small muted">{{ matching|n }} of {{ total_albums|n }} albums.</p>{% endif %}
+
+{% for g in albums %}
+<section class="hits-album" id="album-{{ loop.index }}">
+  <h2 class="small"><b>{{ g.album or 'Songs without an album' }}</b>
+    <span class="muted">&middot; {{ g.artist or 'Unknown artist' }}{% if g.year %} &middot; {{ g.year }}{% endif %}
+    {% if g.kind not in ('album', 'loose') %} &middot; {{ {'ep': 'EP', 'single': 'Single', 'compilation': 'Compilation', 'live': 'Live', 'soundtrack': 'Soundtrack', 'other': 'Remixes'}[g.kind] }}{% endif %}
+    &middot; {{ g.picked }} of {{ g.songs|length }} picked{% if not g.has_data and not g.whole %} &middot; no numbers{% endif %}</span>
+    <form method="post" action="/playlists/{{ p.id }}/hits/whole" class="inline">
+      <input type="hidden" name="album" value="{{ g.id }}">
+      <input type="hidden" name="on" value="{{ '0' if g.whole else '1' }}">
+      <input type="hidden" name="back" value="/playlists/{{ p.id }}/hits?{{ view_qs }}{% if page > 1 %}&amp;page={{ page }}{% endif %}#album-{{ loop.index }}">
+      <button class="btn tiny" title="{{ 'Go back to the standout songs only' if g.whole else 'Put every song on this album in the playlist' }}">{{ 'Back to the picks' if g.whole else 'Whole album' }}</button>
+    </form></h2>
+  <div class="table-wrap">
+  <table class="songs hits">
+    <tbody>
+    {% for s in g.songs %}
+      <tr class="{{ 'picked' if s.picked else 'muted' }}">
+        <td class="num small">{{ s.track or '' }}</td>
+        <td><span class="pick-mark" aria-label="{{ 'Picked' if s.picked else 'Not picked' }}">{{ '&#10003;'|safe if s.picked else '' }}</span>
+          {{ s.title }}{% if s.skipped %} <span class="tag">Left out</span>{% endif %}</td>
+        <td class="small">{% for r in s.reasons %}<span class="tag">{{ r }}</span> {% endfor %}{% if s.out %}<span class="muted">{{ s.out }}</span>{% endif %}</td>
+        <td class="hide-sm small right muted">{{ (s.duration or 0)|duration }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% else %}
+<p class="notice warn">No albums match.</p>
+{% endfor %}
+
+{% if pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if page > 1 %}<a class="btn small" href="?{{ view_qs }}&amp;page={{ page - 1 }}">Previous</a>{% endif %}
+  <span class="small muted">Page {{ page }} of {{ pages }}</span>
+  {% if page < pages %}<a class="btn small" href="?{{ view_qs }}&amp;page={{ page + 1 }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

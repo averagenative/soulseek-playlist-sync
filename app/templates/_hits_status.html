@@ -1,0 +1,24 @@
+<fieldset data-active="{{ 1 if hs_running else 0 }}">
+  <legend>Song lookups</legend>
+  {% if hs_running %}
+    <p><span class="badge busy">Looking up</span> {{ hs.step or 'Starting' }}{% if hs.total %}: {{ hs.done|n }} of {{ hs.total|n }}{% endif %}</p>
+    <p class="muted small">The first run takes an hour or two: MusicBrainz answers one request a second. The playlist updates
+      after each step. Later runs only look up new songs and counts that are more than 90 days old.</p>
+  {% elif hs.state == 'failed' %}
+    <p class="notice bad">The last lookup stopped: {{ hs.error }}. Run it again: what it already found is kept.</p>
+  {% elif hs.state == 'done' %}
+    <p class="muted small">Last lookup finished {{ hs.finished|ago }}. New songs are looked up every 6 hours.</p>
+  {% else %}
+    <p>Nothing looked up yet.</p>
+  {% endif %}
+  {% for n in hs.notes or [] %}<p class="notice warn small">{{ n }}</p>{% endfor %}
+  <p class="small">Known so far: listener counts for {{ hs_counts.recordings|n }} recordings and {{ hs_counts.artists|n }} artists,
+    {{ hs_counts.singles|n }} singles, {{ hs_counts.charts|n }} Hot 100 songs{% if hs_genius %}, Genius page views for {{ hs_counts.genius|n }} artists{% endif %},
+    and {{ hs_counts.favorites|n }} of your favorites.
+    {% if hs_counts.identified or hs_counts.unidentified %}Of the songs whose files have no MusicBrainz ID, {{ hs_counts.identified|n }} were identified and {{ hs_counts.unidentified|n }} weren't.{% endif %}</p>
+  {% if not hs_genius %}<p class="muted small">Set <code>GENIUS_API_TOKEN</code> to add Genius page views, which help most with hip-hop and pop.</p>{% endif %}
+  <form method="post" action="/hits/research" class="inline">
+    <input type="hidden" name="back" value="{{ back or '/' }}">
+    <button class="btn small" {% if hs_running %}disabled{% endif %}>Look up songs now</button>
+  </form>
+</fieldset>

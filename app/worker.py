@@ -6,7 +6,7 @@ import threading
 import time
 from pathlib import Path
 
-from . import db, favorites, library, settings, sync, youtube
+from . import db, favorites, hits, library, settings, sync, youtube
 from .config import Config
 from .match import rank_candidates, search_queries
 from .slskd import Slskd, SlskdError
@@ -35,11 +35,15 @@ class Worker:
 
     @staticmethod
     def refresh(cfg: Config) -> None:
-        """Every few hours: update auto-updating playlists, then sync favorites if that's switched on."""
+        """Every few hours: update auto-updating playlists, sync favorites if that's switched on, and look up
+        new songs for hits playlists (which rebuilds them when it's done)."""
         try:
             sync.refresh_auto_playlists(cfg)
         finally:
-            favorites.scheduled(cfg)
+            try:
+                favorites.scheduled(cfg)
+            finally:
+                hits.start_if_needed(cfg)
 
     def run(self):
         client = Slskd(self.cfg)
@@ -113,9 +117,23 @@ class Worker:
     def start_search(self, client: Slskd, d: dict):
         s = self._song(d["song_key"])
         queries = search_queries(s["title"], s["artist"], s["album"])
+        if not queries:
+            self._give_up(d, "not_found", "Nothing to search Soulseek with: the title and artist are too short")
+            return
         q = queries[min(d["query_index"], len(queries) - 1)]
-        sid = client.start_search(q)
         self.last_search = time.time()
+        try:
+            sid = client.start_search(q)
+        except SlskdError as e:
+            if e.status is None:
+                raise                   # slskd is down: the run loop reports it and tries again later
+            # slskd answered but refused this search. Move on, or the song blocks every search behind it.
+            log.warning("slskd refused the search %r: %s", q, e)
+            if d["query_index"] + 1 < len(queries):
+                self._update(d["song_key"], state="pending", query_index=d["query_index"] + 1, search_id=None)
+            else:
+                self._give_up(d, "failed", f'Soulseek refused the search "{q}": {str(e)[:200]}', search_id=None)
+            return
         self._update(d["song_key"], state="searching", search_id=sid, detail=f'Searching "{q}"')
 
     def poll_search(self, client: Slskd, d: dict):
@@ -197,17 +215,39 @@ class Worker:
         key, cfg = d["song_key"], self.cfg
         song = self._song(key)
         self._update(key, state="searching", detail="Searching YouTube")
+        own = youtube.own_video(song)
         try:
             # A song from a YouTube playlist has its own video; anything else is searched for.
-            cands = youtube.own_video(song) or youtube.search(song, cfg.length_tolerance)
+            cands = own or youtube.search(song, cfg.length_tolerance)
         except youtube.YouTubeError as e:
             self._update(key, state="failed", detail=str(e)[:300])
             return
         if not cands:
             self._update(key, state="not_found", detail="Not on Soulseek or YouTube (nothing with the right length)")
             return
+        errors: list[str] = []
+        if self._youtube_try(key, song, cands, errors):
+            return
+        others = []
+        if own:
+            # The playlist's video can't be downloaded (deleted, blocked, age-restricted): try other uploads.
+            self._update(key, state="searching", detail="The playlist's video failed. Looking for another upload")
+            try:
+                others = [c for c in youtube.search(song, cfg.length_tolerance) if c["id"] != own[0]["id"]][:3]
+            except youtube.YouTubeError as e:
+                log.info("YouTube search after a failed video: %s", e)
+            if others and self._youtube_try(key, song, others, errors):
+                return
+        tail = ""
+        if own:
+            tail = f" Tried {len(others)} other {'upload' if len(others) == 1 else 'uploads'} too." if others \
+                else " No other upload of the song matched."
+        self._update(key, state="failed", detail=f"YouTube downloads failed: {(errors[0] if errors else '')[:250]}.{tail}")
+
+    def _youtube_try(self, key: str, song: dict, cands: list[dict], errors: list[str]) -> bool:
+        """Download the first candidate that works. Errors go in errors, the first one first."""
+        cfg = self.cfg
         work = cfg.data_dir / "youtube-tmp"
-        last_error = None
         for cand in cands:
             who = f"YouTube · {cand['channel'] or 'unknown channel'}"
             self._update(key, state="downloading", username=who, filename=cand["url"], size=None, percent=0,
@@ -219,9 +259,9 @@ class Worker:
                     last[0] = time.time()
                     self._update(key, percent=pct, speed=speed, bytes_done=done, size=total or None)
             try:
-                mp3 = youtube.download(cand, work, progress)
+                mp3 = youtube.download(cand, work, progress, cookies=cfg.youtube_cookies)
             except youtube.YouTubeError as e:
-                last_error = str(e)
+                errors.append(str(e))
                 continue
             try:
                 tag_mp3(mp3, song, artwork(song.get("artwork_url"), cfg.artwork_dir))
@@ -230,14 +270,14 @@ class Worker:
                 shutil.rmtree(mp3.parent, ignore_errors=True)
             if placed:
                 library.add_file(placed, song)
-            note = f"From YouTube: {cand['channel']}"
+            note = f"From YouTube: {cand['channel']}" if cand["channel"] else "From the playlist's video"
             if cand.get("relaxed") and cand.get("length_diff"):
                 diff = cand["length_diff"]
                 note += f" ({abs(diff)} s {'longer' if diff > 0 else 'shorter'} than the original)"
             self._update(key, state="done", path=str(placed) if placed else None, percent=100, detail=note)
             log.info("downloaded from YouTube %s - %s -> %s", song["artist"], song["title"], placed)
-            return
-        self._update(key, state="failed", detail=f"YouTube downloads failed: {(last_error or '')[:250]}")
+            return True
+        return False
 
     def poll_transfer(self, client: Slskd, d: dict):
         t = client.transfer(d["username"], d["filename"])
