@@ -54,7 +54,7 @@
 - [x] 6.4 `GET /suggestions` with images, genres, bio excerpts with credit, reasons, the picked songs with why each was picked, and **Get their hits (N songs)**; the rules form (`POST /suggestions/rules`); plus the two suggestion lists on artist pages
 - [x] 6.5 **Not interested** and **Suggest again** (`suggestion_dismissed`), with a list of dismissed artists
 - [x] 6.6 Tests: ranking (several artists pointing at one, favorites weighting, already-owned artists dropped), reasons text, dismissals, and the hits rules for a suggested artist (charted, single, standout, deluxe bonus tracks ignored, nothing passes)
-- [ ] 6.7 Print the top 20 suggestions for the real library with their reasons and picked songs, review them with the user, and decide whether the hits playlist's picks need extra weight
+- [x] 6.7 Print the top 20 suggestions for the real library with their reasons and picked songs, review them with the user, and decide whether the hits playlist's picks need extra weight. Decided: no extra weight; lean toward lesser-known artists by ListenBrainz listeners; at most 20 songs an artist; Genius views need listeners too
 
 ## 7. Suggestions playlist
 

@@ -2,7 +2,7 @@
   <legend>Artist lookups</legend>
   {% if ast_running %}
     <p><span class="badge busy">Looking up</span> {{ ast.step or 'Starting' }}{% if ast.total %}: {{ ast.done|n }} of {{ ast.total|n }}{% endif %}</p>
-    {% if ast.full %}<p class="muted small">The first run takes about an hour: MusicBrainz answers one request a second and Discogs 25 a minute.
+    {% if ast.full %}<p class="muted small">The first run takes an hour or two: MusicBrainz answers one request a second and Discogs 25 a minute.
       Pages fill in as it goes. Later runs only look up new artists and what's more than 60 or 180 days old.</p>{% endif %}
   {% elif ast.state == 'failed' %}
     <p class="notice bad">The last lookup stopped: {{ ast.error }}. Run it again: what it already found is kept.</p>

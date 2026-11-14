@@ -6,7 +6,8 @@
     <div class="sug-pic">{% if s.image %}<img src="{{ s.image }}" alt="" loading="lazy">{% else %}<span class="avatar" aria-hidden="true">{{ s.name[:1]|upper }}</span>{% endif %}</div>
     <div class="sug-body">
       <h2>{% if s.has_data %}<a href="/artists/{{ s.mbid }}">{{ s.name }}</a>{% else %}<a href="https://musicbrainz.org/artist/{{ s.mbid }}" target="_blank" rel="noopener">{{ s.name }}</a>{% endif %}</h2>
-      {% set facts = [s.years, ('from ' ~ s.origin) if s.origin else None]|select|list %}
+      {% set facts = [s.years, ('from ' ~ s.origin) if s.origin else None,
+                      ('{:,} listeners on ListenBrainz'.format(s.listeners)) if s.listeners else None]|select|list %}
       {% if facts or s.genres %}<div class="muted small">{{ (facts + [s.genres|join(', ')] if s.genres else facts)|select|join(' · ') }}</div>{% endif %}
       <p class="reasons">{{ s.reasons }}.</p>
       {% if s.bio %}<p class="excerpt small">{{ s.bio.text }} <span class="muted">From {% if s.bio.url %}<a href="{{ s.bio.url }}" target="_blank" rel="noopener">{{ s.bio.label }}</a>{% else %}{{ s.bio.label }}{% endif %}{% if s.bio.license %}, {{ s.bio.license }}{% endif %}</span></p>{% endif %}
@@ -17,7 +18,8 @@
             {% for song in best[:5] %}<li><a href="{{ song.url }}" target="_blank" rel="noopener">{{ song.title }}</a>
               <span class="muted">{{ song.album }}{% if song.release_date %}, {{ song.release_date }}{% endif %}{% if song.reasons %} &middot; {{ song.reasons|join(', ') }}{% endif %}</span></li>{% endfor %}
           </ul>
-          {% if best|length > 5 %}<p class="muted small">And {{ best|length - 5 }} more.</p>{% endif %}
+          {% if best|length > 5 %}<p class="muted small">And {{ best|length - 5 }} more.{% if s.hits.passing > best|length %}
+            These are the strongest {{ best|length }} of the {{ s.hits.passing }} songs that pass the rules.{% endif %}</p>{% endif %}
         {% else %}
           <p class="muted small">None of their songs pass the hits rules{% if s.hits.owned %}, apart from {{ s.hits.owned }} you already have{% endif %}.</p>
         {% endif %}

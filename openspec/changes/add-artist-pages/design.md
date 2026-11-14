@@ -179,7 +179,14 @@ Opening an artist with no data puts that artist at the front of the job's queue 
 
 ## Open Questions
 
-- Should suggestions weigh the songs a hits playlist picked more than the rest of the library? Decided after reviewing the top 20 suggestions for the real library (task 6.6). See decision 9.
+None left.
+
+Settled on 2026-11-13, after reviewing the top 20 suggestions for the real library (task 6.7) with the user:
+
+- **Lean toward lesser-known artists.** The top of the list was the most famous bands of the library's genres (R.E.M., The Strokes, Coldplay), each a match for 200 to 370 of its artists. Dampening by how many library artists point at a band barely changed it, because those bands really are the strongest matches. So the ranking divides each match by `(max(listeners, 5000) / 5000) ** 0.75`, from ListenBrainz's artist listener counts, fetched for the best 500 matches per profile. The new top of the list is artists such as KEN mode, Conan, Sumac, and Full of Hell.
+- **At most 20 songs an artist** by default, the strongest of those that pass, editable on the Suggestions page. Before, the top suggestions added 14 to 64 songs each.
+- **Genius views need listeners too** for a suggested artist's song: they count only when the song's listener ratio is at least 0.5. Songs such as one that Genius readers favor but few people play no longer pass on views alone.
+- **No extra weight for the songs hits playlists picked.** The ranking was driven by breadth, and favorites already count double, so extra weight would only push it further toward the same famous bands.
 
 Settled on 2026-11-12:
 

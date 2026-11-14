@@ -328,6 +328,8 @@ class FakeHttp:
 
     def lb(self, method, path, **kw):
         self.calls.append(("api.listenbrainz.org", path))
+        if path == "/popularity/artist":
+            return [{"artist_mbid": m, "total_user_count": 1234} for m in kw["json"]["artist_mbids"]]
         return []
 
 
@@ -533,6 +535,34 @@ def test_suggestions_rank_explain_and_dismiss(cfg):
     assert "Melvins" not in [s["name"] for s in artists.suggestions(1)]
 
 
+def test_suggestions_lean_toward_artists_you_probably_havent_heard(cfg, fake):
+    a, b, c_ = rid("a"), rid("b"), rid("c")
+    for n, m in (("Nirvana", a), ("Pixies", b), ("Mudhoney", c_)):
+        songs(cfg, n, "Album", ["One", "Two"], mbid=m)
+    famous, niche = rid("famous"), rid("niche")
+    with db.connect() as c:
+        for x in (a, b, c_):
+            link(c, x, "similar", famous, "Famous Band", 0.6)        # everyone's match
+        link(c, a, "similar", niche, "Niche Band", 0.9)              # one strong match
+    assert [s["name"] for s in artists.suggestions(1)] == ["Famous Band", "Niche Band"]      # fame not known yet
+    with db.connect() as c:
+        c.execute("INSERT INTO artists (mbid, name, listeners) VALUES (?, 'Famous Band', 400000)", (famous,))
+        c.execute("INSERT INTO artists (mbid, name, listeners) VALUES (?, 'Niche Band', 3000)", (niche,))
+    db.set_kv(artists.POPULARITY_KEY, "1")
+    got = artists.suggestions(1)
+    assert [s["name"] for s in got] == ["Niche Band", "Famous Band"] and got[0]["listeners"] == 3000
+    # The lookup fetches listener counts for the best matches, 500 a request, and not again while they're fresh.
+    with db.connect() as c:
+        c.execute("DELETE FROM artists")
+    run = artists._Run(cfg)
+    run.popularity()
+    with db.connect() as c:
+        assert c.execute("SELECT listeners FROM artists WHERE mbid = ?", (niche,)).fetchone()[0] == 1234
+    fake.calls.clear()
+    run.popularity()
+    assert fake.calls == []
+
+
 def discography(mbid, name, releases):
     """Cache a suggested artist's albums: releases are (title, kind, year, [(title, listeners), ...])."""
     with db.connect() as c:
@@ -593,6 +623,25 @@ def test_get_their_hits_uses_the_hits_rules(cfg):
         c.execute("DELETE FROM library")
     strict = [x["title"] for x in artists.suggested_hits(MELVINS, rules={"max": 5, "cutoff": 5.0})["songs"]]
     assert "Hooch" not in strict and "Revolve" in strict
+
+
+def test_get_their_hits_takes_the_strongest_and_needs_listeners_for_genius(cfg):
+    discography(MELVINS, "Melvins", MELVINS_ALBUMS)
+    with db.connect() as c:
+        c.execute("INSERT INTO hit_charts (title, performer, peak, weeks) VALUES ('revolve', 'Melvins', 40, 3)")
+        c.execute("INSERT INTO hit_artist_songs (source, artist, title, value) VALUES ('single', ?, 'night goat', 1992)",
+                  (MELVINS,))
+    got = artists.suggested_hits(MELVINS, rules={"total": 2})
+    # Three pass; the two strongest stay, in album order.
+    assert [x["title"] for x in got["songs"]] == ["Hooch", "Revolve"] and got["passing"] == 3
+    # Genius views alone don't make a song stand out when its listeners are under half the usual.
+    discography(rid("loud"), "Loud Band", [("Lullabies", "album", 2001, [
+        ("A", 1000), ("B", 1000), ("C", 1000), ("Few Listeners", 200), ("Some Listeners", 600), ("E", 1000)])])
+    with db.connect() as c:
+        for t, views in (("a", 100), ("b", 100), ("c", 100), ("few listeners", 2000), ("some listeners", 2000), ("e", 100)):
+            c.execute("INSERT INTO hit_artist_songs (source, artist, title, value) VALUES ('genius', 'loud band', ?, ?)",
+                      (t, views))
+    assert [x["title"] for x in artists.suggested_hits(rid("loud"))["songs"]] == ["Some Listeners"]
 
 
 def test_suggestions_playlists(cfg, client, monkeypatch):

@@ -48,7 +48,15 @@ SUGGESTIONS_SHOWN = 30            # suggestions the Suggestions page lists befor
 TOP = 100                         # suggestions kept per profile
 SHOWN_REASONS = 5
 INFLUENCE = 0.5                   # an influence link counts like a similarity of 0.5
-RULES = {"max": 5, "cutoff": 1.25}
+RULES = {"max": 5, "cutoff": 1.25, "total": 20}
+VIEWS_NEED_LISTENERS = 0.5        # Genius views count for a suggested song only with half the usual listeners
+# Suggestions lean toward artists you probably haven't heard: a match's score is divided by
+# (listeners / FAME_FLOOR) ** FAME_POWER, and everyone under FAME_FLOOR listeners counts the same.
+FAME_FLOOR = 5000
+FAME_POWER = 0.75
+CANDIDATES = 500                  # best matches per profile whose listener counts are looked up
+POPULARITY_EVERY = 60 * DAY
+POPULARITY_KEY = "artists_popularity_at"
 # Other versions of a song on a suggested artist's singles and EPs: "(Rasta mix)", "(English version)",
 # "(radio edit)", "(in progress)". The hits rules already leave out live, demo and remix versions.
 _OTHER_VERSION = re.compile(r"[\(\[][^\)\]]*\b(mix|version|edit|in progress|take|session|alternate|early|rough|"
@@ -263,6 +271,7 @@ class _Run:
         self.steps(self.discogs, mbids)
         if self.cfg.lastfm_api_key:
             self.steps(self.lastfm, mbids)
+        self.steps(self.popularity)
         ahead = self.ahead()
         self.facts(ahead, influences=False)
         self.steps(self.discographies, ahead)
@@ -564,7 +573,27 @@ class _Run:
                             [{"kind": "similar", "mbid": x["mbid"], "name": x["name"], "score": x["score"]} for x in sim])
                 _mark(c, m, "lastfm")
 
-    # ---------------------------------------------------------- suggested artists' albums
+    # ---------------------------------------------------------- suggested artists
+
+    def popularity(self) -> None:
+        """How well known each profile's best matches are: ListenBrainz listeners, 500 artists a request."""
+        want: dict[str, str] = {}
+        for p in profiles.all_profiles():
+            for s in _matches(p["id"]):
+                want.setdefault(s["mbid"], s["name"])
+        fetched = _fetched_all()
+        todo = [m for m in want if _stale(fetched, m, "popularity", POPULARITY_EVERY)]
+        for i in range(0, len(todo), 500):
+            self.step("Finding out how well known suggested artists are", i, len(todo))
+            batch = todo[i:i + 500]
+            res = self.http.lb("POST", "/popularity/artist", json={"artist_mbids": batch}) or []
+            got = {r.get("artist_mbid"): r.get("total_user_count") for r in res if isinstance(r, dict)}
+            with db.connect() as c:
+                for m in batch:
+                    _mark(c, m, "popularity", name=want[m])
+                    c.execute("UPDATE artists SET listeners = ? WHERE mbid = ?", (got.get(m), m))
+        if todo:
+            db.set_kv(POPULARITY_KEY, str(_now()))
 
     def ahead(self) -> list[str]:
         """The artists to fetch albums for ahead of time: each profile's top suggestions, and any artist someone
@@ -912,19 +941,51 @@ def _stamp(profile: int) -> tuple:
                 tuple(c.execute("SELECT COUNT(*), MAX(at) FROM suggestion_dismissed WHERE profile = ?",
                                 (profile,)).fetchone()),
                 c.execute("SELECT COUNT(*) FROM hit_favorites WHERE profile = ?", (profile,)).fetchone()[0],
-                id(library.artist_index()))
+                id(library.artist_index()), db.get_kv(POPULARITY_KEY))
 
 
 def suggestions(profile: int = 1, limit: int = TOP) -> list[dict]:
-    """Artists you don't have, ranked by how strongly your artists point at them.
+    """Artists you don't have that your artists point to, leaning toward ones you probably haven't heard.
 
-    score(X) = the sum over library artists A linked to X of weight(A) * strength(A, X), where
-    weight(A) = 1 + ln(1 + A's songs) + 2 ln(1 + A's songs among your favorites), and strength is the best
-    similarity score between them, or INFLUENCE for an influence either way."""
+    Each of the best CANDIDATES matches (see _matches) is scored by its match divided by how well known it is:
+    match / (max(listeners, FAME_FLOOR) / FAME_FLOOR) ** FAME_POWER. An artist whose listeners aren't known
+    yet counts as under the floor."""
     stamp = _stamp(profile)
     hit = _cache.get(("suggestions", profile))
     if hit and hit[0] == stamp:
         return hit[1][:limit]
+    matches = _matches(profile, stamp)
+    fame = _listeners([s["mbid"] for s in matches])
+    out = []
+    for s in matches:
+        n = fame.get(s["mbid"])
+        out.append({**s, "listeners": n, "score": s["match"] / (max(n or 0, FAME_FLOOR) / FAME_FLOOR) ** FAME_POWER})
+    out.sort(key=lambda s: (-s["score"], s["name"]))
+    out = out[:TOP]
+    _cache[("suggestions", profile)] = (stamp, out)
+    return out[:limit]
+
+
+def _listeners(mbids: list[str]) -> dict[str, int | None]:
+    out = {}
+    with db.connect() as c:
+        for i in range(0, len(mbids), 500):
+            chunk = mbids[i:i + 500]
+            out.update({r[0]: r[1] for r in c.execute(
+                f"SELECT mbid, listeners FROM artists WHERE mbid IN ({','.join('?' * len(chunk))})", chunk)})
+    return out
+
+
+def _matches(profile: int, stamp: tuple | None = None) -> list[dict]:
+    """The artists you don't have that your artists point to most strongly, best first, up to CANDIDATES.
+
+    match(X) = the sum over library artists A linked to X of weight(A) * strength(A, X), where
+    weight(A) = 1 + ln(1 + A's songs) + 2 ln(1 + A's songs among your favorites), and strength is the best
+    similarity score between them, or INFLUENCE for an influence either way."""
+    stamp = stamp or _stamp(profile)
+    hit = _cache.get(("matches", profile))
+    if hit and hit[0] == stamp:
+        return hit[1]
     idx = library.artist_index()
     with db.connect() as c:
         favs = {r[0] for r in c.execute("SELECT song_key FROM hit_favorites WHERE profile = ?", (profile,))}
@@ -949,23 +1010,23 @@ def suggestions(profile: int = 1, limit: int = TOP) -> list[dict]:
             other_names[x][x_name] += 1
     scored: dict[str, dict] = {}
     for (x, a), p in pair.items():
-        s = scored.setdefault(x, {"mbid": x, "score": 0.0, "links": []})
+        s = scored.setdefault(x, {"mbid": x, "match": 0.0, "links": []})
         part = weight[a] * p["strength"]
-        s["score"] += part
+        s["match"] += part
         s["links"].append((part, names[a], a, p["how"]))
     out = []
     for x, s in scored.items():
-        if s["score"] <= 0:
+        if s["match"] <= 0:
             continue
         s["links"].sort(key=lambda t: -t[0])
         s["name"] = other_names[x].most_common(1)[0][0] if other_names[x] else x
         s["reasons"] = reasons_text(s["links"])
         s["count"] = len(s["links"])
         out.append(s)
-    out.sort(key=lambda s: (-s["score"], s["name"]))
-    out = out[:TOP]
-    _cache[("suggestions", profile)] = (stamp, out)
-    return out[:limit]
+    out.sort(key=lambda s: (-s["match"], s["name"]))
+    out = out[:CANDIDATES]
+    _cache[("matches", profile)] = (stamp, out)
+    return out
 
 
 def _and(names: list[str]) -> str:
@@ -996,11 +1057,12 @@ def rules_for(profile: int) -> dict:
         r.update(json.loads(db.get_kv(f"suggestions_rules:{profile}") or "{}"))
     except ValueError:
         pass
-    return {"max": max(1, min(int(r["max"]), 20)), "cutoff": max(1.0, min(float(r["cutoff"]), 5.0))}
+    return {"max": max(1, min(int(r["max"]), 20)), "cutoff": max(1.0, min(float(r["cutoff"]), 5.0)),
+            "total": max(1, min(int(r["total"]), 100))}
 
 
-def save_rules(profile: int, max_songs: int, cutoff: float) -> dict:
-    db.set_kv(f"suggestions_rules:{profile}", json.dumps({"max": max_songs, "cutoff": cutoff}))
+def save_rules(profile: int, max_songs: int, cutoff: float, total: int = RULES["total"]) -> dict:
+    db.set_kv(f"suggestions_rules:{profile}", json.dumps({"max": max_songs, "cutoff": cutoff, "total": total}))
     return rules_for(profile)
 
 
@@ -1037,6 +1099,7 @@ def card(mbid: str) -> dict:
     return {"image": f"/artists/{mbid}/image" if row.get("image_file") else None,
             "credit": row.get("image_credit") or {}, "genres": (row.get("genres") or facts.get("genres") or [])[:4],
             "years": _years(row) if row else None, "origin": _origin(row) if row else None, "bio": excerpt,
+            "listeners": row.get("listeners"),
             "has_data": "musicbrainz" in (row.get("fetched") or {})}
 
 
@@ -1051,7 +1114,7 @@ def suggested_hits(mbid: str, profile: int = 1, rules: dict | None = None, st: d
     """The songs Get their hits would add: each album's songs that pass the hits rules (charted, a single near
     its album, or listeners or Genius views at least the cutoff times the album's median), at most rules["max"]
     an album, each song once on its earliest album, minus songs already in the library."""
-    rules = rules or rules_for(profile)
+    rules = {**rules_for(profile), **(rules or {})}
     if not albums_known(mbid):
         return {"known": False, "songs": [], "owned": 0}
     with db.connect() as c:
@@ -1103,7 +1166,7 @@ def suggested_hits(mbid: str, profile: int = 1, rules: dict | None = None, st: d
         ("lb", [s["lb"] for s in album_songs if s["lb"]]), ("views", [s["views"] for s in album_songs if s["views"]]))}
     picked, have = [], 0
     for g in ordered:
-        hits.pick_album(g["songs"], g["kind"], opts, base=base)
+        hits.pick_album(g["songs"], g["kind"], opts, base=base, views_need=VIEWS_NEED_LISTENERS)
         for s in sorted(g["songs"], key=lambda s: (s["disc"] or 0, s["track"] or 0)):
             if not s["picked"]:
                 continue
@@ -1118,7 +1181,12 @@ def suggested_hits(mbid: str, profile: int = 1, rules: dict | None = None, st: d
                 "artwork_url": f"https://coverartarchive.org/release/{g['release_id']}/front-250" if g["release_id"] else None,
                 "thumb_url": None, "url": f"https://musicbrainz.org/recording/{s['recording']}", "preview_url": None,
                 "reasons": s["reasons"], "score": s["score"], "kind": g["kind"]})
-    return {"known": True, "songs": picked, "owned": have, "name": name}
+    passing = len(picked)
+    if passing > rules["total"]:
+        # The strongest songs overall, kept in album order.
+        best = {id(x) for x in sorted(picked, key=lambda x: -x["score"])[:rules["total"]]}
+        picked = [x for x in picked if id(x) in best]
+    return {"known": True, "songs": picked, "owned": have, "name": name, "passing": passing}
 
 
 def _pending() -> list[tuple[int, str]]:

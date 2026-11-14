@@ -702,7 +702,7 @@ def signals(s: dict, st: dict, credit: str | None, album_year) -> None:
 
 
 def pick_album(songs: list[dict], kind: str, opts: dict, whole: bool = False,
-               base: dict | None = None) -> tuple[set[str], bool]:
+               base: dict | None = None, views_need: float | None = None) -> tuple[set[str], bool]:
     """Pick one album's songs, the same way for a hits playlist and for a suggested artist's albums.
 
     Each song has its numbers (see signals()), title, duration, disc, track, skipped, and out: why it can't be
@@ -710,7 +710,8 @@ def pick_album(songs: list[dict], kind: str, opts: dict, whole: bool = False,
     EP or soundtrack is filled to opts["min"] with its best songs, then songs that stand out are added up to
     opts["max"]. Sets each song's lift, score, standout, picked and reasons, and returns the picked keys and
     whether the album had numbers to compare. base: lowest medians for listeners and views ({"lb", "views"}),
-    for a suggested artist's releases (see _lift)."""
+    for a suggested artist's releases (see _lift). views_need: Genius views don't count for a song whose
+    listener ratio is below this, when it has one."""
     base = base or {}
     for s in songs:
         if s["out"] is None and not (s["favorite"] or s["chart"]):
@@ -720,8 +721,11 @@ def pick_album(songs: list[dict], kind: str, opts: dict, whole: bool = False,
     gv_lift = _lift({s["key"]: s["views"] for s in live}, MIN_VIEWS, base.get("views"))
     has_data = bool(lb_lift or gv_lift)
     for s in live:
-        lifts = [x for x in (lb_lift.get(s["key"]), gv_lift.get(s["key"])) if x is not None]
-        s["lift_lb"], s["lift_views"] = lb_lift.get(s["key"]), gv_lift.get(s["key"])
+        lb, gv = lb_lift.get(s["key"]), gv_lift.get(s["key"])
+        if views_need is not None and lb is not None and lb < views_need:
+            gv = None                   # listeners say otherwise
+        lifts = [x for x in (lb, gv) if x is not None]
+        s["lift_lb"], s["lift_views"] = lb, gv
         lift = max(lifts) if lifts else None
         s["lift"] = lift
         score = lift if lift is not None else (0.9 if has_data else 1.0)

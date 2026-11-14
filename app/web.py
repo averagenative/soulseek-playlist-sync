@@ -1425,8 +1425,8 @@ def suggestions_list(request: Request, n: int = SUGGESTIONS_SHOWN):
 
 
 @app.post("/suggestions/rules")
-def suggestions_rules(max_songs: int = Form(5), cutoff: float = Form(1.25)):
-    artists.save_rules(_me()["id"], max_songs, cutoff)
+def suggestions_rules(max_songs: int = Form(5), cutoff: float = Form(1.25), total: int = Form(20)):
+    artists.save_rules(_me()["id"], max_songs, cutoff, total)
     return _back("/suggestions?saved=rules")
 
 

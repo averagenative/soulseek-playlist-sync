@@ -6,8 +6,8 @@
   <div>
     <div class="eyebrow">For {{ me.name }}</div>
     <h1>Suggestions</h1>
-    <div class="muted small">Artists you don't have that your artists are similar to, influenced, or were influenced by.
-      Artists you have more songs and favorites of count for more.</div>
+    <div class="muted small">Artists you don't have that your artists are similar to, influenced, or were influenced by,
+      leaning toward ones you probably haven't heard. Artists you have more songs and favorites of count for more.</div>
   </div>
   {% if all_playlist %}<a class="btn" href="/playlists/{{ all_playlist }}">Open the Suggestions playlist</a>{% endif %}
 </section>
@@ -15,11 +15,15 @@
 {% if error %}<p class="notice bad" role="alert">{{ error }}</p>{% endif %}
 
 <details class="hits-opts">
-  <summary class="btn small">Hits rules: up to {{ rules.max }} songs an album, cutoff {{ rules.cutoff }}</summary>
+  <summary class="btn small">Hits rules: up to {{ rules.total }} songs an artist, {{ rules.max }} an album, cutoff {{ rules.cutoff }}</summary>
   <form method="post" action="/suggestions/rules" class="stack">
     <p class="small">Get their hits picks the same songs a hits playlist would from each of the artist's albums, EPs, and singles:
       songs that charted on the Hot 100, came out as a single near their album, or have at least the cutoff times the album's
-      median listeners or Genius page views. There's no minimum, so an album with no standout songs adds none.</p>
+      median listeners or Genius page views. There's no minimum, so an album with no standout songs adds none.
+      Genius views only count for a song that also has at least half the artist's usual listeners.</p>
+    <label class="field"><span class="label">Most songs from one artist</span>
+      <input type="number" name="total" value="{{ rules.total }}" min="1" max="100">
+      <span class="muted small">When more songs pass the rules, Get their hits takes the strongest ones.</span></label>
     <label class="field"><span class="label">Most songs from one album</span>
       <input type="number" name="max_songs" value="{{ rules.max }}" min="1" max="20"></label>
     <label class="field"><span class="label">Cutoff</span>

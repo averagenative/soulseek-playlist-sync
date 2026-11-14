@@ -228,7 +228,8 @@ CREATE TABLE IF NOT EXISTS artists (
     image_file     TEXT,                  -- file name under DATA_DIR/artwork/artists
     image_source   TEXT,                  -- the Commons file or URL it came from
     image_credit   TEXT,                  -- JSON: author, license, page
-    fetched        TEXT                   -- JSON: source -> when it was last fetched
+    fetched        TEXT,                  -- JSON: source -> when it was last fetched
+    listeners      INTEGER                -- ListenBrainz listeners, for how well known a suggestion is
 );
 CREATE TABLE IF NOT EXISTS artist_bios (
     mbid       TEXT NOT NULL,
@@ -322,6 +323,8 @@ def init(path: Path) -> None:
         if "note" not in {r["name"] for r in c.execute("PRAGMA table_info(mirrors)")}:
             c.execute("ALTER TABLE mirrors ADD COLUMN note TEXT")
         # Profiles: everything that was here before belongs to the first one.
+        if "listeners" not in {r["name"] for r in c.execute("PRAGMA table_info(artists)")}:
+            c.execute("ALTER TABLE artists ADD COLUMN listeners INTEGER")
         if "owner" not in pl_cols:
             c.execute("ALTER TABLE playlists ADD COLUMN owner INTEGER NOT NULL DEFAULT 1")
         _add_profile(c, "favorite_pairs", FAVORITE_PAIRS, "spotify_id, apple_id, added_to, at")
